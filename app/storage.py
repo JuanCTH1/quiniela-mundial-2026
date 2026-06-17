@@ -170,3 +170,40 @@ def all_users() -> list[dict]:
     with _sqlite().get_conn() as conn:
         rows = conn.execute("SELECT * FROM users").fetchall()
         return [dict(r) for r in rows]
+
+
+# --------------------------------------------------------------------------- #
+# Sorteo paralelo
+# --------------------------------------------------------------------------- #
+def get_draw() -> list[dict]:
+    """Asignaciones del sorteo, ordenadas por lote."""
+    if USE_SUPABASE:
+        return _sb_request("GET", f"{PREFIX}draw?select=*&order=lot_index.asc")
+    with _sqlite().get_conn() as conn:
+        rows = conn.execute("SELECT * FROM draw ORDER BY lot_index ASC").fetchall()
+        return [dict(r) for r in rows]
+
+
+def save_draw(rows: list[dict]) -> None:
+    """Guarda las asignaciones del sorteo (solo si aún no hay ninguna)."""
+    if USE_SUPABASE:
+        _sb_request("POST", f"{PREFIX}draw", json=rows,
+                    headers={"Prefer": "return=minimal"})
+        return
+    with _sqlite().get_conn() as conn:
+        conn.executemany(
+            """INSERT INTO draw(participant, team_a, team_b, lot_index)
+               VALUES (:participant, :team_a, :team_b, :lot_index)""",
+            rows,
+        )
+        conn.commit()
+
+
+def reset_draw() -> None:
+    """Borra el sorteo para poder rehacerlo (admin)."""
+    if USE_SUPABASE:
+        _sb_request("DELETE", f"{PREFIX}draw?id=gte.0")
+        return
+    with _sqlite().get_conn() as conn:
+        conn.execute("DELETE FROM draw")
+        conn.commit()

@@ -32,6 +32,15 @@ CREATE TABLE IF NOT EXISTS predictions (
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     UNIQUE(user_id, match_id)
 );
+
+CREATE TABLE IF NOT EXISTS draw (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    participant TEXT NOT NULL,
+    team_a      TEXT NOT NULL,
+    team_b      TEXT NOT NULL,
+    lot_index   INTEGER NOT NULL,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
 """
 
 

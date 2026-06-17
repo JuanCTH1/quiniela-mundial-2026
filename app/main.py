@@ -5,7 +5,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
 
 from . import storage
-from .models import PredictionIn, ResultIn, UserIn
+from .models import DrawIn, PredictionIn, ResultIn, UserIn
 from .scoring import points
 
 ADMIN_TOKEN = os.getenv("ADMIN_TOKEN", "cambia-esto")
@@ -76,6 +76,51 @@ def leaderboard() -> list[dict]:
     for i, row in enumerate(table, 1):
         row["rank"] = i
     return table
+
+
+@app.get("/api/lots")
+def get_lots() -> list[dict]:
+    """Los 6 pares de selecciones del sorteo paralelo."""
+    from .data.lots import LOTS
+    return LOTS
+
+
+@app.get("/api/draw")
+def get_draw() -> list[dict]:
+    """Resultado actual del sorteo (vacío si aún no se hizo)."""
+    return storage.get_draw()
+
+
+@app.post("/api/draw")
+def run_draw(body: DrawIn) -> list[dict]:
+    """Sortea los pares entre los participantes. Se bloquea tras el primer sorteo."""
+    import random
+    from .data.lots import LOTS
+
+    if storage.get_draw():
+        raise HTTPException(status_code=409, detail="El sorteo ya se realizó y está bloqueado.")
+    names = [n.strip() for n in body.names if n.strip()]
+    if not (2 <= len(names) <= len(LOTS)):
+        raise HTTPException(status_code=400, detail=f"Pon entre 2 y {len(LOTS)} participantes.")
+
+    lots = LOTS.copy()
+    random.shuffle(lots)
+    rows = [
+        {"participant": name, "team_a": lots[i]["team_a"],
+         "team_b": lots[i]["team_b"], "lot_index": i}
+        for i, name in enumerate(names)
+    ]
+    storage.save_draw(rows)
+    return storage.get_draw()
+
+
+@app.post("/admin/draw/reset")
+def reset_draw(token: str = "") -> dict:
+    """(Admin) Borra el sorteo para rehacerlo. Requiere ?token=ADMIN_TOKEN."""
+    if token != ADMIN_TOKEN:
+        raise HTTPException(status_code=401, detail="Token de admin inválido.")
+    storage.reset_draw()
+    return {"ok": True}
 
 
 @app.post("/admin/result")
@@ -170,10 +215,12 @@ _PAGE = """<!doctype html>
   <div class="tabs">
     <button class="active" id="tab-q" onclick="show('q')">Pronósticos</button>
     <button id="tab-l" onclick="show('l')">Tabla</button>
+    <button id="tab-s" onclick="show('s')">🎲 Sorteo</button>
   </div>
 
   <div id="view-q" class="card"><p class="muted">Entra con tu nombre para pronosticar.</p></div>
   <div id="view-l" class="card" style="display:none"><p class="muted">Cargando…</p></div>
+  <div id="view-s" class="card" style="display:none"><p class="muted">Cargando…</p></div>
 </div>
 
 <script>
@@ -181,11 +228,12 @@ let USER = JSON.parse(localStorage.getItem("quiniela_user") || "null");
 let MATCHES = [], PREDS = {};
 
 function show(t){
-  document.getElementById("view-q").style.display = t==="q" ? "block":"none";
-  document.getElementById("view-l").style.display = t==="l" ? "block":"none";
-  document.getElementById("tab-q").classList.toggle("active", t==="q");
-  document.getElementById("tab-l").classList.toggle("active", t==="l");
+  ["q","l","s"].forEach(v=>{
+    document.getElementById("view-"+v).style.display = v===t ? "block":"none";
+    document.getElementById("tab-"+v).classList.toggle("active", v===t);
+  });
   if(t==="l") loadLeaderboard();
+  if(t==="s") loadDraw();
 }
 
 async function login(){
@@ -254,6 +302,43 @@ async function loadLeaderboard(){
     <tbody>${t.map(r=>`<tr>
       <td class="rank">${r.rank}</td><td>${r.name}</td><td><b>${r.points}</b></td><td>${r.exacts}</td><td>${r.played}</td>
     </tr>`).join("")}</tbody></table>`;
+}
+
+async function loadDraw(){
+  const [lots, draw] = await Promise.all([
+    fetch("/api/lots").then(r=>r.json()),
+    fetch("/api/draw").then(r=>r.json())
+  ]);
+  const el = document.getElementById("view-s");
+  if(draw.length){ el.innerHTML = drawResultHTML(draw); return; }
+  el.innerHTML = `
+    <p class="muted">Cada participante saca un par de selecciones al azar. Si una de las dos
+    gana el Mundial, gana el sorteo. Una vez sorteado, <b>queda bloqueado</b>.</p>
+    <p class="muted">Pares en juego: ${lots.map(l=>`<span class="grp">${l.team_a} + ${l.team_b}</span>`).join(" ")}</p>
+    <div id="names">${[1,2,3,4,5,6].map(i=>`<input class="dn" placeholder="Participante ${i}" style="width:100%;margin:4px 0">`).join("")}</div>
+    <button onclick="runDraw()" style="margin-top:8px;width:100%">🎲 Sortear</button>
+    <p class="muted" id="draw-msg"></p>`;
+}
+
+function drawResultHTML(draw){
+  return `<p class="muted">Sorteo realizado 🔒 — esto ya no cambia.</p>
+    <table><thead><tr><th>Participante</th><th>Sus selecciones</th></tr></thead>
+    <tbody>${draw.map(d=>`<tr>
+      <td><b>${d.participant}</b></td>
+      <td><span class="grp">${d.team_a}</span> <span class="grp">${d.team_b}</span></td>
+    </tr>`).join("")}</tbody></table>`;
+}
+
+async function runDraw(){
+  const names = [...document.querySelectorAll(".dn")].map(i=>i.value.trim()).filter(Boolean);
+  if(names.length < 2) return alert("Pon al menos 2 participantes.");
+  const msg = document.getElementById("draw-msg");
+  msg.textContent = "Sorteando…";
+  const r = await fetch("/api/draw",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({names})});
+  const data = await r.json();
+  if(!r.ok){ msg.textContent = data.detail || "Error en el sorteo"; return; }
+  const el = document.getElementById("view-s");
+  el.innerHTML = drawResultHTML(data);
 }
 
 renderWho();
