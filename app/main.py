@@ -87,6 +87,16 @@ def post_result(body: ResultIn, token: str = "") -> dict:
     return {"ok": True, "match_id": body.match_id}
 
 
+@app.post("/admin/seed")
+def admin_seed(token: str = "") -> dict:
+    """(Admin) Carga grupos y partidos una sola vez. Requiere ?token=ADMIN_TOKEN."""
+    if token != ADMIN_TOKEN:
+        raise HTTPException(status_code=401, detail="Token de admin inválido.")
+    from .seed import seed
+    inserted = seed()
+    return {"ok": True, "inserted": inserted}
+
+
 @app.get("/health")
 def health() -> dict:
     """Healthcheck."""
