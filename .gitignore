@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# DB local
+quiniela.db
+*.db-journal
+
+# Editor
+.vscode/
+.idea/
+.DS_Store
