@@ -10,6 +10,7 @@ interface Props {
 const NAV = [
   { href: '/partidos', label: 'Partidos', icon: '⚽' },
   { href: '/ranking', label: 'Ranking', icon: '🏆' },
+  { href: '/reglamento', label: 'Reglas', icon: '📋' },
   { href: '/perfil', label: 'Perfil', icon: '👤' },
 ]
 
