@@ -26,11 +26,11 @@ interface RankedPred {
   pred: Prediction
   rank: number
   pts: number
+  resultType?: string
   globalPts?: number
-  globalRank?: number
 }
 
-const RESULT_COLORS = {
+const RESULT_COLORS: Record<string, { text: string }> = {
   EXACTO: { text: '#34A853' },
   DIFERENCIA: { text: '#4285F4' },
   TENDENCIA: { text: '#FFA726' },
@@ -43,20 +43,26 @@ export function RankingPreview({ matchId, match, allPredictions, currentUserId, 
 
   useEffect(() => {
     async function calculateRanking() {
-      // Calcular puntos locales (de este partido)
+      // Calcular puntos locales (de este partido) — UNA SOLA VEZ
       const withLocalPts = allPredictions
         .map(pred => {
           let pts = 0
+          let resultType = 'FALLO'
+
           if (isFinished && match.home_score_quiniela != null && pred.home_score != null) {
             const result = calcResult(pred.home_score, pred.away_score!, match.home_score_quiniela, match.away_score_quiniela!)
-            pts = result.pts
+            if (result) {
+              pts = result.pts
+              resultType = result.type
+            }
           }
-          return { pred, pts }
+
+          return { pred, pts, resultType }
         })
         .sort((a, b) => b.pts - a.pts)
         .map((item, idx) => ({ ...item, rank: idx + 1 }))
 
-      // Calcular puntos globales (si es necesario — cuando termina el partido)
+      // Calcular puntos globales (solo para el usuario actual cuando termina el partido)
       let withGlobalPts = withLocalPts
 
       if (isFinished) {
@@ -81,15 +87,14 @@ export function RankingPreview({ matchId, match, allPredictions, currentUserId, 
               const m = result.matches as any
               if (m?.home_score_quiniela != null && result.home_score != null) {
                 const res = calcResult(result.home_score, result.away_score!, m.home_score_quiniela, m.away_score_quiniela)
-                globalPts += res.pts
+                if (res) globalPts += res.pts
               }
             }
           }
 
-          // TODO: ranking global vs otros usuarios requeriría otra query
-          // Por ahora solo mostramos el global del usuario
+          // Agregar global solo al usuario actual
           withGlobalPts = withLocalPts.map(item =>
-            item.pred.user_id === currentUserId ? { ...item, globalPts, globalRank: undefined } : item
+            item.pred.user_id === currentUserId ? { ...item, globalPts } : item
           )
         } catch (err) {
           console.error('Error calculando ranking global:', err)
@@ -113,10 +118,11 @@ export function RankingPreview({ matchId, match, allPredictions, currentUserId, 
       display: 'flex', flexDirection: 'column', gap: 6,
     }}>
       {ranked.map(item => {
-        const { pred, rank, pts, globalPts } = item
+        const { pred, rank, pts, resultType, globalPts } = item
         const isMe = pred.user_id === currentUserId
         const name = (pred.profiles?.display_name ?? '?').split(' ')[0]
         const posEmoji = positions[rank - 1] ?? `#${rank}`
+        const textColor = isFinished ? (RESULT_COLORS[resultType ?? 'FALLO']?.text ?? 'var(--text-main)') : 'var(--text-main)'
 
         return (
           <div
@@ -146,7 +152,7 @@ export function RankingPreview({ matchId, match, allPredictions, currentUserId, 
 
             {/* Puntos locales */}
             {isFinished && (
-              <span style={{ fontSize: 13, fontWeight: 700, color: RESULT_COLORS[calcResult(pred.home_score!, pred.away_score!, match.home_score_quiniela!, match.away_score_quiniela!)?.type ?? 'FALLO'].text, minWidth: 28, textAlign: 'right' }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: textColor, minWidth: 28, textAlign: 'right' }}>
                 +{pts}
               </span>
             )}
