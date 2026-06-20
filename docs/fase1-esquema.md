@@ -97,10 +97,27 @@ SELECT público para todos los 6. INSERT solo vía `service_role` (no falsificab
 | Diferencia | 3-1 | 2-0 | 3 | DIFERENCIA | PASS |
 | Empate sin exacto | 1-1 | 0-0 | 3 | DIFERENCIA | PASS |
 | Tendencia | 2-0 | 1-0 | 2 | TENDENCIA | PASS |
+| Sin pronóstico | — | 2-1 | 0 | — | PASS (LEFT JOIN → 0) |
 | Fallo total (volteado) | 2-0 | 0-2 | 0 | FALLO | PASS |
 | Fallo signo incorrecto | 2-0 | 0-1 | 0 | FALLO | PASS |
 
 **6/6 PASS**
+
+## Test de límite — segundo exacto del bloqueo
+
+| Caso | `scheduled_time` | `lock_time` | `is_locked` | Test |
+|---|---|---|---|---|
+| En el límite exacto | now + 15min | now | true | PASS |
+| 1 segundo después | now + 15min + 1s | now + 1s | false | PASS |
+| 1 segundo antes | now + 15min - 1s | now - 1s | true | PASS |
+
+Semántica: `>=` (no `>`). Al llegar al segundo exacto, la predicción ya está cerrada.
+
+## Bucket de avatares
+
+- **Nombre:** `avatares`, privado, 512 KB, jpg/png/webp
+- **RLS:** path `avatares/<user_id>/*` — SELECT/INSERT/UPDATE/DELETE restringidos al `auth.uid()` del path
+- **Verificado:** bucket creado y 4 policies activas en `storage.objects`
 
 ## Archivos generados
 
@@ -109,4 +126,5 @@ SELECT público para todos los 6. INSERT solo vía `service_role` (no falsificab
 - `supabase/migrations/02_matches_predictions_logs.sql`
 - `supabase/migrations/03_functions_and_views.sql`
 - `supabase/migrations/04_rls_policies.sql`
+- `supabase/migrations/05_storage_avatares.sql`
 - `src/types/database.types.ts` — tipos TypeScript generados desde el esquema real
