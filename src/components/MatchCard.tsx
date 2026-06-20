@@ -124,7 +124,13 @@ export function MatchCard({
       {isOpen && (
         <div style={{ marginTop: 8, borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 8 }}>
           <Countdown target={lockTime.toISOString()} label="Cierra en" />
-          <PredictionForm matchId={match.id} currentPrediction={myPrediction} disabled={false} />
+          <PredictionForm
+            matchId={match.id}
+            scheduledTime={match.scheduled_time}
+            bloqueoMinutos={bloqueoMinutos}
+            currentPrediction={myPrediction}
+            disabled={false}
+          />
         </div>
       )}
 

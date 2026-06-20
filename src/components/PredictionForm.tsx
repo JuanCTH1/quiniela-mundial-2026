@@ -5,12 +5,13 @@ import { createClient } from '@/lib/supabase/client'
 
 interface Props {
   matchId: string
+  scheduledTime: string
+  bloqueoMinutos: number
   currentPrediction?: { home_score: number | null; away_score: number | null } | null
   disabled?: boolean
 }
 
-export function PredictionForm({ matchId, currentPrediction, disabled }: Props) {
-  // Estado local — no revalida ni recarga la página, sin scroll reset
+export function PredictionForm({ matchId, scheduledTime, bloqueoMinutos, currentPrediction, disabled }: Props) {
   const [saved, setSaved] = useState<{ home: number; away: number } | null>(
     currentPrediction?.home_score != null
       ? { home: currentPrediction.home_score, away: currentPrediction.away_score! }
@@ -29,14 +30,32 @@ export function PredictionForm({ matchId, currentPrediction, disabled }: Props) 
     )
   }
 
+  function isNowLocked() {
+    const lockMs = new Date(scheduledTime).getTime() - bloqueoMinutos * 60 * 1000
+    return Date.now() >= lockMs
+  }
+
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
+
+    // Verificación de tiempo en cliente — evita el submit silencioso post-bloqueo
+    if (isNowLocked()) {
+      setError('🔒 Ups, muy tarde — los pronósticos ya cerraron.')
+      return
+    }
+
     const home = parseInt(homeRef.current?.value ?? '')
     const away = parseInt(awayRef.current?.value ?? '')
     if (isNaN(home) || isNaN(away) || home < 0 || away < 0) return
 
     setError(null)
     startTransition(async () => {
+      // Segunda verificación antes del network round-trip
+      if (isNowLocked()) {
+        setError('🔒 Ups, muy tarde — los pronósticos ya cerraron.')
+        return
+      }
+
       const sb = createClient()
       const { data: { user } } = await sb.auth.getUser()
       if (!user) { setError('No autenticado'); return }
@@ -47,10 +66,8 @@ export function PredictionForm({ matchId, currentPrediction, disabled }: Props) 
       )
 
       if (err) {
-        // RLS rechazó — partido ya bloqueado
-        setError(err.code === '42501' || err.message.includes('policy')
-          ? '🔒 Ya no se aceptan pronósticos'
-          : 'Error al guardar, intenta de nuevo.')
+        // RLS rechazó en el servidor (doble seguro)
+        setError('🔒 Ups, muy tarde — los pronósticos ya cerraron.')
         return
       }
 
@@ -66,52 +83,37 @@ export function PredictionForm({ matchId, currentPrediction, disabled }: Props) 
         <input
           ref={homeRef}
           name="home"
-          type="number"
-          min={0}
-          max={20}
+          type="number" min={0} max={20}
           defaultValue={saved?.home ?? ''}
           placeholder="0"
           required
           style={{
-            width: 52,
-            textAlign: 'center',
-            fontSize: 20,
-            fontWeight: 600,
+            width: 52, textAlign: 'center', fontSize: 20, fontWeight: 600,
             background: 'rgba(255,255,255,0.05)',
             border: '1px solid rgba(255,255,255,0.15)',
-            borderRadius: 8,
-            color: 'var(--text-main)',
-            padding: '6px 0',
+            borderRadius: 8, color: 'var(--text-main)', padding: '6px 0',
           }}
         />
         <span style={{ color: 'var(--text-muted)', fontSize: 18 }}>–</span>
         <input
           ref={awayRef}
           name="away"
-          type="number"
-          min={0}
-          max={20}
+          type="number" min={0} max={20}
           defaultValue={saved?.away ?? ''}
           placeholder="0"
           required
           style={{
-            width: 52,
-            textAlign: 'center',
-            fontSize: 20,
-            fontWeight: 600,
+            width: 52, textAlign: 'center', fontSize: 20, fontWeight: 600,
             background: 'rgba(255,255,255,0.05)',
             border: '1px solid rgba(255,255,255,0.15)',
-            borderRadius: 8,
-            color: 'var(--text-main)',
-            padding: '6px 0',
+            borderRadius: 8, color: 'var(--text-main)', padding: '6px 0',
           }}
         />
         <button
           type="submit"
           disabled={pending}
           style={{
-            padding: '7px 16px',
-            fontSize: 13,
+            padding: '7px 16px', fontSize: 13,
             background: hasPred ? 'transparent' : 'var(--mx-green)',
             border: '1px solid var(--mx-green)',
             borderRadius: 8,
@@ -123,13 +125,15 @@ export function PredictionForm({ matchId, currentPrediction, disabled }: Props) 
         >
           {pending ? '...' : hasPred ? 'Editar' : 'Guardar'}
         </button>
-
-        {/* Confirmación visual sin mover la página */}
         {hasPred && !pending && !error && (
           <span style={{ fontSize: 12, color: 'var(--mx-green)' }}>✓</span>
         )}
       </div>
-      {error && <p style={{ fontSize: 11, color: 'var(--mx-red)', marginTop: 4 }}>{error}</p>}
+      {error && (
+        <p style={{ fontSize: 12, color: 'var(--warning)', marginTop: 6, fontWeight: 500 }}>
+          {error}
+        </p>
+      )}
     </form>
   )
 }
