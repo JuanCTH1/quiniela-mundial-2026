@@ -52,11 +52,18 @@
 
 **Implicación para el código:** usar `score.get('regularTime')` (Python) o `score?.regularTime` (TS). Para partidos `REGULAR`, el score a usar es `fullTime`. El campo `regularTime` solo se espera cuando `duration` es `EXTRA_TIME` o `PENALTY_SHOOTOUT`.
 
-### ⏳ PENDIENTE — validación de `regularTime` en prórroga/penales
-- Requiere un partido de eliminatoria del Mundial 2026 que llegue a prórroga o penales
-- Qatar 2022 devuelve 403 en free tier (Tier 1)
-- **Acción:** validar en el primer partido de ronda de 16 que vaya a prórroga (primera semana de julio 2026)
-- **Riesgo si no se valida:** puntuación incorrecta en eliminatoria. Mitigación: campo `home_score_regular`/`away_score_regular` en tabla `matches` permite corregir sin cambiar el schema
+### ✅ VALIDADO — `regularTime` en penales (Copa Libertadores 2026)
+
+Probado con 7 partidos de Copa Libertadores con `PENALTY_SHOOTOUT`. El campo existe y es correcto:
+
+| Partido | `duration` | `fullTime` (penales) | `regularTime` (90') |
+|---|---|---|---|
+| Táchira vs The Strongest | PENALTY_SHOOTOUT | `6-3` | `1-0` |
+| Cristal vs 2 de Mayo | PENALTY_SHOOTOUT | `5-4` | `0-0` ← empate en 90' |
+| Bahia vs O'Higgins | PENALTY_SHOOTOUT | `5-5` | `2-1` |
+| Argentinos Juniors vs Barcelona SC | PENALTY_SHOOTOUT | `4-6` | `0-1` |
+
+**Conclusión confirmada:** Para `PENALTY_SHOOTOUT` y `EXTRA_TIME`, `regularTime` contiene el marcador a 90' minutos exactos. `fullTime` incluye la prórroga/penales. El código usa `regularTime` cuando `duration != 'REGULAR'`, y `fullTime` cuando `duration == 'REGULAR'`. El campo puede estar ausente (grupo stage) — usar `.get('regularTime')`.
 
 ---
 
@@ -75,12 +82,15 @@
 | EUA vs Australia | 19:00 | 21:00 | 08:25 (+1d) | ~11h25m |
 | Escocia vs Marruecos | 22:00 | 00:00 | 08:25 (+1d) | ~8h25m |
 
-**Interpretación:** `lastUpdated` NO representa cuándo el score se hizo disponible — es la última vez que football-data.org actualizó el registro (corre en batch ~03:25 UTC y ~08:25 UTC). El delay real de la API para scores finales en free tier probablemente es mucho menor (< 5 min según el patrón de México vs Corea del Sur).
+**Hallazgo clave:** `lastUpdated` NO mide el delay real. El Brasileirao lo confirma de forma brutal: partidos del 2026-05-31 con `lastUpdated` del 2026-06-13 (13 días después) — era una actualización batch mientras la liga pausó por el Mundial. El campo refleja cuándo la API tocó el registro, no cuándo el score apareció.
 
-### ⏳ PENDIENTE — delay real medido con precisión
-- Requiere observar un partido en vivo y medir cuándo aparece el resultado final
-- **Acción:** registrar manualmente en el primer partido que juguemos como quiniela (Mundial sigue en curso)
-- **Impacto en el failsafe de 3h:** el failsafe es suficientemente holgado que incluso un delay de 60 min no rompe la experiencia. Se mantiene en 3h hasta medir el dato real.
+**Proxy más útil:** México vs Corea del Sur (kick 01:00, fin estimado 03:00, `lastUpdated` 03:25) sugiere que en ciclos de actualización frecuentes el resultado llega en ~25 min. Pero esto también puede ser coincidencia con el batch.
+
+**Conclusión práctica:** el delay real solo se puede medir haciendo polling durante un partido en vivo. Con el failsafe de 3h, incluso un delay de 60 min no afecta la experiencia del usuario.
+
+### ⏳ PENDIENTE — delay real medido con polling en vivo
+- **Acción:** durante el primer partido del Mundial en fase eliminatoria, hacer polling cada 2 min después del minuto 90 y registrar cuándo cambia `status` a `FINISHED` y aparece el score.
+- **Impacto en el failsafe de 3h:** ninguno hasta que se mida. El margen es amplio.
 
 **Criterio de activación del respaldo (API-Football):** intervención manual del admin vía Modo Dios. No hay failover automático. Apropiado para app de 6 usuarios.
 
