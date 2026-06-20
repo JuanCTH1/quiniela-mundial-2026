@@ -183,6 +183,7 @@ export function MatchCard({
           allPredictions={allPredictions}
           currentUserId={currentUserId ?? ''}
           isFinished={isFinished}
+          isLive={isLive}
         />
       )}
     </div>

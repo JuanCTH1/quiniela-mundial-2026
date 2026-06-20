@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { calcResult, STAGE_LABELS } from '@/lib/utils'
+import { calcResult } from '@/lib/utils'
 import type { Tables } from '@/types/database.types'
 
 type Prediction = {
@@ -12,7 +12,7 @@ type Prediction = {
   profiles: { display_name: string; avatar_url: string | null } | null
 }
 
-type Match = Pick<Tables<'matches'>, 'id' | 'status' | 'home_score_quiniela' | 'away_score_quiniela' | 'stage'>
+type Match = Pick<Tables<'matches'>, 'id' | 'status' | 'home_score_quiniela' | 'away_score_quiniela' | 'home_score_fulltime' | 'away_score_fulltime' | 'stage'>
 
 interface Props {
   matchId: string
@@ -20,6 +20,7 @@ interface Props {
   allPredictions: Prediction[]
   currentUserId: string
   isFinished: boolean
+  isLive?: boolean
 }
 
 interface RankedPred {
@@ -37,21 +38,61 @@ const RESULT_COLORS: Record<string, { text: string }> = {
   FALLO: { text: 'var(--mx-red)' },
 }
 
-export function RankingPreview({ matchId, match, allPredictions, currentUserId, isFinished }: Props) {
+export function RankingPreview({ matchId, match, allPredictions, currentUserId, isFinished, isLive }: Props) {
   const [ranked, setRanked] = useState<RankedPred[]>([])
   const [loading, setLoading] = useState(true)
+  const [liveHome, setLiveHome] = useState<number | null>(match.home_score_fulltime ?? null)
+  const [liveAway, setLiveAway] = useState<number | null>(match.away_score_fulltime ?? null)
+  const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null)
+
+  function getClient() {
+    if (!supabaseRef.current) supabaseRef.current = createClient()
+    return supabaseRef.current
+  }
+
+  // Suscripción en tiempo real para partidos en vivo
+  useEffect(() => {
+    if (!isLive) return
+    const sb = getClient()
+
+    const channel = sb.channel(`ranking-live-${matchId}`)
+      .on('postgres_changes', {
+        event: 'UPDATE', schema: 'public', table: 'matches',
+        filter: `id=eq.${matchId}`,
+      }, payload => {
+        const row = payload.new as Tables<'matches'>
+        setLiveHome(row.home_score_fulltime)
+        setLiveAway(row.away_score_fulltime)
+      })
+      .subscribe()
+
+    const poll = setInterval(async () => {
+      const { data } = await sb.from('matches')
+        .select('home_score_fulltime, away_score_fulltime')
+        .eq('id', matchId).single()
+      if (data) {
+        setLiveHome(data.home_score_fulltime)
+        setLiveAway(data.away_score_fulltime)
+      }
+    }, 10_000)
+
+    return () => { sb.removeChannel(channel); clearInterval(poll) }
+  }, [matchId, isLive])
 
   useEffect(() => {
     async function calculateRanking() {
-      // Calcular puntos locales (de este partido) — UNA SOLA VEZ
-      // Solo si el partido terminó; en vivo no hay puntos, solo ranking por pronóstico
+      // Score a usar: quiniela (terminado) o live (en vivo)
+      const scoreH = isFinished ? match.home_score_quiniela : liveHome
+      const scoreA = isFinished ? match.away_score_quiniela : liveAway
+      const hasScore = scoreH != null && scoreA != null
+
       const withLocalPts = allPredictions
         .map(pred => {
           let pts = 0
           let resultType = 'FALLO'
 
-          if (isFinished && match.home_score_quiniela != null && pred.home_score != null) {
-            const result = calcResult(pred.home_score, pred.away_score!, match.home_score_quiniela, match.away_score_quiniela!)
+          if (hasScore && pred.home_score != null) {
+            const result = calcResult(pred.home_score, pred.away_score!, scoreH!, scoreA!)
             if (result) {
               pts = result.pts
               resultType = result.type
@@ -60,8 +101,7 @@ export function RankingPreview({ matchId, match, allPredictions, currentUserId, 
 
           return { pred, pts, resultType }
         })
-        // Ordenar: si hay puntos (isFinished), por puntos; si no, mantener orden original
-        .sort((a, b) => isFinished ? (b.pts - a.pts) : 0)
+        .sort((a, b) => (isFinished || isLive) ? (b.pts - a.pts) : 0)
         .map((item, idx) => ({ ...item, rank: idx + 1 }))
 
       // Calcular puntos globales (solo para el usuario actual cuando termina el partido)
@@ -108,7 +148,7 @@ export function RankingPreview({ matchId, match, allPredictions, currentUserId, 
     }
 
     calculateRanking()
-  }, [isFinished, match, allPredictions, currentUserId])
+  }, [isFinished, isLive, match, allPredictions, currentUserId, liveHome, liveAway])
 
   if (loading) return null
   if (ranked.length === 0) return null

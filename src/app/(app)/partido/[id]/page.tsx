@@ -4,16 +4,9 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { Avatar } from '@/components/Avatar'
 import { PredictionForm } from '@/components/PredictionForm'
 import { RankingPreview } from '@/components/RankingPreview'
-import { getTeamFlag, calcResult, isMatchLocked, STAGE_LABELS } from '@/lib/utils'
+import { getTeamFlag, isMatchLocked, STAGE_LABELS } from '@/lib/utils'
 import { LiveMatchClient } from './LiveMatchClient'
 import Link from 'next/link'
-
-const RESULT_COLORS = {
-  EXACTO: { bg: 'rgba(52,168,83,0.15)', border: 'rgba(52,168,83,0.4)', text: '#34A853' },
-  DIFERENCIA: { bg: 'rgba(66,133,244,0.15)', border: 'rgba(66,133,244,0.4)', text: '#4285F4' },
-  TENDENCIA: { bg: 'rgba(255,167,38,0.15)', border: 'rgba(255,167,38,0.4)', text: '#FFA726' },
-  FALLO: { bg: 'rgba(206,17,38,0.15)', border: 'rgba(206,17,38,0.3)', text: 'var(--mx-red)' },
-}
 
 export default async function PartidoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -178,6 +171,7 @@ export default async function PartidoPage({ params }: { params: Promise<{ id: st
             allPredictions={predictions}
             currentUserId={user!.id}
             isFinished={isFinished}
+            isLive={isLive}
           />
         </div>
       )}
