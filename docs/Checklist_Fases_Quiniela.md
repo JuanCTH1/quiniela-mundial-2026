@@ -84,6 +84,112 @@ Archivo `fase2-automatizacion.md`: diagrama de flujo del cron, casos de fallo pr
 - [ ] Indicador visible de modo prueba vs modo real, para no confundir datos ficticios con reales.
 - [ ] Probado en al menos un dispositivo móvil real.
 
+### Checklist adicional — decisiones de diseño acordadas en sesión (Jun 2026)
+Estos puntos son gates específicos de la implementación real, complementarios al checklist base de arriba.
+
+#### Login
+- [ ] Pantalla de login con diseño glassmorphism oscuro (glass-card, blobs de fondo, colores del token system).
+- [ ] No hay registro público: el admin invita a cada jugador vía Supabase (invite email → link de primer acceso).
+- [ ] Los 6 correos de los jugadores están registrados y probaron entrar con su link antes de modo real.
+- [ ] Existe una cuenta QA del admin para probar sin afectar datos de jugadores reales.
+
+#### Banner de próximo partido
+- [ ] Siempre visible en la parte superior de la app (todas las pantallas autenticadas), excepto login.
+- [ ] Muestra: bandera + nombre local, bandera + nombre visitante, hora del kickoff en la zona horaria del usuario.
+- [ ] Muestra el pronóstico actual del usuario o advertencia "Sin pronóstico" si no ha capturado.
+- [ ] Muestra countdown "Cierra en X" antes del bloqueo, o "Empieza en X" después del bloqueo.
+- [ ] Es un link al detalle del partido.
+- [ ] Si no hay próximo partido programado, el banner no aparece (no muestra error ni queda vacío feo).
+
+#### Tarjetas de partido — 3 estados
+- [ ] Estado ABIERTO: pronóstico editable inline en la tarjeta (sin modal), con countdown al cierre visible.
+- [ ] Estado BLOQUEADO: todos los 6 pronósticos visibles con nombre + score, inputs deshabilitados.
+- [ ] Estado FINALIZADO: resultado real + pronósticos con código de color (EXACTO, DIFERENCIA, TENDENCIA, FALLO) + puntos ganados por cada uno.
+- [ ] La transición ABIERTO → BLOQUEADO ocurre automáticamente en la UI sin refresco manual (countdown llega a 0, UI actualiza).
+
+#### Guardar pronóstico (UX)
+- [ ] Botón "Guardar" con estado pending visible durante el server action.
+- [ ] Cambio a "Editar" después de guardar exitosamente.
+- [ ] Error visible inline (no toast) si falla.
+- [ ] Si el partido ya está bloqueado, el form muestra "🔒 Cerrado para pronósticos" y no tiene inputs activos.
+
+#### Vista de partido en vivo
+- [ ] En partidos IN_PROGRESS, el marcador actual se actualiza via Supabase Realtime (postgres_changes en la tabla `matches`).
+- [ ] Se muestran los pronósticos de todos + puntos tentativos con el marcador actual.
+- [ ] Pequeño ranking tentativo visible (quién va ganando ahora mismo con este marcador).
+- [ ] Indicador visual "● En juego" claramente distinguible.
+- [ ] Aclarado con el grupo: el tier gratuito de football-data.org da actualizaciones IN_PROGRESS con ~5-15 min de delay — esto es aceptable para la quiniela.
+
+#### Navegación de partidos
+- [ ] Tabs de etapa: Grupos → 32avos → Octavos → Cuartos → Semis → 3er lugar → Final.
+- [ ] Scroll horizontal de fechas visible en vista de Grupos (Hoy, Mañana, Lun 23, etc. en la zona horaria del usuario).
+- [ ] En tabs de eliminatoria, desaparece el scroll de fechas.
+- [ ] "Hoy" es la vista default.
+
+#### El Ranking (antes "Muro de la Vergüenza")
+- [ ] El leaderboard se llama **"El Ranking"** en la UI, no "Muro de la Vergüenza".
+- [ ] Posición 1: título **"El Messias"** con corona 👑, color dorado, borde dorado en el card.
+- [ ] Posición 2: **"El Escolta"** color neutro/plata.
+- [ ] Posición 3: **"El de Bronce"** color neutro/cobre.
+- [ ] Posición 4: **"El del Montón"** color gris.
+- [ ] Posición 5: **"El Sparring"** color gris oscuro.
+- [ ] Posición 6: **"El Analista de la FIFA"** (o equivalente de vergüenza), color shame-red, borde rojo en el card.
+- [ ] Regla de desempate visible en la UI: exactos → diferencias → sorteo.
+- [ ] Tu propia fila resaltada con fondo verde sutil (mx-green low-opacity).
+- [ ] Avatar visible en cada fila del ranking.
+
+#### Avatares
+- [ ] Avatar muestra foto si existe, o círculo con iniciales si no.
+- [ ] Borde dorado en avatar de #1, borde shame-red en avatar de #6.
+- [ ] El usuario puede subir/cambiar su avatar desde /perfil.
+- [ ] RLS de Storage: un usuario no puede leer ni escribir el avatar de otro (probado explícitamente).
+
+#### Zona horaria por usuario
+- [ ] Cada usuario elige su zona horaria en /perfil.
+- [ ] Opciones incluyen: Ciudad de México, **Mazatlán (America/Mazatlan)**, Tijuana, Nueva York, Madrid, UTC.
+- [ ] Todos los horarios de partidos en la UI se convierten a la zona del usuario (nunca se muestra UTC crudo).
+- [ ] Toda la base de datos guarda en UTC; la conversión es solo en presentación.
+
+#### Equipos placeholder
+- [ ] Los partidos de eliminatoria con equipos "por definir" muestran texto descriptivo (e.g. "Ganador Grupo A").
+- [ ] El cron de actualización detecta automáticamente cuando la API ya devuelve el nombre real y actualiza `matches`.
+- [ ] Una vez actualizado, el banner y las tarjetas reflejan el nombre real sin intervención manual.
+
+#### Flags
+- [ ] Cada equipo muestra su bandera emoji en tarjetas, banner y detalle del partido.
+- [ ] Si un equipo no tiene flag mapeado, muestra 🏳️ (no error, no roto).
+
+#### Perfil (/perfil)
+- [ ] Nombre para mostrar editable.
+- [ ] Zona horaria seleccionable (dropdown).
+- [ ] Botón de cerrar sesión.
+- [ ] Badge "Admin" visible si el usuario es admin.
+
+#### Panel Admin (/admin)
+- [ ] Solo accesible si `is_admin = true` en la sesión del servidor (redirect a /partidos si no).
+- [ ] Enlace visible en el BottomNav solo para admins.
+- [ ] Selector de modo (prueba / real): el paso a real pide confirmación explícita y es irreversible.
+- [ ] Config de minutos de bloqueo editable desde la UI.
+- [ ] Invitación de nuevos jugadores por email desde la UI.
+- [ ] Lista de jugadores registrados visible.
+- [ ] Log de las últimas 50 entradas de `system_logs`, errores resaltados en rojo.
+- [ ] Botón de liberación manual ("Liberar antes") visible en el detalle del partido, habilitado solo cuando el backend confirma 6/6 pronósticos, con validación server-side.
+
+#### Diseño y sistema visual
+- [ ] Todos los colores usan CSS variables (no hard-coded), definidas en `@theme inline {}` en `globals.css`.
+- [ ] Colores temáticos del Mundial pero **cambiables via variables**: verde México (`--mx-green`), rojo México (`--mx-red`), dorado (`--gold`), vergüenza (`--shame-red`).
+- [ ] Glassmorphism oscuro consistente en toda la app (`.glass-card`, blobs, backdrop-blur).
+- [ ] Fuente Outfit en toda la app (Google Fonts, ya declarada en globals.css).
+- [ ] BottomNav fijo con safe-area-inset para iPhones con notch.
+- [ ] Banner de modo prueba visible y claramente diferenciado del modo real.
+- [ ] Banner de alerta de sistema (errores recientes del cron) visible cuando aplica.
+
+#### QA antes de producción
+- [ ] Todo lo anterior probado en el entorno de QA de Railway antes de tocar producción.
+- [ ] Probado en al menos un dispositivo móvil real (iOS o Android).
+- [ ] Los 6 jugadores hicieron al menos un pronóstico de prueba y lo vieron reflejado correctamente en El Ranking.
+- [ ] Confirmado que ningún jugador ve pronósticos ajenos antes de que el partido se bloquee.
+
 ### Documentación de salida
 Archivo `fase3-interfaz.md`: capturas de cada estado y lista de componentes reutilizables. **Insumo obligatorio para Fase 4.**
 

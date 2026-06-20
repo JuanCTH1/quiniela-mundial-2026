@@ -169,6 +169,7 @@ export type Database = {
           display_name: string
           id: string
           is_admin: boolean
+          timezone: string
         }
         Insert: {
           avatar_url?: string | null
@@ -176,6 +177,7 @@ export type Database = {
           display_name: string
           id: string
           is_admin?: boolean
+          timezone?: string
         }
         Update: {
           avatar_url?: string | null
@@ -183,6 +185,7 @@ export type Database = {
           display_name?: string
           id?: string
           is_admin?: boolean
+          timezone?: string
         }
         Relationships: []
       }
@@ -455,19 +458,3 @@ export const Constants = {
     Enums: {},
   },
 } as const
-
-// ── Tipos de conveniencia para uso en la app ──────────────────────────────────
-export type Profile    = Tables<'profiles'>
-export type Match      = Tables<'matches'>
-export type Prediction = Tables<'predictions'>
-export type Setting    = Tables<'settings'>
-export type ReglasPuntuacion = Tables<'reglas_puntuacion'>
-export type ScoreRow   = Tables<'scores'>
-export type LeaderboardRow = Tables<'leaderboard'>
-export type AuditEntry = Tables<'audit_log'>
-
-export type MatchStatus = 'SCHEDULED' | 'IN_PROGRESS' | 'FINISHED' | 'POSTPONED'
-export type Stage = 'GROUP' | 'ROUND_OF_16' | 'QUARTER_FINALS' | 'SEMI_FINALS' | 'THIRD_PLACE' | 'FINAL'
-export type ResultType = 'EXACTO' | 'DIFERENCIA' | 'TENDENCIA' | 'FALLO' | 'PENDIENTE'
-export type AppMode = 'test' | 'real'
-export type Corte = '90' | '120' | 'PENALTIES'
