@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { getUser, getProfile, getBloqueoMinutos } from '@/lib/data'
 import { MatchCard } from '@/components/MatchCard'
 import { isMatchLocked } from '@/lib/utils'
 import { DateNav } from './DateNav'
@@ -9,18 +10,13 @@ export default async function PartidosPage({
   searchParams: Promise<{ fecha?: string; etapa?: string }>
 }) {
   const { fecha, etapa } = await searchParams
+
+  // Cached — layout already fetched these, no extra DB round-trip
+  const [user, bloqueoMinutos] = await Promise.all([getUser(), getBloqueoMinutos()])
+  const profile = user ? await getProfile(user.id) : null
+  const timezone = profile?.timezone ?? 'America/Mexico_City'
+
   const supabase = await createClient()
-
-  const { data: { user } } = await supabase.auth.getUser()
-
-  // Fetch profile + settings in parallel
-  const [profileRes, settingsRes] = await Promise.all([
-    supabase.from('profiles').select('timezone').eq('id', user!.id).single(),
-    supabase.from('settings').select('key, value'),
-  ])
-
-  const bloqueoMinutos = parseInt(settingsRes.data?.find(s => s.key === 'bloqueo_minutos')?.value ?? '15')
-  const timezone = profileRes.data?.timezone ?? 'America/Mexico_City'
 
   // Build main matches query
   let query = supabase.from('matches').select('*').order('scheduled_time')
@@ -66,7 +62,7 @@ export default async function PartidosPage({
 
   const [myPredsRes, allPredsRes, allProfilesRes] = await Promise.all([
     matchIds.length
-      ? supabase.from('predictions').select('match_id, home_score, away_score').eq('user_id', user!.id).in('match_id', matchIds)
+      ? supabase.from('predictions').select('match_id, home_score, away_score').eq('user_id', user!.id!).in('match_id', matchIds)
       : Promise.resolve({ data: [] }),
     lockedIds.length
       ? supabase.from('predictions').select('match_id, user_id, home_score, away_score').in('match_id', lockedIds)
