@@ -40,7 +40,7 @@ export function NextMatchBanner({ liveMatch, nextMatch, prediction, bloqueoMinut
             padding: '8px 16px',
             display: 'flex', alignItems: 'center', gap: 10,
           }}>
-            <div style={{ fontSize: 10, color: 'var(--warning)', fontWeight: 700, flexShrink: 0, animation: 'pulse 1.5s infinite' }}>
+            <div style={{ fontSize: 10, color: 'var(--warning)', fontWeight: 700, flexShrink: 0, animation: 'dot-pulse 1.5s ease-in-out infinite' }}>
               ● EN VIVO
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>

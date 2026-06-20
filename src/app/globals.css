@@ -136,6 +136,10 @@ a:active > .glass-card {
   0%, 100% { box-shadow: 0 0 0 1px rgba(245,158,11,0.2), 0 4px 20px rgba(245,158,11,0.08); }
   50%       { box-shadow: 0 0 0 1px rgba(245,158,11,0.4), 0 4px 24px rgba(245,158,11,0.18); }
 }
+@keyframes dot-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
 
 /* ── TABLA DE POSICIONES: estados especiales ── */
 .rank-first  { box-shadow: 0 0 0 2px var(--gold), 0 0 20px rgba(212, 175, 55, 0.3); }
