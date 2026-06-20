@@ -3,6 +3,7 @@ import { getUser, getProfile, getBloqueoMinutos } from '@/lib/data'
 import { MatchCard } from '@/components/MatchCard'
 import { isMatchLocked } from '@/lib/utils'
 import { DateNav } from './DateNav'
+import { SwipeNav } from './SwipeNav'
 
 export default async function PartidosPage({
   searchParams,
@@ -92,35 +93,39 @@ export default async function PartidosPage({
     const arr = allPredMap.get(p.match_id) ?? []; arr.push(p); allPredMap.set(p.match_id, arr)
   }
 
+  const activeFecha = fecha ?? new Date().toISOString().slice(0, 10)
+
   return (
-    <div style={{ paddingTop: 14 }}>
-      <h1 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 12px', color: 'var(--text-main)' }}>
-        Partidos
-      </h1>
+    <SwipeNav currentFecha={activeFecha} currentEtapa={etapa}>
+      <div style={{ paddingTop: 14 }}>
+        <h1 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 12px', color: 'var(--text-main)' }}>
+          Partidos
+        </h1>
 
-      <DateNav currentFecha={fecha} currentEtapa={etapa} timezone={timezone} availableDates={availableDates} />
+        <DateNav currentFecha={fecha} currentEtapa={etapa} timezone={timezone} availableDates={availableDates} />
 
-      {!matches?.length ? (
-        <p style={{ color: 'var(--text-muted)', fontSize: 14, textAlign: 'center', marginTop: 40 }}>
-          No hay partidos para esta fecha
-        </p>
-      ) : (
-        matches.map(match => {
-          const locked = isMatchLocked(match.scheduled_time, bloqueoMinutos, match.early_unlock_at)
-          return (
-            <MatchCard
-              key={match.id}
-              match={match}
-              myPrediction={myPredMap.get(match.id)}
-              allPredictions={locked || match.status === 'FINISHED' ? (allPredMap.get(match.id) ?? []) : undefined}
-              isLocked={locked}
-              bloqueoMinutos={bloqueoMinutos}
-              timezone={timezone}
-              currentUserId={user!.id}
-            />
-          )
-        })
-      )}
-    </div>
+        {!matches?.length ? (
+          <p style={{ color: 'var(--text-muted)', fontSize: 14, textAlign: 'center', marginTop: 40 }}>
+            No hay partidos para esta fecha
+          </p>
+        ) : (
+          matches.map(match => {
+            const locked = isMatchLocked(match.scheduled_time, bloqueoMinutos, match.early_unlock_at)
+            return (
+              <MatchCard
+                key={match.id}
+                match={match}
+                myPrediction={myPredMap.get(match.id)}
+                allPredictions={locked || match.status === 'FINISHED' ? (allPredMap.get(match.id) ?? []) : undefined}
+                isLocked={locked}
+                bloqueoMinutos={bloqueoMinutos}
+                timezone={timezone}
+                currentUserId={user!.id}
+              />
+            )
+          })
+        )}
+      </div>
+    </SwipeNav>
   )
 }
