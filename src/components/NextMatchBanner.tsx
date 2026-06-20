@@ -3,11 +3,11 @@
 import Link from 'next/link'
 import { Countdown } from './Countdown'
 import { getTeamFlag, getLockTime } from '@/lib/utils'
-import type { Tables } from '@/types/database.types'
-type Match = Tables<'matches'>
+type MatchSlim = Pick<import('@/types/database.types').Tables<'matches'>,
+  'id' | 'home_team' | 'away_team' | 'scheduled_time' | 'early_unlock_at' | 'stage' | 'group_name'>
 
 interface Props {
-  match: Match | null
+  match: MatchSlim | null
   prediction?: { home_score: number | null; away_score: number | null } | null
   bloqueoMinutos: number
   timezone: string
