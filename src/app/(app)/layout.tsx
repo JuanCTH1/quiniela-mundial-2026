@@ -1,9 +1,10 @@
+import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getUser, getProfile, getSettings } from '@/lib/data'
 import { TestModeBanner } from '@/components/TestModeBanner'
 import { SystemAlertBanner } from '@/components/SystemAlertBanner'
-import { NextMatchBanner } from '@/components/NextMatchBanner'
+import { NextMatchBannerWrapper } from '@/components/NextMatchBannerWrapper'
 import { BottomNav } from '@/components/BottomNav'
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -12,7 +13,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   const supabase = await createClient()
 
-  // getProfile + getSettings are cached — pages that call them won't re-query the DB
+  // Todo en paralelo — nextPrediction ya no está aquí, lo busca NextMatchBannerWrapper
   const [profile, settings, nextMatchRes, alertRes] = await Promise.all([
     getProfile(user.id),
     getSettings(),
@@ -31,10 +32,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const timezone = profile?.timezone ?? 'America/Mexico_City'
   const nextMatch = nextMatchRes.data ?? null
 
-  const nextPrediction = nextMatch
-    ? (await supabase.from('predictions').select('home_score, away_score')
-        .eq('match_id', nextMatch.id).eq('user_id', user.id).maybeSingle()).data
-    : null
+  // Skeleton para el banner mientras carga el pronóstico del usuario
+  const bannerSkeleton = nextMatch ? (
+    <div style={{ height: 52, background: 'rgba(0,104,71,0.06)', borderBottom: '1px solid rgba(0,104,71,0.15)' }} />
+  ) : null
 
   return (
     <div style={{ paddingBottom: 'calc(72px + env(safe-area-inset-bottom))' }}>
@@ -52,12 +53,15 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         {alertRes.data && (
           <SystemAlertBanner message={alertRes.data.message} createdAt={alertRes.data.created_at} />
         )}
-        <NextMatchBanner
-          match={nextMatch}
-          prediction={nextPrediction}
-          bloqueoMinutos={bloqueoMinutos}
-          timezone={timezone}
-        />
+        {/* Suspense: el shell se renderiza sin esperar el pronóstico del usuario */}
+        <Suspense fallback={bannerSkeleton}>
+          <NextMatchBannerWrapper
+            match={nextMatch}
+            userId={user.id}
+            bloqueoMinutos={bloqueoMinutos}
+            timezone={timezone}
+          />
+        </Suspense>
       </div>
       <div style={{ maxWidth: 720, margin: '0 auto', padding: '0 16px' }}>
         {children}
