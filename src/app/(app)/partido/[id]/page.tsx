@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { Avatar } from '@/components/Avatar'
 import { getTeamFlag, calcResult, isMatchLocked, STAGE_LABELS } from '@/lib/utils'
 import { LiveMatchClient } from './LiveMatchClient'
@@ -18,12 +19,15 @@ export default async function PartidoPage({ params }: { params: Promise<{ id: st
 
   const { data: { user } } = await supabase.auth.getUser()
 
+  // Admin client para ver quién ya metió pronóstico (RLS solo deja ver los propios)
+  const admin = createAdminClient()
+
   const [matchRes, settingsRes, profileRes, allProfilesRes, submittedIdsRes] = await Promise.all([
     supabase.from('matches').select('*').eq('id', id).single(),
     supabase.from('settings').select('key, value'),
     supabase.from('profiles').select('timezone').eq('id', user!.id).single(),
     supabase.from('profiles').select('id, display_name, avatar_url'),
-    supabase.from('predictions').select('user_id').eq('match_id', id),
+    admin.from('predictions').select('user_id').eq('match_id', id),
   ])
 
   if (!matchRes.data) notFound()
