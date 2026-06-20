@@ -34,12 +34,14 @@ export async function GET(request: NextRequest) {
 
     try {
       const apiMatch = await fetchMatch(match.external_id)
+      // Normalizar el status de la API (IN_PLAY/PAUSED → IN_PROGRESS, etc.) una sola vez
+      const apiStatus = normalizeStatus(apiMatch.status)
 
       // Failsafe: partido bloqueado en IN_PROGRESS por más de 3 horas
       const startTime = match.actual_start_time ?? match.scheduled_time
       const hoursElapsed = (Date.now() - new Date(startTime).getTime()) / 3_600_000
 
-      if (apiMatch.status === 'IN_PROGRESS' && hoursElapsed >= FAILSAFE_HOURS) {
+      if (apiStatus === 'IN_PROGRESS' && hoursElapsed >= FAILSAFE_HOURS) {
         await logEntry(supabase, 'FAILSAFE_ALERT',
           `Partido ${match.external_id} lleva ${hoursElapsed.toFixed(1)}h en IN_PROGRESS`, false,
           match.id, { external_id: match.external_id, hours_elapsed: hoursElapsed }
@@ -59,12 +61,12 @@ export async function GET(request: NextRequest) {
       const quiniela = resolveQuinielaScore(apiMatch.score, corte)
 
       // No escribir si no hay datos completos (evita nulos parciales)
-      const isFinished = apiMatch.status === 'FINISHED' && quiniela !== null
-      const isFirstLive = apiMatch.status === 'IN_PROGRESS' && !match.actual_start_time
+      const isFinished = apiStatus === 'FINISHED' && quiniela !== null
+      const isFirstLive = apiStatus === 'IN_PROGRESS' && !match.actual_start_time
       const detectedAt = new Date()
 
       const payload: Partial<TablesInsert<'matches'>> = {
-        status: normalizeStatus(apiMatch.status),
+        status: apiStatus,
         home_score_fulltime: apiMatch.score.fullTime.home,
         away_score_fulltime: apiMatch.score.fullTime.away,
         home_score_regular: apiMatch.score.regularTime?.home ?? null,

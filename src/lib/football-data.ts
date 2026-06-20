@@ -11,7 +11,10 @@ interface ApiScore {
 export interface ApiMatch {
   id: number
   utcDate: string
-  status: 'SCHEDULED' | 'TIMED' | 'IN_PROGRESS' | 'FINISHED' | 'POSTPONED' | 'CANCELLED' | 'SUSPENDED'
+  // Estados reales que devuelve football-data.org v4:
+  // SCHEDULED/TIMED (por jugar), IN_PLAY (en juego), PAUSED (medio tiempo),
+  // FINISHED, POSTPONED, SUSPENDED, CANCELLED
+  status: 'SCHEDULED' | 'TIMED' | 'IN_PLAY' | 'PAUSED' | 'FINISHED' | 'POSTPONED' | 'CANCELLED' | 'SUSPENDED'
   stage: string
   group: string | null
   matchday: number | null
@@ -35,23 +38,23 @@ async function apiFetch<T>(path: string): Promise<T> {
 }
 
 export async function fetchActiveMatches(): Promise<ApiMatch[]> {
-  // Solo partidos SCHEDULED (próximos 30 min) o IN_PROGRESS
+  // Estados "en vivo" y "por jugar" tal como los nombra la API
   const data = await apiFetch<{ matches: ApiMatch[] }>(
-    `/competitions/${WC_ID}/matches?status=IN_PROGRESS,SCHEDULED`
+    `/competitions/${WC_ID}/matches?status=IN_PLAY,PAUSED,TIMED,SCHEDULED`
   )
   const now = Date.now()
   const window = 30 * 60 * 1000 // 30 minutos
 
   return data.matches.filter(m => {
-    if (m.status === 'IN_PROGRESS') return true
-    if (m.status === 'SCHEDULED') return new Date(m.utcDate).getTime() - now <= window
+    if (m.status === 'IN_PLAY' || m.status === 'PAUSED') return true
+    if (m.status === 'SCHEDULED' || m.status === 'TIMED') return new Date(m.utcDate).getTime() - now <= window
     return false
   })
 }
 
+// El endpoint de un partido devuelve el objeto al nivel raíz, NO envuelto en { match }.
 export async function fetchMatch(externalId: number): Promise<ApiMatch> {
-  const data = await apiFetch<{ match: ApiMatch }>(`/matches/${externalId}`)
-  return data.match
+  return apiFetch<ApiMatch>(`/matches/${externalId}`)
 }
 
 export async function fetchAllWCMatches(): Promise<ApiMatch[]> {
@@ -104,7 +107,9 @@ export function normalizeStage(apiStage: string): string {
 
 // Normaliza el status de la API a nuestro enum interno
 export function normalizeStatus(apiStatus: string): 'SCHEDULED' | 'IN_PROGRESS' | 'FINISHED' | 'POSTPONED' {
-  if (apiStatus === 'TIMED') return 'SCHEDULED'
-  if (apiStatus === 'CANCELLED' || apiStatus === 'SUSPENDED') return 'POSTPONED'
-  return apiStatus as 'SCHEDULED' | 'IN_PROGRESS' | 'FINISHED' | 'POSTPONED'
+  if (apiStatus === 'TIMED' || apiStatus === 'SCHEDULED') return 'SCHEDULED'
+  if (apiStatus === 'IN_PLAY' || apiStatus === 'PAUSED') return 'IN_PROGRESS'
+  if (apiStatus === 'CANCELLED' || apiStatus === 'SUSPENDED' || apiStatus === 'POSTPONED') return 'POSTPONED'
+  if (apiStatus === 'FINISHED') return 'FINISHED'
+  return 'SCHEDULED' // fallback seguro para estados desconocidos
 }
