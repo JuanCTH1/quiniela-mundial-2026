@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import type { Database } from '@/types/database.types'
-import { calcResult, getMatchPhase } from '@/lib/utils'
+import { calcResult } from '@/lib/utils'
 
 interface Prediction {
   user_id: string
@@ -19,8 +19,6 @@ interface Props {
   isLive: boolean
   isFinished: boolean
   predictions: Prediction[]
-  actualStartTime?: string | null
-  status?: string
 }
 
 function useElapsed(ts: Date | null) {
@@ -37,7 +35,7 @@ function useElapsed(ts: Date | null) {
   return `hace ${Math.round(s / 60)}min`
 }
 
-export function LiveMatchClient({ matchId, initialHomeScore, initialAwayScore, isLive, isFinished, predictions, actualStartTime, status }: Props) {
+export function LiveMatchClient({ matchId, initialHomeScore, initialAwayScore, isLive, isFinished, predictions }: Props) {
   const [home, setHome] = useState(initialHomeScore ?? null)
   const [away, setAway] = useState(initialAwayScore ?? null)
   const [lastUpdated, setLastUpdated] = useState<Date | null>(isLive ? new Date() : null)
@@ -117,13 +115,6 @@ export function LiveMatchClient({ matchId, initialHomeScore, initialAwayScore, i
 
       {isLive && (
         <div style={{ fontSize: 11, color: 'var(--warning)', marginTop: 2 }}>● En juego</div>
-      )}
-
-      {/* Fase del partido */}
-      {isLive && status && actualStartTime && (
-        <div style={{ fontSize: 11, color: 'var(--warning)', marginTop: 1 }}>
-          {getMatchPhase(actualStartTime, status)}
-        </div>
       )}
 
       {/* Último update — una sola línea, siempre visible cuando está en vivo */}
