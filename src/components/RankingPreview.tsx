@@ -44,6 +44,7 @@ export function RankingPreview({ matchId, match, allPredictions, currentUserId, 
   useEffect(() => {
     async function calculateRanking() {
       // Calcular puntos locales (de este partido) — UNA SOLA VEZ
+      // Solo si el partido terminó; en vivo no hay puntos, solo ranking por pronóstico
       const withLocalPts = allPredictions
         .map(pred => {
           let pts = 0
@@ -59,7 +60,8 @@ export function RankingPreview({ matchId, match, allPredictions, currentUserId, 
 
           return { pred, pts, resultType }
         })
-        .sort((a, b) => b.pts - a.pts)
+        // Ordenar: si hay puntos (isFinished), por puntos; si no, mantener orden original
+        .sort((a, b) => isFinished ? (b.pts - a.pts) : 0)
         .map((item, idx) => ({ ...item, rank: idx + 1 }))
 
       // Calcular puntos globales (solo para el usuario actual cuando termina el partido)
