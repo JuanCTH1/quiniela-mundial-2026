@@ -6,7 +6,14 @@ import { createAdminClient } from '@/lib/supabase/admin'
 // Todo queda en system_logs para que el admin lo vea en el panel.
 
 export async function GET(req: NextRequest) {
-  const secret = req.headers.get('x-cron-secret') ?? req.nextUrl.searchParams.get('secret')
+  // Acepta el secret de 3 formas para que ambos crons usen config idéntica:
+  // - Authorization: Bearer <secret>  (igual que update-matches)
+  // - x-cron-secret: <secret>
+  // - ?secret=<secret>
+  const bearer = req.headers.get('authorization')?.replace('Bearer ', '')
+  const secret = bearer
+    ?? req.headers.get('x-cron-secret')
+    ?? req.nextUrl.searchParams.get('secret')
   if (secret !== process.env.CRON_SECRET) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
