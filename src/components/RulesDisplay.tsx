@@ -59,7 +59,7 @@ export function RulesDisplay({ rule, isAdmin }: Props) {
   }
 
   async function saveRules() {
-    if (!editValues) return
+    if (!editValues || !rule) return
     setSaving(true)
     try {
       const supabase = createClient()
