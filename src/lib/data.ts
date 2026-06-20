@@ -17,7 +17,7 @@ export const getProfile = cache(async (userId: string) => {
     .select('display_name, avatar_url, is_admin, timezone')
     .eq('id', userId)
     .single()
-  return data
+  return data as any  // TODO: regenerate types after theme column added
 })
 
 export const getSettings = cache(async () => {

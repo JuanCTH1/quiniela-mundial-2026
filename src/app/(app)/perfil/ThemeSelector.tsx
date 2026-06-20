@@ -19,8 +19,8 @@ export function ThemeSelector({ initialTheme, userId }: Props) {
     try {
       const supabase = createClient()
       const { error } = await supabase
-        .from('profiles')
-        .update({ theme: newTheme })
+        .from('profiles' as any)
+        .update({ theme: newTheme } as any)
         .eq('id', userId)
 
       if (error) throw error

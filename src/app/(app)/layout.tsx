@@ -37,7 +37,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const appMode = settings.find(s => s.key === 'app_mode')?.value ?? 'test'
   const bloqueoMinutos = parseInt(settings.find(s => s.key === 'bloqueo_minutos')?.value ?? '15')
   const timezone = profile?.timezone ?? 'America/Mexico_City'
-  const theme = (profile?.theme as Theme) ?? 'mexico'
+
+  // Fetch theme separately (column is new, types not regenerated yet)
+  const themeRes = await supabase.from('profiles').select('theme').eq('id', user.id).single()
+  const theme = ((themeRes.data as any)?.theme as Theme) ?? 'mexico'
   const liveMatch = liveMatchRes.data ?? null
   const nextMatch = nextMatchRes.data ?? null
 

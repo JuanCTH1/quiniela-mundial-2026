@@ -8,9 +8,13 @@ export default async function PerfilPage() {
   const { data: { user } } = await supabase.auth.getUser()
   const { data: profile } = await supabase
     .from('profiles')
-    .select('display_name, avatar_url, timezone, is_admin, theme')
+    .select('display_name, avatar_url, timezone, is_admin')
     .eq('id', user!.id)
     .single()
+
+  // Fetch theme separately (column is new, types not regenerated yet)
+  const themeRes = await supabase.from('profiles').select('theme').eq('id', user!.id).single()
+  const theme = ((themeRes.data as any)?.theme) ?? 'mexico'
 
   return (
     <div style={{ padding: '16px 16px 0' }}>
@@ -40,7 +44,7 @@ export default async function PerfilPage() {
         <h2 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-main)', margin: '0 0 14px' }}>
           Tema Visual
         </h2>
-        <ThemeSelector initialTheme={profile?.theme ?? 'mexico'} userId={user!.id} />
+        <ThemeSelector initialTheme={theme} userId={user!.id} />
       </div>
 
       {/* Logout */}
