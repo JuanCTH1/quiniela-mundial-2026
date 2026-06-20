@@ -24,10 +24,9 @@ export function SwipeNav({ children, currentFecha, currentEtapa }: Props) {
   const router = useRouter()
   const touchStart = useRef<{ x: number; y: number } | null>(null)
   const blocked = useRef(false)
-  const [flash, setFlash] = useState<'left' | 'right' | null>(null)
+  const [swipe, setSwipe] = useState<'left' | 'right' | null>(null)
 
   function onTouchStart(e: React.TouchEvent) {
-    // Si el toque empieza en un elemento con scroll horizontal (chips), no swipear
     blocked.current = startsInScrollable(e.target)
     if (blocked.current) return
     touchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }
@@ -43,8 +42,8 @@ export function SwipeNav({ children, currentFecha, currentEtapa }: Props) {
     if (currentEtapa) return
 
     const dir = dx < 0 ? 'left' : 'right'
-    setFlash(dir)
-    setTimeout(() => setFlash(null), 300)
+    setSwipe(dir)
+    setTimeout(() => setSwipe(null), 500)
 
     const d = new Date(currentFecha + 'T12:00:00')
     d.setDate(d.getDate() + (dx < 0 ? 1 : -1))
@@ -52,24 +51,60 @@ export function SwipeNav({ children, currentFecha, currentEtapa }: Props) {
   }
 
   return (
-    <div onTouchStart={onTouchStart} onTouchEnd={onTouchEnd} style={{ position: 'relative' }}>
-      {/* Flash overlay para confirmar el swipe visualmente */}
-      {flash && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          zIndex: 99,
-          pointerEvents: 'none',
-          background: flash === 'left'
-            ? 'linear-gradient(to left, rgba(0,104,71,0.15) 0%, transparent 60%)'
-            : 'linear-gradient(to right, rgba(0,104,71,0.15) 0%, transparent 60%)',
-          animation: 'swipe-flash 0.3s ease-out forwards',
-        }} />
+    <div onTouchStart={onTouchStart} onTouchEnd={onTouchEnd} style={{ position: 'relative', overflow: 'hidden' }}>
+      {/* Overlay de confirmación — borde lateral que entra y desaparece */}
+      {swipe && (
+        <div
+          key={swipe + Date.now()}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 99,
+            pointerEvents: 'none',
+            animation: `swipe-flash-${swipe} 0.5s ease-out forwards`,
+          }}
+        />
+      )}
+      {/* Flecha de dirección */}
+      {swipe && (
+        <div
+          key={'arrow' + swipe + Date.now()}
+          style={{
+            position: 'fixed',
+            top: '50%',
+            [swipe === 'left' ? 'right' : 'left']: 20,
+            transform: 'translateY(-50%)',
+            zIndex: 100,
+            fontSize: 36,
+            color: 'rgba(255,255,255,0.85)',
+            pointerEvents: 'none',
+            animation: `arrow-${swipe} 0.5s ease-out forwards`,
+            textShadow: '0 0 20px rgba(0,104,71,0.8)',
+          }}
+        >
+          {swipe === 'left' ? '→' : '←'}
+        </div>
       )}
       <style>{`
-        @keyframes swipe-flash {
-          0% { opacity: 1 }
-          100% { opacity: 0 }
+        @keyframes swipe-flash-left {
+          0%   { background: linear-gradient(to left, rgba(0,104,71,0.35) 0%, transparent 50%); opacity: 1; }
+          100% { background: linear-gradient(to left, rgba(0,104,71,0.35) 0%, transparent 50%); opacity: 0; }
+        }
+        @keyframes swipe-flash-right {
+          0%   { background: linear-gradient(to right, rgba(0,104,71,0.35) 0%, transparent 50%); opacity: 1; }
+          100% { background: linear-gradient(to right, rgba(0,104,71,0.35) 0%, transparent 50%); opacity: 0; }
+        }
+        @keyframes arrow-left {
+          0%   { opacity: 0; transform: translateY(-50%) translateX(-10px); }
+          20%  { opacity: 1; transform: translateY(-50%) translateX(0); }
+          70%  { opacity: 1; }
+          100% { opacity: 0; transform: translateY(-50%) translateX(10px); }
+        }
+        @keyframes arrow-right {
+          0%   { opacity: 0; transform: translateY(-50%) translateX(10px); }
+          20%  { opacity: 1; transform: translateY(-50%) translateX(0); }
+          70%  { opacity: 1; }
+          100% { opacity: 0; transform: translateY(-50%) translateX(-10px); }
         }
       `}</style>
       {children}
