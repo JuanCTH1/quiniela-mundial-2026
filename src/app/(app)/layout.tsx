@@ -13,10 +13,15 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   const supabase = await createClient()
 
-  // Todo en paralelo — nextPrediction ya no está aquí, lo busca NextMatchBannerWrapper
-  const [profile, settings, nextMatchRes, alertRes] = await Promise.all([
+  const [profile, settings, liveMatchRes, nextMatchRes, alertRes] = await Promise.all([
     getProfile(user.id),
     getSettings(),
+    // Partido en vivo primero
+    supabase.from('matches')
+      .select('id, home_team, away_team, scheduled_time, early_unlock_at, stage, group_name, home_score_fulltime, away_score_fulltime')
+      .eq('status', 'IN_PROGRESS')
+      .order('scheduled_time').limit(1).maybeSingle(),
+    // Siguiente programado
     supabase.from('matches')
       .select('id, home_team, away_team, scheduled_time, early_unlock_at, stage, group_name')
       .eq('status', 'SCHEDULED')
@@ -30,20 +35,17 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const appMode = settings.find(s => s.key === 'app_mode')?.value ?? 'test'
   const bloqueoMinutos = parseInt(settings.find(s => s.key === 'bloqueo_minutos')?.value ?? '15')
   const timezone = profile?.timezone ?? 'America/Mexico_City'
+  const liveMatch = liveMatchRes.data ?? null
   const nextMatch = nextMatchRes.data ?? null
 
-  // Skeleton para el banner mientras carga el pronóstico del usuario
-  const bannerSkeleton = nextMatch ? (
-    <div style={{ height: 52, background: 'rgba(0,104,71,0.06)', borderBottom: '1px solid rgba(0,104,71,0.15)' }} />
+  const bannerSkeleton = (liveMatch || nextMatch) ? (
+    <div style={{ height: 52, background: 'rgba(0,104,71,0.06)' }} />
   ) : null
 
   return (
     <div style={{ paddingBottom: 'calc(72px + env(safe-area-inset-bottom))' }}>
-      {/* Sticky header: banners + próximo partido */}
       <div style={{
-        position: 'sticky',
-        top: 0,
-        zIndex: 50,
+        position: 'sticky', top: 0, zIndex: 50,
         backdropFilter: 'blur(20px) saturate(180%)',
         WebkitBackdropFilter: 'blur(20px) saturate(180%)',
         background: 'rgba(6,12,10,0.75)',
@@ -53,10 +55,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         {alertRes.data && (
           <SystemAlertBanner message={alertRes.data.message} createdAt={alertRes.data.created_at} />
         )}
-        {/* Suspense: el shell se renderiza sin esperar el pronóstico del usuario */}
         <Suspense fallback={bannerSkeleton}>
           <NextMatchBannerWrapper
-            match={nextMatch}
+            liveMatch={liveMatch}
+            nextMatch={nextMatch}
             userId={user.id}
             bloqueoMinutos={bloqueoMinutos}
             timezone={timezone}

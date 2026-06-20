@@ -133,8 +133,8 @@ export const TIMEZONES = [
 
 export const STAGE_LABELS: Record<string, string> = {
   GROUP: 'Fase de grupos',
-  LAST_32: '32avos de final',
-  ROUND_OF_16: '16avos de final',
+  LAST_32: 'Ronda de 32',
+  ROUND_OF_16: 'Ronda de 16',
   QUARTER_FINALS: 'Cuartos de final',
   SEMI_FINALS: 'Semifinales',
   THIRD_PLACE: 'Tercer lugar',

@@ -4,8 +4,8 @@ import Link from 'next/link'
 
 const STAGES = [
   { value: 'GROUP', label: 'Grupos' },
-  { value: 'LAST_32', label: '32avos' },
-  { value: 'ROUND_OF_16', label: '16avos' },
+  { value: 'LAST_32', label: 'R. de 32' },
+  { value: 'ROUND_OF_16', label: 'R. de 16' },
   { value: 'QUARTER_FINALS', label: 'Cuartos' },
   { value: 'SEMI_FINALS', label: 'Semis' },
   { value: 'THIRD_PLACE', label: '3er lugar' },

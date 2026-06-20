@@ -6,6 +6,7 @@ interface Props {
   target: string
   label?: string
   className?: string
+  small?: boolean
 }
 
 function diff(target: Date) {
@@ -19,7 +20,7 @@ function diff(target: Date) {
   return `${s}s`
 }
 
-export function Countdown({ target, label = '', className = '' }: Props) {
+export function Countdown({ target, label = '', className = '', small }: Props) {
   const date = new Date(target)
   const [text, setText] = useState(() => diff(date))
 
@@ -33,7 +34,7 @@ export function Countdown({ target, label = '', className = '' }: Props) {
   if (!text) return null
 
   return (
-    <span className={className} style={{ fontSize: '12px', color: 'var(--warning)' }}>
+    <span className={className} style={{ fontSize: small ? '10px' : '12px', color: 'var(--warning)' }}>
       {label && `${label} `}{text}
     </span>
   )

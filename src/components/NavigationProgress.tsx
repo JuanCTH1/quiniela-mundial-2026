@@ -1,10 +1,14 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
-import { usePathname } from 'next/navigation'
+import { useEffect, useRef, useState, Suspense } from 'react'
+import { usePathname, useSearchParams } from 'next/navigation'
 
-export function NavigationProgress() {
+function ProgressBar() {
   const pathname = usePathname()
+  const searchParams = useSearchParams()
+  // Clave única que cambia con pathname O con searchParams (fechas, etapas)
+  const navKey = pathname + '?' + searchParams.toString()
+
   const [width, setWidth] = useState(0)
   const [opacity, setOpacity] = useState(0)
   const navigating = useRef(false)
@@ -29,7 +33,7 @@ export function NavigationProgress() {
     return () => document.removeEventListener('click', onLinkClick)
   }, [])
 
-  // pathname change = navigation done
+  // navKey cambia = navegación completada (pathname O searchParams)
   useEffect(() => {
     if (!navigating.current) return
     navigating.current = false
@@ -38,7 +42,7 @@ export function NavigationProgress() {
     const t1 = setTimeout(() => setOpacity(0), 180)
     const t2 = setTimeout(() => setWidth(0), 480)
     return () => { clearTimeout(t1); clearTimeout(t2) }
-  }, [pathname])
+  }, [navKey])
 
   return (
     <div
@@ -60,5 +64,13 @@ export function NavigationProgress() {
         boxShadow: opacity > 0 ? '0 0 8px rgba(0,104,71,0.7)' : 'none',
       }}
     />
+  )
+}
+
+export function NavigationProgress() {
+  return (
+    <Suspense>
+      <ProgressBar />
+    </Suspense>
   )
 }
