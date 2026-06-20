@@ -6,6 +6,8 @@ import { TestModeBanner } from '@/components/TestModeBanner'
 import { SystemAlertBanner } from '@/components/SystemAlertBanner'
 import { NextMatchBannerWrapper } from '@/components/NextMatchBannerWrapper'
 import { BottomNav } from '@/components/BottomNav'
+import { ThemeProvider } from '@/components/ThemeProvider'
+import type { Theme } from '@/lib/themes'
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const user = await getUser()
@@ -35,6 +37,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const appMode = settings.find(s => s.key === 'app_mode')?.value ?? 'test'
   const bloqueoMinutos = parseInt(settings.find(s => s.key === 'bloqueo_minutos')?.value ?? '15')
   const timezone = profile?.timezone ?? 'America/Mexico_City'
+  const theme = (profile?.theme as Theme) ?? 'mexico'
   const liveMatch = liveMatchRes.data ?? null
   const nextMatch = nextMatchRes.data ?? null
 
@@ -43,7 +46,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   ) : null
 
   return (
-    <div style={{ paddingBottom: 'calc(72px + env(safe-area-inset-bottom))', maxWidth: 480, margin: '0 auto' }}>
+    <ThemeProvider theme={theme}>
+      <div style={{ paddingBottom: 'calc(72px + env(safe-area-inset-bottom))', maxWidth: 480, margin: '0 auto' }}>
       <div style={{
         position: 'sticky', top: 0, zIndex: 50,
         backdropFilter: 'blur(20px) saturate(180%)',
@@ -51,7 +55,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         background: 'rgba(6,12,10,0.75)',
         borderBottom: '1px solid rgba(255,255,255,0.06)',
       }}>
-        {appMode === 'test' && <TestModeBanner />}
+        {appMode === 'test' && <TestModeBanner theme={theme} />}
         {alertRes.data && (
           <SystemAlertBanner message={alertRes.data.message} createdAt={alertRes.data.created_at} />
         )}
@@ -70,5 +74,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       </div>
       <BottomNav isAdmin={profile?.is_admin ?? false} />
     </div>
+    </ThemeProvider>
   )
 }

@@ -16,6 +16,7 @@ export default async function PartidosPage({
   const [user, bloqueoMinutos] = await Promise.all([getUser(), getBloqueoMinutos()])
   const profile = user ? await getProfile(user.id) : null
   const timezone = profile?.timezone ?? 'America/Mexico_City'
+  const theme = (profile?.theme as any) ?? 'mexico'
 
   const supabase = await createClient()
 
@@ -121,6 +122,7 @@ export default async function PartidosPage({
                 bloqueoMinutos={bloqueoMinutos}
                 timezone={timezone}
                 currentUserId={user!.id}
+                theme={theme}
               />
             )
           })

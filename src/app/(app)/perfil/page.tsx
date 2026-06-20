@@ -1,13 +1,14 @@
 import { createClient } from '@/lib/supabase/server'
 import { logout } from '@/app/actions/auth'
 import { ProfileForm } from './ProfileForm'
+import { ThemeSelector } from './ThemeSelector'
 
 export default async function PerfilPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   const { data: profile } = await supabase
     .from('profiles')
-    .select('display_name, avatar_url, timezone, is_admin')
+    .select('display_name, avatar_url, timezone, is_admin, theme')
     .eq('id', user!.id)
     .single()
 
@@ -33,6 +34,14 @@ export default async function PerfilPage() {
         initialAvatarUrl={profile?.avatar_url}
         userId={user!.id}
       />
+
+      {/* Selector de Tema */}
+      <div style={{ marginTop: 24, paddingTop: 24, borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+        <h2 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-main)', margin: '0 0 14px' }}>
+          Tema Visual
+        </h2>
+        <ThemeSelector initialTheme={profile?.theme ?? 'mexico'} userId={user!.id} />
+      </div>
 
       {/* Logout */}
       <div style={{ marginTop: 32, paddingTop: 20, borderTop: '1px solid rgba(255,255,255,0.07)' }}>

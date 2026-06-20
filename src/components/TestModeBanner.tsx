@@ -1,4 +1,13 @@
-export function TestModeBanner() {
+'use client'
+
+import { getTheme, type Theme } from '@/lib/themes'
+
+interface Props {
+  theme: Theme
+}
+
+export function TestModeBanner({ theme }: Props) {
+  const t = getTheme(theme)
   return (
     <div
       className="test-mode-banner"
@@ -7,11 +16,11 @@ export function TestModeBanner() {
         textAlign: 'center',
         fontSize: '12px',
         fontWeight: 500,
-        color: 'var(--gold)',
+        color: 'var(--theme-secondary)',
         letterSpacing: '0.04em',
       }}
     >
-      ⚗️ Modo prueba — los datos no son reales
+      ⚗️ {t.texts.testMode}
     </div>
   )
 }

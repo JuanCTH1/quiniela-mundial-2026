@@ -9,7 +9,7 @@
 */
 
 :root {
-  /* === PALETA MUNDIAL / MÉXICO (pendiente de afinar en Fase 0) === */
+  /* === DEFAULTS (México) === */
   --mx-green:  #006847;   /* verde bandera México */
   --mx-red:    #CE1126;   /* rojo bandera México */
   --mx-white:  #FFFFFF;
@@ -30,10 +30,19 @@
   --glass-glow:       rgba(0, 104, 71, 0.35);
   --glass-blur:       blur(24px);
 
+  /* === TEMA DINÁMICO === */
+  --theme-primary: var(--mx-green);
+  --theme-secondary: var(--gold);
+  --theme-accent: var(--mx-red);
+  --theme-background: #0a0f0d;
+  --theme-text_main: #ffffff;
+  --theme-text_muted: #a0a8a6;
+  --theme-text_dim: #7a8280;
+
   /* === SEMÁNTICOS === */
-  --accent:   var(--gold);
-  --primary:  var(--mx-green);
-  --danger:   var(--mx-red);
+  --accent:   var(--theme-secondary);
+  --primary:  var(--theme-primary);
+  --danger:   var(--theme-accent);
   --success:  #34A853;
   --warning:  #F59E0B;
 }

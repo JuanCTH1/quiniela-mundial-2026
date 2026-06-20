@@ -3,6 +3,7 @@ import { PredictionForm } from './PredictionForm'
 import { Countdown } from './Countdown'
 import { RankingPreview } from './RankingPreview'
 import { getTeamFlag, calcResult, getLockTime, STAGE_LABELS } from '@/lib/utils'
+import { getTheme, type Theme } from '@/lib/themes'
 import type { Tables } from '@/types/database.types'
 type Match = Tables<'matches'>
 
@@ -21,6 +22,7 @@ interface Props {
   bloqueoMinutos: number
   timezone: string
   currentUserId?: string
+  theme?: Theme
 }
 
 const RESULT_COLORS = {
@@ -31,8 +33,10 @@ const RESULT_COLORS = {
 }
 
 export function MatchCard({
-  match, myPrediction, allPredictions, isLocked, bloqueoMinutos, timezone, currentUserId,
+  match, myPrediction, allPredictions, isLocked, bloqueoMinutos, timezone, currentUserId, theme = 'mexico',
 }: Props) {
+  const t = getTheme(theme)
+
   // FINISHED pero quiniela aún null (cron no corrió): usar fulltime como fallback visual
   const finalHome = match.home_score_quiniela ?? match.home_score_fulltime
   const finalAway = match.away_score_quiniela ?? match.away_score_fulltime
@@ -55,9 +59,9 @@ export function MatchCard({
     isLocked   ? 'var(--warning)' : 'var(--success)'
 
   const stateLabel =
-    isFinished ? 'Finalizado' :
-    isLive     ? '● En juego' :
-    isLocked   ? 'Bloqueado'  : 'Abierto'
+    isFinished ? t.texts.finished :
+    isLive     ? t.texts.live :
+    isLocked   ? t.texts.locked : t.texts.open
 
   // Mi resultado (solo cuando hay resultado final quiniela confirmado)
   const myResult = (isFinished && match.home_score_quiniela != null && myPrediction?.home_score != null)
