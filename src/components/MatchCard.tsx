@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { PredictionForm } from './PredictionForm'
 import { Countdown } from './Countdown'
+import { RankingPreview } from './RankingPreview'
 import { getTeamFlag, calcResult, getLockTime, STAGE_LABELS } from '@/lib/utils'
 import type { Tables } from '@/types/database.types'
 type Match = Tables<'matches'>
@@ -174,36 +175,15 @@ export function MatchCard({
         </div>
       )}
 
-      {/* Predictions grid (LOCKED / FINISHED / LIVE) */}
+      {/* Ranking preview (LOCKED / FINISHED / LIVE) */}
       {(isLocked || isFinished || isLive) && allPredictions && allPredictions.length > 0 && (
-        <div style={{
-          marginTop: 8, borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 8,
-          display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 4,
-        }}>
-          {allPredictions.map(pred => {
-            const isMe = pred.user_id === currentUserId
-            const name = (pred.profiles?.display_name ?? '?').split(' ')[0]
-            const result = (isFinished && match.home_score_quiniela != null && pred.home_score != null)
-              ? calcResult(pred.home_score, pred.away_score!, match.home_score_quiniela, match.away_score_quiniela!)
-              : null
-            const colors = result ? RESULT_COLORS[result.type] : null
-
-            return (
-              <div key={pred.user_id} style={{
-                padding: '5px 6px', borderRadius: 7,
-                border: `1px solid ${colors?.border ?? (isMe ? 'rgba(0,104,71,0.4)' : 'rgba(255,255,255,0.07)')}`,
-                background: colors?.bg ?? (isMe ? 'rgba(0,104,71,0.1)' : 'rgba(255,255,255,0.03)'),
-                textAlign: 'center',
-              }}>
-                <div style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: isMe ? 600 : 400 }}>{name}</div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: colors?.text ?? 'var(--text-main)' }}>
-                  {pred.home_score != null ? `${pred.home_score}–${pred.away_score}` : '—'}
-                </div>
-                {result && <div style={{ fontSize: 9, color: colors?.text, fontWeight: 600 }}>{result.pts}pts</div>}
-              </div>
-            )
-          })}
-        </div>
+        <RankingPreview
+          matchId={match.id}
+          match={match}
+          allPredictions={allPredictions}
+          currentUserId={currentUserId ?? ''}
+          isFinished={isFinished}
+        />
       )}
     </div>
   )

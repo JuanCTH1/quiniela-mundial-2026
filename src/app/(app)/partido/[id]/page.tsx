@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { Avatar } from '@/components/Avatar'
+import { PredictionForm } from '@/components/PredictionForm'
 import { getTeamFlag, calcResult, isMatchLocked, STAGE_LABELS } from '@/lib/utils'
 import { LiveMatchClient } from './LiveMatchClient'
 import Link from 'next/link'
@@ -22,12 +23,13 @@ export default async function PartidoPage({ params }: { params: Promise<{ id: st
   // Admin client para ver quién ya metió pronóstico (RLS solo deja ver los propios)
   const admin = createAdminClient()
 
-  const [matchRes, settingsRes, profileRes, allProfilesRes, submittedIdsRes] = await Promise.all([
+  const [matchRes, settingsRes, profileRes, allProfilesRes, submittedIdsRes, myPredRes] = await Promise.all([
     supabase.from('matches').select('*').eq('id', id).single(),
     supabase.from('settings').select('key, value'),
     supabase.from('profiles').select('timezone').eq('id', user!.id).single(),
     supabase.from('profiles').select('id, display_name, avatar_url'),
     admin.from('predictions').select('user_id').eq('match_id', id),
+    supabase.from('predictions').select('home_score, away_score').eq('match_id', id).eq('user_id', user!.id).maybeSingle(),
   ])
 
   if (!matchRes.data) notFound()
@@ -79,6 +81,22 @@ export default async function PartidoPage({ params }: { params: Promise<{ id: st
       <Link href="/partidos" style={{ fontSize: 13, color: 'var(--text-muted)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4, marginBottom: 14 }}>
         ← Partidos
       </Link>
+
+      {/* Editor de pronóstico (OPEN) */}
+      {!locked && !isFinished && !isLive && (
+        <div className="glass-card" style={{ padding: '14px 16px', marginBottom: 14 }}>
+          <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 10, textTransform: 'uppercase' }}>
+            Tu pronóstico
+          </div>
+          <PredictionForm
+            matchId={id}
+            scheduledTime={match.scheduled_time}
+            bloqueoMinutos={bloqueoMinutos}
+            currentPrediction={myPredRes.data}
+            disabled={false}
+          />
+        </div>
+      )}
 
       {/* Match header */}
       <div className="glass-card" style={{ padding: '20px 16px', marginBottom: 14, textAlign: 'center' }}>
