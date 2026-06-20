@@ -132,17 +132,17 @@ export async function GET(req: NextRequest) {
     const { data: lastCronLog } = await sb
       .from('system_logs')
       .select('created_at, message')
-      .eq('log_type', 'CRON_UPDATE')
+      .eq('log_type', 'CRON_RUN')
       .order('created_at', { ascending: false })
       .limit(1)
-      .single()
+      .maybeSingle()
 
     if (!lastCronLog) {
       errors.push('🔴 Sin registros del cron de actualización en system_logs')
     } else {
       const minsSinceCron = Math.round((now.getTime() - new Date(lastCronLog.created_at).getTime()) / 60000)
-      if (minsSinceCron > 35) {
-        errors.push(`🔴 Cron principal sin correr desde hace ${minsSinceCron}min — verificar Railway`)
+      if (minsSinceCron > 10) {
+        errors.push(`🔴 Cron principal sin correr desde hace ${minsSinceCron}min`)
       } else {
         checks.push(`Cron principal: último run hace ${minsSinceCron}min ✓`)
       }

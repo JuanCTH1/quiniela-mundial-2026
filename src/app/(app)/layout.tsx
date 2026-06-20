@@ -43,7 +43,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   ) : null
 
   return (
-    <div style={{ paddingBottom: 'calc(72px + env(safe-area-inset-bottom))' }}>
+    <div style={{ paddingBottom: 'calc(72px + env(safe-area-inset-bottom))', maxWidth: 480, margin: '0 auto' }}>
       <div style={{
         position: 'sticky', top: 0, zIndex: 50,
         backdropFilter: 'blur(20px) saturate(180%)',
@@ -65,7 +65,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           />
         </Suspense>
       </div>
-      <div style={{ maxWidth: 720, margin: '0 auto', padding: '0 16px' }}>
+      <div style={{ padding: '0 16px' }}>
         {children}
       </div>
       <BottomNav isAdmin={profile?.is_admin ?? false} />
