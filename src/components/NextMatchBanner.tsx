@@ -34,7 +34,6 @@ export function NextMatchBanner({ match, prediction, bloqueoMinutos, timezone }:
       <div
         style={{
           background: 'rgba(0,104,71,0.08)',
-          borderBottom: '1px solid rgba(0,104,71,0.2)',
           padding: '10px 16px',
           display: 'flex',
           alignItems: 'center',

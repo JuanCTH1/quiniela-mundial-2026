@@ -18,10 +18,12 @@ export default async function PartidoPage({ params }: { params: Promise<{ id: st
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  const [matchRes, settingsRes, profileRes] = await Promise.all([
+  const [matchRes, settingsRes, profileRes, allProfilesRes, submittedIdsRes] = await Promise.all([
     supabase.from('matches').select('*').eq('id', id).single(),
     supabase.from('settings').select('key, value'),
     supabase.from('profiles').select('timezone').eq('id', user!.id).single(),
+    supabase.from('profiles').select('id, display_name, avatar_url'),
+    supabase.from('predictions').select('user_id').eq('match_id', id),
   ])
 
   if (!matchRes.data) notFound()
@@ -33,7 +35,11 @@ export default async function PartidoPage({ params }: { params: Promise<{ id: st
   const isFinished = match.status === 'FINISHED' && match.home_score_quiniela != null
   const isLive = match.status === 'IN_PROGRESS'
 
-  // Fetch all predictions if locked/finished (two queries — no FK in public schema)
+  const allProfiles = allProfilesRes.data ?? []
+  const submittedIds = new Set((submittedIdsRes.data ?? []).map(p => p.user_id))
+  const missingProfiles = allProfiles.filter(p => !submittedIds.has(p.id))
+
+  // Full predictions with scores (only when revealed)
   type PredWithProfile = {
     user_id: string
     home_score: number | null
@@ -42,21 +48,17 @@ export default async function PartidoPage({ params }: { params: Promise<{ id: st
   }
 
   let predictions: PredWithProfile[] = []
-  if (locked || isFinished) {
-    const [predsRes, profilesRes] = await Promise.all([
-      supabase.from('predictions').select('user_id, home_score, away_score').eq('match_id', id),
-      supabase.from('profiles').select('id, display_name, avatar_url'),
-    ])
-    const profileMap = new Map((profilesRes.data ?? []).map(p => [p.id, p]))
+  if (locked || isFinished || isLive) {
+    const predsRes = await supabase.from('predictions').select('user_id, home_score, away_score').eq('match_id', id)
+    const profileMap = new Map(allProfiles.map(p => [p.id, p]))
     predictions = (predsRes.data ?? []).map(p => ({
       ...p,
-      profiles: profileMap.get(p.user_id)
+      profiles: profileMap.has(p.user_id)
         ? { display_name: profileMap.get(p.user_id)!.display_name, avatar_url: profileMap.get(p.user_id)!.avatar_url }
         : null,
     }))
   }
 
-  // My prediction
   const myPred = predictions.find(p => p.user_id === user!.id)
 
   const matchTime = new Intl.DateTimeFormat('es-MX', {
@@ -78,7 +80,7 @@ export default async function PartidoPage({ params }: { params: Promise<{ id: st
       <div className="glass-card" style={{ padding: '20px 16px', marginBottom: 14, textAlign: 'center' }}>
         <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
           {STAGE_LABELS[match.stage] ?? match.stage}
-          {match.group_name ? ` · Grupo ${match.group_name}` : ''}
+          {match.group_name ? ` · Grupo ${match.group_name.replace('GROUP_', '')}` : ''}
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
@@ -110,10 +112,41 @@ export default async function PartidoPage({ params }: { params: Promise<{ id: st
         </div>
       </div>
 
-      {/* Predictions */}
-      {(locked || isFinished) && predictions && predictions.length > 0 && (
+      {/* Quiénes faltan */}
+      {missingProfiles.length > 0 && (
+        <div
+          className="glass-card"
+          style={{
+            padding: '10px 14px',
+            marginBottom: 12,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            background: locked ? 'rgba(139,0,0,0.10)' : 'rgba(245,158,11,0.08)',
+            borderColor: locked ? 'rgba(139,0,0,0.3)' : 'rgba(245,158,11,0.25)',
+          }}
+        >
+          <div style={{ fontSize: 16 }}>{locked ? '🤐' : '⏳'}</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: locked ? 'var(--shame-red)' : 'var(--warning)', marginBottom: 6 }}>
+              {locked ? 'No jugaron' : `Falta${missingProfiles.length > 1 ? 'n' : ''} pronóstico${missingProfiles.length > 1 ? 's' : ''}`}
+            </div>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {missingProfiles.map(p => (
+                <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <Avatar name={p.display_name} avatarUrl={p.avatar_url} size={24} />
+                  <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{p.display_name}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Predictions (revealed) */}
+      {(locked || isFinished || isLive) && predictions.length > 0 && (
         <div style={{ marginBottom: 14 }}>
-          <h2 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-muted)', margin: '0 0 10px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+          <h2 style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-muted)', margin: '0 0 10px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
             Pronósticos
           </h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -135,8 +168,8 @@ export default async function PartidoPage({ params }: { params: Promise<{ id: st
                     display: 'flex',
                     alignItems: 'center',
                     gap: 10,
-                    background: isMe ? 'rgba(0,104,71,0.12)' : colors?.bg ?? undefined,
-                    borderColor: isMe ? 'rgba(0,104,71,0.3)' : colors?.border ?? undefined,
+                    background: isMe ? 'rgba(0,104,71,0.12)' : (colors?.bg ?? undefined),
+                    borderColor: isMe ? 'rgba(0,104,71,0.3)' : (colors?.border ?? undefined),
                   }}
                 >
                   <Avatar name={name} avatarUrl={profile?.avatar_url} size={32} />
@@ -158,7 +191,7 @@ export default async function PartidoPage({ params }: { params: Promise<{ id: st
         </div>
       )}
 
-      {!locked && (
+      {!locked && !isLive && !isFinished && (
         <div className="glass-card" style={{ padding: '14px 16px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
           Los pronósticos se revelan cuando el partido se bloquee
         </div>

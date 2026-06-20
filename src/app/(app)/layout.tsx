@@ -38,16 +38,27 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <div style={{ paddingBottom: 'calc(72px + env(safe-area-inset-bottom))' }}>
-      {appMode === 'test' && <TestModeBanner />}
-      {alertRes.data && (
-        <SystemAlertBanner message={alertRes.data.message} createdAt={alertRes.data.created_at} />
-      )}
-      <NextMatchBanner
-        match={nextMatch}
-        prediction={nextPrediction}
-        bloqueoMinutos={bloqueoMinutos}
-        timezone={timezone}
-      />
+      {/* Sticky header: banners + próximo partido */}
+      <div style={{
+        position: 'sticky',
+        top: 0,
+        zIndex: 50,
+        backdropFilter: 'blur(20px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+        background: 'rgba(6,12,10,0.75)',
+        borderBottom: '1px solid rgba(255,255,255,0.06)',
+      }}>
+        {appMode === 'test' && <TestModeBanner />}
+        {alertRes.data && (
+          <SystemAlertBanner message={alertRes.data.message} createdAt={alertRes.data.created_at} />
+        )}
+        <NextMatchBanner
+          match={nextMatch}
+          prediction={nextPrediction}
+          bloqueoMinutos={bloqueoMinutos}
+          timezone={timezone}
+        />
+      </div>
       <div style={{ maxWidth: 720, margin: '0 auto', padding: '0 16px' }}>
         {children}
       </div>
