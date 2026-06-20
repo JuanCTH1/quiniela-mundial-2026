@@ -1,0 +1,118 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
+
+/*
+  DESIGN SYSTEM — Quiniela Overrated 2026
+  Paleta: tema Mundial / México (verde, rojo, dorado)
+  TODO (Fase 0): finalizar tokens de color con el grupo, actualmente son placeholders funcionales.
+  Referencia de estructura: Penetron Liquid Glass (Ecosistema Desarrollador / automation brain).
+*/
+
+:root {
+  /* === PALETA MUNDIAL / MÉXICO (pendiente de afinar en Fase 0) === */
+  --mx-green:  #006847;   /* verde bandera México */
+  --mx-red:    #CE1126;   /* rojo bandera México */
+  --mx-white:  #FFFFFF;
+  --gold:      #D4AF37;   /* dorado trofeo / primer lugar */
+  --shame-red: #8B0000;   /* rojo denigrante / último lugar */
+
+  /* === CORE DARK === */
+  --bg-dark:   #060c0a;   /* casi negro con tinte verde */
+  --text-main: rgba(255, 255, 255, 0.95);
+  --text-muted: rgba(255, 255, 255, 0.62);
+  --text-dim:  rgba(255, 255, 255, 0.25);
+
+  /* === GLASSMORPHISM === */
+  --glass-bg:         rgba(0, 104, 71, 0.08);
+  --glass-bg-hover:   rgba(0, 104, 71, 0.14);
+  --glass-border:     rgba(255, 255, 255, 0.07);
+  --glass-border-top: rgba(255, 255, 255, 0.20);
+  --glass-glow:       rgba(0, 104, 71, 0.35);
+  --glass-blur:       blur(24px);
+
+  /* === SEMÁNTICOS === */
+  --accent:   var(--gold);
+  --primary:  var(--mx-green);
+  --danger:   var(--mx-red);
+  --success:  #34A853;
+  --warning:  #F59E0B;
+}
+
+@theme inline {
+  --color-background:  var(--bg-dark);
+  --color-foreground:  var(--text-main);
+  --color-primary:     var(--mx-green);
+  --color-accent:      var(--gold);
+  --color-danger:      var(--mx-red);
+  --color-success:     #34A853;
+  --color-warning:     #F59E0B;
+  --color-muted:       var(--text-muted);
+  --color-glass:       var(--glass-bg);
+  --color-gold:        var(--gold);
+  --color-shame:       var(--shame-red);
+
+  --font-sans: 'Outfit', system-ui, sans-serif;
+  --font-mono: 'Geist Mono', monospace;
+}
+
+/* ── BASE ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-sans);
+  background: linear-gradient(135deg, #040a07 0%, #071410 50%, #020604 100%);
+  color: var(--text-main);
+  min-height: 100vh;
+  isolation: isolate;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); }
+::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.12); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.25); }
+
+/* ── BLOBS DE FONDO ── */
+.g-blob-wrap { position: fixed; inset: 0; pointer-events: none; z-index: -1; }
+.g-blob { position: absolute; border-radius: 50%; }
+.g-blob-1 { width: 55vw; height: 45vh; left: -10%; top: -5%;    background: rgba(0, 104, 71, 0.25);  filter: blur(90px); animation: gb1 30s ease-in-out infinite; }
+.g-blob-2 { width: 45vw; height: 35vh; right: -10%; bottom: -5%; background: rgba(206, 17, 38, 0.12);  filter: blur(80px); animation: gb2 38s ease-in-out infinite; }
+.g-blob-3 { width: 40vw; height: 30vh; left: 35%; top: 20%;     background: rgba(212, 175, 55, 0.10); filter: blur(70px); animation: gb3 25s ease-in-out infinite; }
+@keyframes gb1 { 0%,100%{transform:translate(0,0) scale(1)} 35%{transform:translate(5%,4%) scale(1.07)} 70%{transform:translate(-3%,3%) scale(0.95)} }
+@keyframes gb2 { 0%,100%{transform:translate(0,0) scale(1)} 40%{transform:translate(-5%,-4%) scale(1.05)} 75%{transform:translate(4%,-2%) scale(0.96)} }
+@keyframes gb3 { 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(-5%,6%) scale(1.09)} }
+
+/* ── GLASS CARD ── */
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur) saturate(180%);
+  -webkit-backdrop-filter: var(--glass-blur) saturate(180%);
+  border: 1px solid var(--glass-border);
+  border-top: 1px solid var(--glass-border-top);
+  border-left: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 16px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 8px 32px 0 rgba(0, 0, 0, 0.35);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.glass-card:hover {
+  background: var(--glass-bg-hover);
+  box-shadow: 0 12px 40px 0 rgba(0, 104, 71, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* ── TABLA DE POSICIONES: estados especiales ── */
+.rank-first  { box-shadow: 0 0 0 2px var(--gold), 0 0 20px rgba(212, 175, 55, 0.3); }
+.rank-last   { background: rgba(139, 0, 0, 0.15) !important; border-color: rgba(139, 0, 0, 0.4) !important; }
+
+/* ── ESTADO MODO PRUEBA ── */
+.test-mode-banner {
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(212, 175, 55, 0.08),
+    rgba(212, 175, 55, 0.08) 10px,
+    transparent 10px,
+    transparent 20px
+  );
+  border: 1px solid rgba(212, 175, 55, 0.35);
+}
