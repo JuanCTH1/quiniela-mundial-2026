@@ -120,6 +120,8 @@ export default async function PartidoPage({ params }: { params: Promise<{ id: st
                 isLive={isLive}
                 isFinished={isFinished}
                 predictions={predictions}
+                actualStartTime={match.actual_start_time}
+                status={match.status}
               />
             ) : (
               <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>vs</div>

@@ -131,6 +131,19 @@ export const TIMEZONES = [
   { label: 'UTC', value: 'UTC' },
 ]
 
+export function getMatchPhase(actualStartTime: string | null, status: string): string {
+  if (status !== 'IN_PROGRESS' || !actualStartTime) return ''
+
+  const elapsed = (Date.now() - new Date(actualStartTime).getTime()) / 60000 // minutos
+
+  if (elapsed < 45) return `Primer Tiempo (${Math.floor(elapsed)}')`
+  if (elapsed < 50) return 'Medio Tiempo ⏸'
+  if (elapsed < 90) return `Segundo Tiempo (${Math.floor(elapsed)}')`
+  if (elapsed < 105) return `Prórroga (${Math.floor(elapsed - 90)}')`
+  if (elapsed < 120) return `Prórroga (${Math.floor(elapsed - 90)}')`
+  return `Penales`
+}
+
 export const STAGE_LABELS: Record<string, string> = {
   GROUP: 'Fase de grupos',
   LAST_32: 'Ronda de 32',
