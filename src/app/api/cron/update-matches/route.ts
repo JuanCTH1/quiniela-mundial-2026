@@ -17,9 +17,10 @@ export async function GET(request: NextRequest) {
   const results = { updated: 0, skipped: 0, errors: 0, failsafe_alerts: 0 }
 
   // Partidos candidatos: SCHEDULED (próximos 30 min) o IN_PROGRESS
+  // home_score_fulltime/away_score_fulltime incluidos para detectar cambios de marcador
   const { data: candidates, error: fetchErr } = await supabase
     .from('matches')
-    .select('id, external_id, status, stage, scheduled_time, actual_start_time')
+    .select('id, external_id, status, stage, scheduled_time, actual_start_time, home_score_fulltime, away_score_fulltime')
     .in('status', ['SCHEDULED', 'IN_PROGRESS'])
     .lte('scheduled_time', new Date(Date.now() + 30 * 60 * 1000).toISOString())
 
@@ -94,6 +95,24 @@ export async function GET(request: NextRequest) {
           `${match.external_id} detectado EN JUEGO ${delayMin}min después del kickoff programado`,
           false, match.id,
           { delay_minutes: delayMin, scheduled_time: match.scheduled_time, detected_at: detectedAt.toISOString() }
+        )
+      }
+
+      // Log cambio de marcador durante partido en vivo
+      const newHome = apiMatch.score.fullTime.home
+      const newAway = apiMatch.score.fullTime.away
+      const prevHome = match.home_score_fulltime
+      const prevAway = match.away_score_fulltime
+      const scoreChanged = match.status === 'IN_PROGRESS'
+        && newHome != null && newAway != null
+        && (newHome !== prevHome || newAway !== prevAway)
+        && (prevHome != null || prevAway != null) // evita loggear el primer 0-0
+
+      if (scoreChanged) {
+        await logEntry(supabase, 'SCORE_UPDATE',
+          `⚽ ${match.external_id}: ${prevHome}-${prevAway} → ${newHome}-${newAway}`,
+          false, match.id,
+          { prev: `${prevHome}-${prevAway}`, curr: `${newHome}-${newAway}` }
         )
       }
 
