@@ -1,7 +1,6 @@
 'use client'
 
 import Link from 'next/link'
-import { useSearchParams } from 'next/navigation'
 
 const STAGES = [
   { value: 'GROUP', label: 'Grupos' },
@@ -13,17 +12,21 @@ const STAGES = [
   { value: 'FINAL', label: 'Final' },
 ]
 
-function getDays(timezone: string) {
-  const days: { label: string; fecha: string }[] = []
-  const today = new Date()
+function formatDateLabel(fecha: string, timezone: string) {
+  const today = new Date().toISOString().slice(0, 10)
+  const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10)
+  if (fecha === today) return 'Hoy'
+  if (fecha === tomorrow) return 'Mañana'
+  const d = new Date(fecha + 'T12:00:00')
+  return new Intl.DateTimeFormat('es-MX', { weekday: 'short', day: 'numeric', month: 'short', timeZone: timezone }).format(d)
+}
+
+function getDefaultDays(timezone: string) {
+  const days: string[] = []
   for (let i = -1; i <= 5; i++) {
-    const d = new Date(today)
+    const d = new Date()
     d.setDate(d.getDate() + i)
-    const fecha = d.toISOString().slice(0, 10)
-    const label = i === 0 ? 'Hoy' :
-      i === 1 ? 'Mañana' :
-      new Intl.DateTimeFormat('es-MX', { weekday: 'short', day: 'numeric', timeZone: timezone }).format(d)
-    days.push({ label, fecha })
+    days.push(d.toISOString().slice(0, 10))
   }
   return days
 }
@@ -32,78 +35,70 @@ interface Props {
   currentFecha?: string
   currentEtapa?: string
   timezone: string
+  availableDates?: string[]  // dates from the selected stage
 }
 
-export function DateNav({ currentFecha, currentEtapa, timezone }: Props) {
-  const days = getDays(timezone)
+export function DateNav({ currentFecha, currentEtapa, timezone, availableDates }: Props) {
   const todayStr = new Date().toISOString().slice(0, 10)
   const activeFecha = currentFecha ?? todayStr
 
+  // Which dates to show in the date scroll
+  const datesToShow = currentEtapa && availableDates?.length
+    ? availableDates
+    : getDefaultDays(timezone)
+
+  const chipStyle = (active: boolean): React.CSSProperties => ({
+    padding: '5px 12px',
+    borderRadius: 20,
+    fontSize: 12,
+    fontWeight: 500,
+    whiteSpace: 'nowrap',
+    textDecoration: 'none',
+    display: 'inline-block',
+    background: active ? 'var(--mx-green)' : 'rgba(255,255,255,0.07)',
+    color: active ? '#fff' : 'var(--text-muted)',
+    border: '1px solid transparent',
+    flexShrink: 0,
+  })
+
   return (
-    <div style={{ marginBottom: 14 }}>
+    <div style={{ marginBottom: 12 }}>
       {/* Stage tabs */}
-      <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 8, scrollbarWidth: 'none' }}>
-        <Link
-          href="/partidos"
-          style={{
-            padding: '5px 12px',
-            borderRadius: 20,
-            fontSize: 12,
-            fontWeight: 500,
-            whiteSpace: 'nowrap',
-            textDecoration: 'none',
-            background: !currentEtapa ? 'var(--mx-green)' : 'rgba(255,255,255,0.07)',
-            color: !currentEtapa ? '#fff' : 'var(--text-muted)',
-            border: '1px solid transparent',
-          }}
-        >
-          Hoy
-        </Link>
+      <div style={{ display: 'flex', gap: 5, overflowX: 'auto', paddingBottom: 8, scrollbarWidth: 'none' }}>
+        <Link href="/partidos" style={chipStyle(!currentEtapa)}>Hoy</Link>
         {STAGES.map(s => (
-          <Link
-            key={s.value}
-            href={`/partidos?etapa=${s.value}`}
-            style={{
-              padding: '5px 12px',
-              borderRadius: 20,
-              fontSize: 12,
-              fontWeight: 500,
-              whiteSpace: 'nowrap',
-              textDecoration: 'none',
-              background: currentEtapa === s.value ? 'var(--mx-green)' : 'rgba(255,255,255,0.07)',
-              color: currentEtapa === s.value ? '#fff' : 'var(--text-muted)',
-              border: '1px solid transparent',
-            }}
-          >
+          <Link key={s.value} href={`/partidos?etapa=${s.value}`} style={chipStyle(currentEtapa === s.value)}>
             {s.label}
           </Link>
         ))}
       </div>
 
-      {/* Date scroll (only visible when no stage filter) */}
-      {!currentEtapa && (
-        <div style={{ display: 'flex', gap: 8, overflowX: 'auto', scrollbarWidth: 'none' }}>
-          {days.map(({ label, fecha }) => (
+      {/* Date scroll */}
+      <div style={{ display: 'flex', gap: 6, overflowX: 'auto', scrollbarWidth: 'none' }}>
+        {datesToShow.map(fecha => {
+          const active = currentEtapa ? false : activeFecha === fecha
+          return (
             <Link
               key={fecha}
-              href={`/partidos?fecha=${fecha}`}
+              href={currentEtapa ? `/partidos?etapa=${currentEtapa}&fecha=${fecha}` : `/partidos?fecha=${fecha}`}
               style={{
-                padding: '6px 12px',
-                borderRadius: 10,
-                fontSize: 12,
+                padding: '5px 10px',
+                borderRadius: 8,
+                fontSize: 11,
                 fontWeight: 500,
                 whiteSpace: 'nowrap',
                 textDecoration: 'none',
-                background: activeFecha === fecha ? 'rgba(0,104,71,0.3)' : 'rgba(255,255,255,0.05)',
-                border: `1px solid ${activeFecha === fecha ? 'rgba(0,104,71,0.5)' : 'rgba(255,255,255,0.08)'}`,
-                color: activeFecha === fecha ? 'var(--mx-green)' : 'var(--text-muted)',
+                flexShrink: 0,
+                background: active ? 'rgba(0,104,71,0.3)' : 'rgba(255,255,255,0.05)',
+                border: `1px solid ${active ? 'rgba(0,104,71,0.5)' : 'rgba(255,255,255,0.07)'}`,
+                color: active ? 'var(--mx-green)' : 'var(--text-muted)',
               }}
             >
-              {label}
+              {formatDateLabel(fecha, timezone)}
             </Link>
-          ))}
-        </div>
-      )}
+          )
+        })}
+      </div>
     </div>
   )
 }

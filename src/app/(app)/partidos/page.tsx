@@ -1,9 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { MatchCard } from '@/components/MatchCard'
-import { isMatchLocked, STAGE_LABELS } from '@/lib/utils'
+import { isMatchLocked } from '@/lib/utils'
 import { DateNav } from './DateNav'
-
-const STAGES = ['GROUP', 'LAST_32', 'ROUND_OF_16', 'QUARTER_FINALS', 'SEMI_FINALS', 'THIRD_PLACE', 'FINAL']
 
 export default async function PartidosPage({
   searchParams,
@@ -14,98 +12,98 @@ export default async function PartidosPage({
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('timezone')
-    .eq('id', user!.id)
-    .single()
 
-  const { data: settings } = await supabase.from('settings').select('key, value')
-  const bloqueoMinutos = parseInt(settings?.find(s => s.key === 'bloqueo_minutos')?.value ?? '15')
-  const timezone = profile?.timezone ?? 'America/Mexico_City'
+  // Fetch profile + settings in parallel
+  const [profileRes, settingsRes] = await Promise.all([
+    supabase.from('profiles').select('timezone').eq('id', user!.id).single(),
+    supabase.from('settings').select('key, value'),
+  ])
 
-  // Build query
+  const bloqueoMinutos = parseInt(settingsRes.data?.find(s => s.key === 'bloqueo_minutos')?.value ?? '15')
+  const timezone = profileRes.data?.timezone ?? 'America/Mexico_City'
+
+  // Build main matches query
   let query = supabase.from('matches').select('*').order('scheduled_time')
 
-  if (etapa) {
+  if (etapa && fecha) {
+    // Stage + specific date
+    const start = new Date(fecha + 'T00:00:00')
+    const end = new Date(fecha + 'T23:59:59')
+    query = query.eq('stage', etapa).gte('scheduled_time', start.toISOString()).lte('scheduled_time', end.toISOString())
+  } else if (etapa) {
     query = query.eq('stage', etapa)
   } else if (fecha) {
-    const start = new Date(fecha)
-    start.setHours(0, 0, 0, 0)
-    const end = new Date(fecha)
-    end.setHours(23, 59, 59, 999)
+    const start = new Date(fecha + 'T00:00:00')
+    const end = new Date(fecha + 'T23:59:59')
     query = query.gte('scheduled_time', start.toISOString()).lte('scheduled_time', end.toISOString())
   } else {
-    // Default: today ± 1 day in user's timezone
     const now = new Date()
-    const start = new Date(now)
-    start.setHours(0, 0, 0, 0)
-    const end = new Date(now)
-    end.setDate(end.getDate() + 1)
-    end.setHours(23, 59, 59, 999)
+    const start = new Date(now); start.setHours(0, 0, 0, 0)
+    const end = new Date(now); end.setDate(end.getDate() + 1); end.setHours(23, 59, 59, 999)
     query = query.gte('scheduled_time', start.toISOString()).lte('scheduled_time', end.toISOString())
   }
 
-  const { data: matches } = await query
+  // Fetch matches + available dates for stage in parallel
+  const [{ data: matches }, stageDatesRes] = await Promise.all([
+    query,
+    // When a stage is selected, get all unique dates for that stage to show in DateNav
+    etapa
+      ? supabase.from('matches').select('scheduled_time').eq('stage', etapa).order('scheduled_time')
+      : Promise.resolve({ data: null }),
+  ])
 
-  // My predictions for these matches
+  // Dedupe available dates for the selected stage
+  const availableDates = stageDatesRes.data
+    ? [...new Set(stageDatesRes.data.map(m => m.scheduled_time.slice(0, 10)))]
+    : undefined
+
   const matchIds = matches?.map(m => m.id) ?? []
-  const { data: myPreds } = matchIds.length
-    ? await supabase.from('predictions').select('match_id, home_score, away_score').eq('user_id', user!.id).in('match_id', matchIds)
-    : { data: [] }
 
-  // All predictions for locked/finished matches
+  // Parallel: my predictions + locked/finished predictions + profiles
   const lockedIds = (matches ?? [])
     .filter(m => isMatchLocked(m.scheduled_time, bloqueoMinutos, m.early_unlock_at) || m.status === 'FINISHED')
     .map(m => m.id)
 
-  // Two separate queries: predictions + profiles joined in JS (no FK declared in public schema)
-  const [allPredsRes, allProfilesRes] = lockedIds.length
-    ? await Promise.all([
-        supabase.from('predictions').select('match_id, user_id, home_score, away_score').in('match_id', lockedIds),
-        supabase.from('profiles').select('id, display_name, avatar_url'),
-      ])
-    : [{ data: [] }, { data: [] }]
+  const [myPredsRes, allPredsRes, allProfilesRes] = await Promise.all([
+    matchIds.length
+      ? supabase.from('predictions').select('match_id, home_score, away_score').eq('user_id', user!.id).in('match_id', matchIds)
+      : Promise.resolve({ data: [] }),
+    lockedIds.length
+      ? supabase.from('predictions').select('match_id, user_id, home_score, away_score').in('match_id', lockedIds)
+      : Promise.resolve({ data: [] }),
+    lockedIds.length
+      ? supabase.from('profiles').select('id, display_name, avatar_url')
+      : Promise.resolve({ data: [] }),
+  ])
 
   const profileMap = new Map((allProfilesRes.data ?? []).map(p => [p.id, p]))
 
   type PredWithProfile = {
-    match_id: string
-    user_id: string
-    home_score: number
-    away_score: number
+    match_id: string; user_id: string; home_score: number; away_score: number
     profiles: { display_name: string; avatar_url: string | null } | null
   }
 
   const allPreds: PredWithProfile[] = (allPredsRes.data ?? []).map(p => ({
     ...p,
-    profiles: profileMap.get(p.user_id) ? {
-      display_name: profileMap.get(p.user_id)!.display_name,
-      avatar_url: profileMap.get(p.user_id)!.avatar_url,
-    } : null,
+    profiles: profileMap.has(p.user_id)
+      ? { display_name: profileMap.get(p.user_id)!.display_name, avatar_url: profileMap.get(p.user_id)!.avatar_url }
+      : null,
   }))
 
-  const myPredMap = new Map(myPreds?.map(p => [p.match_id, p]) ?? [])
+  const myPredMap = new Map(myPredsRes.data?.map(p => [p.match_id, p]) ?? [])
   const allPredMap = new Map<string, PredWithProfile[]>()
   for (const p of allPreds) {
-    const arr = allPredMap.get(p.match_id) ?? []
-    arr.push(p)
-    allPredMap.set(p.match_id, arr)
+    const arr = allPredMap.get(p.match_id) ?? []; arr.push(p); allPredMap.set(p.match_id, arr)
   }
 
-  // Active stage for tabs
-  const activeStages = [...new Set(matches?.map(m => m.stage) ?? [])]
-
   return (
-    <div style={{ padding: '16px 16px 0' }}>
-      <h1 style={{ fontSize: 20, fontWeight: 700, margin: '0 0 14px', color: 'var(--text-main)' }}>
+    <div style={{ paddingTop: 14 }}>
+      <h1 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 12px', color: 'var(--text-main)' }}>
         Partidos
       </h1>
 
-      {/* Navigation: stage tabs (elimination) or date scroll (groups) */}
-      <DateNav currentFecha={fecha} currentEtapa={etapa} timezone={timezone} />
+      <DateNav currentFecha={fecha} currentEtapa={etapa} timezone={timezone} availableDates={availableDates} />
 
-      {/* Match list */}
       {!matches?.length ? (
         <p style={{ color: 'var(--text-muted)', fontSize: 14, textAlign: 'center', marginTop: 40 }}>
           No hay partidos para esta fecha

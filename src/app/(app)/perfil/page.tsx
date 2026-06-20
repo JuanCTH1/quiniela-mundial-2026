@@ -1,6 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
 import { logout } from '@/app/actions/auth'
-import { Avatar } from '@/components/Avatar'
 import { ProfileForm } from './ProfileForm'
 
 export default async function PerfilPage() {
@@ -18,18 +17,11 @@ export default async function PerfilPage() {
         Perfil
       </h1>
 
-      {/* Avatar */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 28 }}>
-        <Avatar
-          name={profile?.display_name ?? user!.email ?? '?'}
-          avatarUrl={profile?.avatar_url ?? undefined}
-          size={80}
-        />
-        <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 8 }}>
-          {user!.email}
-        </p>
+      {/* Email + badge */}
+      <div style={{ textAlign: 'center', marginBottom: 20 }}>
+        <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: 0 }}>{user!.email}</p>
         {profile?.is_admin && (
-          <span style={{ fontSize: 11, padding: '2px 8px', background: 'rgba(212,175,55,0.15)', border: '1px solid rgba(212,175,55,0.3)', borderRadius: 10, color: 'var(--gold)', marginTop: 4 }}>
+          <span style={{ fontSize: 11, padding: '2px 8px', background: 'rgba(212,175,55,0.15)', border: '1px solid rgba(212,175,55,0.3)', borderRadius: 10, color: 'var(--gold)', display: 'inline-block', marginTop: 6 }}>
             Admin
           </span>
         )}
@@ -38,6 +30,8 @@ export default async function PerfilPage() {
       <ProfileForm
         initialName={profile?.display_name ?? ''}
         initialTimezone={profile?.timezone ?? 'America/Mexico_City'}
+        initialAvatarUrl={profile?.avatar_url}
+        userId={user!.id}
       />
 
       {/* Logout */}
