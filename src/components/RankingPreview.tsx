@@ -110,7 +110,8 @@ export function RankingPreview({ matchId, match, allPredictions, currentUserId, 
     calculateRanking()
   }, [isFinished, match, allPredictions, currentUserId])
 
-  if (loading || ranked.length === 0) return null
+  if (loading) return null
+  if (ranked.length === 0) return null
 
   const positions = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣', '6️⃣']
 
@@ -136,8 +137,10 @@ export function RankingPreview({ matchId, match, allPredictions, currentUserId, 
               display: 'flex', alignItems: 'center', gap: 8, fontSize: 12,
             }}
           >
-            {/* Posición */}
-            <span style={{ fontSize: 14, minWidth: 24 }}>{posEmoji}</span>
+            {/* Posición — solo si hay puntos, en vivo solo número */}
+            <span style={{ fontSize: 14, minWidth: 24, opacity: isFinished ? 1 : 0.5 }}>
+              {isFinished ? posEmoji : `${rank}.`}
+            </span>
 
             {/* Nombre */}
             <span style={{
@@ -152,7 +155,7 @@ export function RankingPreview({ matchId, match, allPredictions, currentUserId, 
               {pred.home_score != null ? `${pred.home_score}–${pred.away_score}` : '—'}
             </span>
 
-            {/* Puntos locales */}
+            {/* Puntos locales — solo cuando está terminado */}
             {isFinished && (
               <span style={{ fontSize: 13, fontWeight: 700, color: textColor, minWidth: 28, textAlign: 'right' }}>
                 +{pts}
