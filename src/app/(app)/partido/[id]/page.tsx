@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { Avatar } from '@/components/Avatar'
 import { PredictionForm } from '@/components/PredictionForm'
+import { RankingPreview } from '@/components/RankingPreview'
 import { getTeamFlag, calcResult, isMatchLocked, STAGE_LABELS } from '@/lib/utils'
 import { LiveMatchClient } from './LiveMatchClient'
 import Link from 'next/link'
@@ -167,51 +168,19 @@ export default async function PartidoPage({ params }: { params: Promise<{ id: st
         </div>
       )}
 
-      {/* Predictions (revealed) */}
+      {/* Ranking con coronas y puntos */}
       {(locked || isFinished || isLive) && predictions.length > 0 && (
         <div style={{ marginBottom: 14 }}>
           <h2 style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-muted)', margin: '0 0 10px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-            Pronósticos
+            Ranking
           </h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {predictions.map(pred => {
-              const isMe = pred.user_id === user!.id
-              const profile = Array.isArray(pred.profiles) ? pred.profiles[0] : pred.profiles
-              const name = profile?.display_name ?? '?'
-              const result = (isFinished && match.home_score_quiniela != null && pred.home_score != null)
-                ? calcResult(pred.home_score, pred.away_score!, match.home_score_quiniela, match.away_score_quiniela!)
-                : null
-              const colors = result ? RESULT_COLORS[result.type] : null
-
-              return (
-                <div
-                  key={pred.user_id}
-                  className="glass-card"
-                  style={{
-                    padding: '10px 14px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 10,
-                    background: isMe ? 'rgba(0,104,71,0.12)' : (colors?.bg ?? undefined),
-                    borderColor: isMe ? 'rgba(0,104,71,0.3)' : (colors?.border ?? undefined),
-                  }}
-                >
-                  <Avatar name={name} avatarUrl={profile?.avatar_url} size={32} />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 13, fontWeight: isMe ? 700 : 500 }}>{name}{isMe ? ' (tú)' : ''}</div>
-                    {result && (
-                      <div style={{ fontSize: 11, color: colors?.text, fontWeight: 600 }}>
-                        {result.type} · {result.pts} pts
-                      </div>
-                    )}
-                  </div>
-                  <div style={{ fontSize: 20, fontWeight: 700, color: colors?.text ?? 'var(--text-main)' }}>
-                    {pred.home_score != null ? `${pred.home_score} – ${pred.away_score}` : '—'}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
+          <RankingPreview
+            matchId={id}
+            match={match}
+            allPredictions={predictions}
+            currentUserId={user!.id}
+            isFinished={isFinished}
+          />
         </div>
       )}
 

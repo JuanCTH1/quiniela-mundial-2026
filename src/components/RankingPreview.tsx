@@ -117,8 +117,7 @@ export function RankingPreview({ matchId, match, allPredictions, currentUserId, 
 
   return (
     <div style={{
-      marginTop: 8, borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 8,
-      display: 'flex', flexDirection: 'column', gap: 6,
+      display: 'flex', flexDirection: 'column', gap: 8,
     }}>
       {ranked.map(item => {
         const { pred, rank, pts, resultType, globalPts } = item
@@ -130,24 +129,27 @@ export function RankingPreview({ matchId, match, allPredictions, currentUserId, 
         return (
           <div
             key={pred.user_id}
+            className="glass-card"
             style={{
-              padding: '6px 8px', borderRadius: 7,
-              background: isMe ? 'rgba(0,104,71,0.1)' : 'rgba(255,255,255,0.03)',
+              padding: '10px 12px', borderRadius: 8,
+              background: isMe ? 'rgba(0,104,71,0.12)' : 'rgba(255,255,255,0.03)',
               border: `1px solid ${isMe ? 'rgba(0,104,71,0.3)' : 'rgba(255,255,255,0.08)'}`,
-              display: 'flex', alignItems: 'center', gap: 8, fontSize: 12,
+              display: 'flex', alignItems: 'center', gap: 10, fontSize: 12,
             }}
           >
-            {/* Posición — solo si hay puntos, en vivo solo número */}
-            <span style={{ fontSize: 14, minWidth: 24, opacity: isFinished ? 1 : 0.5 }}>
-              {isFinished ? posEmoji : `${rank}.`}
+            {/* Posición con corona/número */}
+            <span style={{ fontSize: 18, minWidth: 28, textAlign: 'center' }}>
+              {posEmoji}
             </span>
 
             {/* Nombre */}
             <span style={{
-              flex: 1, color: isMe ? 'var(--mx-green)' : 'var(--text-muted)',
-              fontWeight: isMe ? 600 : 400,
+              fontSize: 13,
+              color: isMe ? 'var(--mx-green)' : 'var(--text-main)',
+              fontWeight: isMe ? 700 : 500,
+              flex: 1,
             }}>
-              {name}
+              {name}{isMe ? ' (tú)' : ''}
             </span>
 
             {/* Pronóstico */}
@@ -155,17 +157,17 @@ export function RankingPreview({ matchId, match, allPredictions, currentUserId, 
               {pred.home_score != null ? `${pred.home_score}–${pred.away_score}` : '—'}
             </span>
 
-            {/* Puntos locales — solo cuando está terminado */}
+            {/* Puntos de este partido — solo cuando está terminado */}
             {isFinished && (
-              <span style={{ fontSize: 13, fontWeight: 700, color: textColor, minWidth: 28, textAlign: 'right' }}>
-                +{pts}
+              <span style={{ fontSize: 13, fontWeight: 700, color: textColor, minWidth: 32, textAlign: 'right' }}>
+                +{pts} pts
               </span>
             )}
 
-            {/* Global (si es el usuario y terminó) */}
+            {/* Puntos globales — solo usuario cuando terminó */}
             {isMe && globalPts != null && (
-              <span style={{ fontSize: 10, color: 'var(--text-muted)', paddingLeft: 4, borderLeft: '1px solid rgba(255,255,255,0.1)' }}>
-                {globalPts} total
+              <span style={{ fontSize: 11, color: 'var(--mx-green)', fontWeight: 600, paddingLeft: 8, borderLeft: '1px solid rgba(0,104,71,0.3)' }}>
+                {globalPts}⭐
               </span>
             )}
           </div>
