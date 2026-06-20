@@ -101,7 +101,27 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // ── 6. Cron principal — verificar que corrió recientemente ────────────────
+    // ── 6. Delays del API para partidos de hoy ────────────────────────────────
+    const todayStart = new Date(now); todayStart.setUTCHours(0, 0, 0, 0)
+    const { data: delayLogs } = await sb
+      .from('system_logs')
+      .select('message, details, created_at')
+      .eq('log_type', 'API_DELAY')
+      .gte('created_at', todayStart.toISOString())
+      .order('created_at', { ascending: false })
+
+    if (delayLogs?.length) {
+      for (const dl of delayLogs) {
+        const d = dl.details as Record<string, unknown> | null
+        const mins = d?.delay_minutes as number | null
+        checks.push(`🕐 API delay medido: ${mins}min desde kickoff hasta detección`)
+        if (mins !== null && mins > 15) {
+          errors.push(`⚠️ API delay de ${mins}min — partidos en vivo se reflejan tarde (¿plan gratuito de football-data.org?)`)
+        }
+      }
+    }
+
+    // ── 7. Cron principal — verificar que corrió recientemente ────────────────
     const { data: lastCronLog } = await sb
       .from('system_logs')
       .select('created_at, message')
@@ -120,6 +140,10 @@ export async function GET(req: NextRequest) {
         checks.push(`Cron principal: último run hace ${minsSinceCron}min ✓`)
       }
     }
+
+    // Tip: football-data.org free tier = 10min delay intencional
+    // Paid tier = ~1min. Si delay_minutes > 10 es normal en free tier.
+    checks.push('ℹ️ football-data.org free tier: delay intencional de ~10min en datos live')
 
     const allOk = errors.length === 0
     const summary = allOk

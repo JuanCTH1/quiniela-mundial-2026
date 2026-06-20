@@ -59,6 +59,8 @@ export async function GET(request: NextRequest) {
 
       // No escribir si no hay datos completos (evita nulos parciales)
       const isFinished = apiMatch.status === 'FINISHED' && quiniela !== null
+      const isFirstLive = apiMatch.status === 'IN_PROGRESS' && !match.actual_start_time
+      const detectedAt = new Date()
 
       const payload: Partial<TablesInsert<'matches'>> = {
         status: normalizeStatus(apiMatch.status),
@@ -71,9 +73,8 @@ export async function GET(request: NextRequest) {
           away_score_quiniela: quiniela!.away,
           result_source: 'AUTOMATIC',
         }),
-        // Registrar hora de inicio real si el partido arrancó
-        ...(apiMatch.status === 'IN_PROGRESS' && !match.actual_start_time && {
-          actual_start_time: new Date().toISOString(),
+        ...(isFirstLive && {
+          actual_start_time: detectedAt.toISOString(),
         }),
       }
 
@@ -85,6 +86,16 @@ export async function GET(request: NextRequest) {
       if (updateErr) throw updateErr
 
       results.updated++
+
+      // Log detección de inicio para medir delay real del API
+      if (isFirstLive) {
+        const delayMin = Math.round((detectedAt.getTime() - new Date(match.scheduled_time).getTime()) / 60000)
+        await logEntry(supabase, 'API_DELAY',
+          `${match.external_id} detectado EN JUEGO ${delayMin}min después del kickoff programado`,
+          false, match.id,
+          { delay_minutes: delayMin, scheduled_time: match.scheduled_time, detected_at: detectedAt.toISOString() }
+        )
+      }
 
       if (isFinished) {
         await logEntry(supabase, 'RESULT_UPDATE',
