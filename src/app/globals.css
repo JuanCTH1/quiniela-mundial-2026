@@ -172,7 +172,7 @@ body {
 /* ── GLASS CARD ── */
 .glass-card {
   background: var(--glass-bg);
-  backdrop-filter: blur(12px) saturate(180%);
+  backdrop-filter: blur(6px) saturate(180%);
   border: 1px solid var(--glass-border);
   border-top: 1px solid var(--glass-border-top);
   border-left: 1px solid rgba(255, 255, 255, 0.10);
