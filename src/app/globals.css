@@ -22,7 +22,7 @@
   --glass-border:     rgba(255, 255, 255, 0.07);
   --glass-border-top: rgba(255, 255, 255, 0.20);
   --glass-glow:       color-mix(in srgb, var(--theme-primary) 35%, transparent);
-  --glass-blur:       blur(56px);
+  --glass-blur:       blur(8px);
 
   /* === TEMA DINÁMICO (defaults = México) === */
   --theme-primary: var(--mx-green);
@@ -68,7 +68,7 @@
   --glass-border:     rgba(0, 0, 0, 0.08);
   --glass-border-top: rgba(255, 255, 255, 0.88);
   --glass-glow:       color-mix(in srgb, var(--theme-primary) 18%, transparent);
-  --glass-blur:       blur(44px);
+  --glass-blur:       blur(7px);
 
   /* Chrome */
   --header-bg:     rgba(255, 255, 255, 0.80);
