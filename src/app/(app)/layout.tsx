@@ -38,14 +38,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const bloqueoMinutos = parseInt(settings.find(s => s.key === 'bloqueo_minutos')?.value ?? '15')
   const timezone = profile?.timezone ?? 'America/Mexico_City'
 
-  // Fetch theme separately (column is new, types not regenerated yet)
-  const themeRes = await supabase.from('profiles').select('theme').eq('id', user.id).single()
-  const theme = ((themeRes.data as any)?.theme as Theme) ?? 'mexico'
+  const theme = (profile?.theme as Theme) ?? 'mexico'
   const liveMatch = liveMatchRes.data ?? null
   const nextMatch = nextMatchRes.data ?? null
 
   const bannerSkeleton = (liveMatch || nextMatch) ? (
-    <div style={{ height: 52, background: 'rgba(0,104,71,0.06)' }} />
+    <div style={{ height: 52, background: 'var(--glass-bg)' }} />
   ) : null
 
   return (
@@ -75,7 +73,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <div style={{ padding: '0 16px' }}>
         {children}
       </div>
-      <BottomNav isAdmin={profile?.is_admin ?? false} />
+      <BottomNav isAdmin={profile?.is_admin ?? false} theme={theme} />
     </div>
     </ThemeProvider>
   )

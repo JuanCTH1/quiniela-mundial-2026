@@ -2,6 +2,7 @@
 
 import { useState, useRef, useTransition } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { getTheme, type Theme } from '@/lib/themes'
 
 interface Props {
   matchId: string
@@ -9,9 +10,11 @@ interface Props {
   bloqueoMinutos: number
   currentPrediction?: { home_score: number | null; away_score: number | null } | null
   disabled?: boolean
+  theme?: Theme
 }
 
-export function PredictionForm({ matchId, scheduledTime, bloqueoMinutos, currentPrediction, disabled }: Props) {
+export function PredictionForm({ matchId, scheduledTime, bloqueoMinutos, currentPrediction, disabled, theme = 'mexico' }: Props) {
+  const t = getTheme(theme)
   const [saved, setSaved] = useState<{ home: number; away: number } | null>(
     currentPrediction?.home_score != null
       ? { home: currentPrediction.home_score, away: currentPrediction.away_score! }
@@ -114,19 +117,19 @@ export function PredictionForm({ matchId, scheduledTime, bloqueoMinutos, current
           disabled={pending}
           style={{
             padding: '7px 16px', fontSize: 13,
-            background: hasPred ? 'transparent' : 'var(--mx-green)',
-            border: '1px solid var(--mx-green)',
+            background: hasPred ? 'transparent' : 'var(--primary)',
+            border: '1px solid var(--primary)',
             borderRadius: 8,
-            color: hasPred ? 'var(--mx-green)' : '#fff',
+            color: hasPred ? 'var(--primary)' : '#fff',
             cursor: pending ? 'not-allowed' : 'pointer',
             opacity: pending ? 0.6 : 1,
             fontWeight: 500,
           }}
         >
-          {pending ? '...' : hasPred ? 'Editar' : 'Guardar'}
+          {pending ? '...' : hasPred ? t.texts.edit : t.texts.save}
         </button>
         {hasPred && !pending && !error && (
-          <span style={{ fontSize: 12, color: 'var(--mx-green)' }}>✓</span>
+          <span style={{ fontSize: 12, color: 'var(--primary)' }}>✓</span>
         )}
       </div>
       {error && (

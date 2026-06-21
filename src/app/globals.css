@@ -23,11 +23,11 @@
   --text-dim:  rgba(255, 255, 255, 0.25);
 
   /* === GLASSMORPHISM === */
-  --glass-bg:         rgba(0, 104, 71, 0.08);
-  --glass-bg-hover:   rgba(0, 104, 71, 0.14);
+  --glass-bg:         color-mix(in srgb, var(--theme-primary) 8%, transparent);
+  --glass-bg-hover:   color-mix(in srgb, var(--theme-primary) 14%, transparent);
   --glass-border:     rgba(255, 255, 255, 0.07);
   --glass-border-top: rgba(255, 255, 255, 0.20);
-  --glass-glow:       rgba(0, 104, 71, 0.35);
+  --glass-glow:       color-mix(in srgb, var(--theme-primary) 35%, transparent);
   --glass-blur:       blur(24px);
 
   /* === TEMA DINÁMICO === */
@@ -42,16 +42,16 @@
   /* === SEMÁNTICOS === */
   --accent:   var(--theme-secondary);
   --primary:  var(--theme-primary);
-  --danger:   var(--theme-accent);
+  --danger:   var(--mx-red);
   --success:  #34A853;
   --warning:  #F59E0B;
 }
 
 @theme inline {
-  --color-background:  var(--bg-dark);
+  --color-background:  var(--theme-background);
   --color-foreground:  var(--text-main);
-  --color-primary:     var(--mx-green);
-  --color-accent:      var(--gold);
+  --color-primary:     var(--theme-primary);
+  --color-accent:      var(--theme-secondary);
   --color-danger:      var(--mx-red);
   --color-success:     #34A853;
   --color-warning:     #F59E0B;
@@ -69,7 +69,7 @@
 
 body {
   font-family: var(--font-sans);
-  background: linear-gradient(135deg, #040a07 0%, #071410 50%, #020604 100%);
+  background: var(--theme-background);
   color: var(--text-main);
   min-height: 100vh;
   isolation: isolate;
@@ -86,9 +86,9 @@ body {
 /* ── BLOBS DE FONDO ── */
 .g-blob-wrap { position: fixed; inset: 0; pointer-events: none; z-index: -1; }
 .g-blob { position: absolute; border-radius: 50%; }
-.g-blob-1 { width: 55vw; height: 45vh; left: -10%; top: -5%;    background: rgba(0, 104, 71, 0.25);  filter: blur(90px); animation: gb1 30s ease-in-out infinite; }
-.g-blob-2 { width: 45vw; height: 35vh; right: -10%; bottom: -5%; background: rgba(206, 17, 38, 0.12);  filter: blur(80px); animation: gb2 38s ease-in-out infinite; }
-.g-blob-3 { width: 40vw; height: 30vh; left: 35%; top: 20%;     background: rgba(212, 175, 55, 0.10); filter: blur(70px); animation: gb3 25s ease-in-out infinite; }
+.g-blob-1 { width: 55vw; height: 45vh; left: -10%; top: -5%;    background: color-mix(in srgb, var(--theme-primary) 25%, transparent);   filter: blur(90px); animation: gb1 30s ease-in-out infinite; }
+.g-blob-2 { width: 45vw; height: 35vh; right: -10%; bottom: -5%; background: color-mix(in srgb, var(--theme-accent) 12%, transparent);  filter: blur(80px); animation: gb2 38s ease-in-out infinite; }
+.g-blob-3 { width: 40vw; height: 30vh; left: 35%; top: 20%;     background: color-mix(in srgb, var(--theme-secondary) 10%, transparent); filter: blur(70px); animation: gb3 25s ease-in-out infinite; }
 @keyframes gb1 { 0%,100%{transform:translate(0,0) scale(1)} 35%{transform:translate(5%,4%) scale(1.07)} 70%{transform:translate(-3%,3%) scale(0.95)} }
 @keyframes gb2 { 0%,100%{transform:translate(0,0) scale(1)} 40%{transform:translate(-5%,-4%) scale(1.05)} 75%{transform:translate(4%,-2%) scale(0.96)} }
 @keyframes gb3 { 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(-5%,6%) scale(1.09)} }
@@ -107,7 +107,7 @@ body {
 }
 .glass-card:hover {
   background: var(--glass-bg-hover);
-  box-shadow: 0 12px 40px 0 rgba(0, 104, 71, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  box-shadow: 0 12px 40px 0 color-mix(in srgb, var(--theme-primary) 15%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 /* ── PRESS / TAP EFFECTS ── */
@@ -151,7 +151,7 @@ a:active > .glass-card {
 }
 
 /* ── TABLA DE POSICIONES: estados especiales ── */
-.rank-first  { box-shadow: 0 0 0 2px var(--gold), 0 0 20px rgba(212, 175, 55, 0.3); }
+.rank-first  { box-shadow: 0 0 0 2px var(--theme-secondary), 0 0 20px color-mix(in srgb, var(--theme-secondary) 30%, transparent); }
 .rank-last   { background: rgba(139, 0, 0, 0.15) !important; border-color: rgba(139, 0, 0, 0.4) !important; }
 
 /* ── ESTADO MODO PRUEBA ── */

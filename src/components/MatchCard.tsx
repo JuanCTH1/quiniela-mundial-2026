@@ -163,7 +163,7 @@ export function MatchCard({
           {/* Mi pronóstico cuando está abierto — arriba del form */}
           {myPrediction?.home_score != null && (
             <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>
-              Tu pronóstico actual: <span style={{ fontWeight: 700, color: 'var(--mx-green)', fontSize: 14 }}>
+              Tu pronóstico actual: <span style={{ fontWeight: 700, color: 'var(--primary)', fontSize: 14 }}>
                 {myPrediction.home_score}–{myPrediction.away_score}
               </span>
             </div>
@@ -175,6 +175,7 @@ export function MatchCard({
             bloqueoMinutos={bloqueoMinutos}
             currentPrediction={myPrediction}
             disabled={false}
+            theme={theme}
           />
         </div>
       )}

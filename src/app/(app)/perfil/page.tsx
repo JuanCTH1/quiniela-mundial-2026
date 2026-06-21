@@ -8,13 +8,11 @@ export default async function PerfilPage() {
   const { data: { user } } = await supabase.auth.getUser()
   const { data: profile } = await supabase
     .from('profiles')
-    .select('display_name, avatar_url, timezone, is_admin')
+    .select('display_name, avatar_url, timezone, is_admin, theme')
     .eq('id', user!.id)
     .single()
 
-  // Fetch theme separately (column is new, types not regenerated yet)
-  const themeRes = await supabase.from('profiles').select('theme').eq('id', user!.id).single()
-  const theme = ((themeRes.data as any)?.theme) ?? 'mexico'
+  const theme = profile?.theme ?? 'mexico'
 
   return (
     <div style={{ padding: '16px 16px 0' }}>

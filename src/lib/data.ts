@@ -14,10 +14,10 @@ export const getProfile = cache(async (userId: string) => {
   const supabase = await createClient()
   const { data } = await supabase
     .from('profiles')
-    .select('display_name, avatar_url, is_admin, timezone')
+    .select('display_name, avatar_url, is_admin, timezone, theme')
     .eq('id', userId)
     .single()
-  return data as any  // TODO: regenerate types after theme column added
+  return data
 })
 
 export const getSettings = cache(async () => {
