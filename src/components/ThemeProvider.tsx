@@ -18,6 +18,9 @@ export function ThemeProvider({ theme, children }: Props) {
       root.style.setProperty(`--theme-${key}`, value)
     })
 
+    // Aplicar patrón de fondo
+    root.style.setProperty('--theme-pattern', t.pattern)
+
     // Aplicar modo (light/dark) — activa overrides CSS en [data-mode="light"]
     root.setAttribute('data-mode', t.mode)
 

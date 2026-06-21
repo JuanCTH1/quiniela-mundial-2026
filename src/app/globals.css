@@ -132,7 +132,8 @@
 
 body {
   font-family: var(--font-sans);
-  background: var(--theme-background);
+  background-color: var(--theme-background);
+  background-image: var(--theme-pattern, none);
   color: var(--text-main);
   min-height: 100vh;
   isolation: isolate;
