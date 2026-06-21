@@ -33,12 +33,15 @@ export function ThemeSelector({ initialTheme, userId }: Props) {
   const [isDia, setIsDia] = useState(parsed.isDia)
   const [saving, setSaving] = useState(false)
 
-  async function applyTheme(newCountry: Country, newIsDia: boolean) {
-    const newTheme = buildTheme(newCountry, newIsDia)
+  const savedTheme = buildTheme(parsed.country, parsed.isDia)
+  const selected = buildTheme(country, isDia)
+  const isDirty = selected !== savedTheme
+
+  async function handleApply() {
     setSaving(true)
     try {
       const supabase = createClient()
-      const { error } = await (supabase as any).from('profiles').update({ theme: newTheme }).eq('id', userId)
+      const { error } = await (supabase as any).from('profiles').update({ theme: selected }).eq('id', userId)
       if (error) throw error
       setTimeout(() => window.location.reload(), 200)
     } catch (err) {
@@ -46,16 +49,6 @@ export function ThemeSelector({ initialTheme, userId }: Props) {
       alert('Error al cambiar tema: ' + msg)
       setSaving(false)
     }
-  }
-
-  function handleCountry(c: Country) {
-    setCountry(c)
-    applyTheme(c, isDia)
-  }
-
-  function handleMode(dia: boolean) {
-    setIsDia(dia)
-    applyTheme(country, dia)
   }
 
   return (
@@ -68,8 +61,7 @@ export function ThemeSelector({ initialTheme, userId }: Props) {
       }}>
         <span style={{ fontSize: 18 }}>🌙</span>
         <button
-          onClick={() => handleMode(!isDia)}
-          disabled={saving}
+          onClick={() => setIsDia(v => !v)}
           aria-label={isDia ? 'Cambiar a noche' : 'Cambiar a día'}
           style={{
             position: 'relative',
@@ -79,7 +71,7 @@ export function ThemeSelector({ initialTheme, userId }: Props) {
             background: isDia
               ? 'color-mix(in srgb, var(--theme-primary) 60%, #fff)'
               : 'rgba(255,255,255,0.12)',
-            cursor: saving ? 'wait' : 'pointer',
+            cursor: 'pointer',
             transition: 'background 0.3s',
             padding: 0,
           }}
@@ -100,39 +92,58 @@ export function ThemeSelector({ initialTheme, userId }: Props) {
       {/* Selector de país */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
         {COUNTRIES.map(c => {
-          const selected = country === c.id
+          const active = country === c.id
           return (
             <button
               key={c.id}
-              onClick={() => handleCountry(c.id)}
-              disabled={saving}
+              onClick={() => setCountry(c.id)}
               style={{
                 display: 'flex', flexDirection: 'column', alignItems: 'center',
                 gap: 6, padding: '14px 8px',
                 borderRadius: 12,
-                border: selected
+                border: active
                   ? '2px solid var(--theme-primary)'
                   : '1px solid var(--glass-border)',
-                background: selected ? 'var(--glass-bg-hover)' : 'var(--glass-bg)',
-                cursor: saving ? 'wait' : 'pointer',
-                opacity: saving ? 0.6 : 1,
+                background: active ? 'var(--glass-bg-hover)' : 'var(--glass-bg)',
+                cursor: 'pointer',
                 transition: 'all 0.2s',
               }}
             >
               <span style={{ fontSize: 32, lineHeight: 1 }}>{c.emoji}</span>
               <span style={{
-                fontSize: 12, fontWeight: selected ? 700 : 500,
-                color: selected ? 'var(--theme-primary)' : 'var(--text-muted)',
+                fontSize: 12, fontWeight: active ? 700 : 500,
+                color: active ? 'var(--theme-primary)' : 'var(--text-muted)',
               }}>
                 {c.name}
               </span>
-              {selected && (
+              {active && (
                 <span style={{ fontSize: 10, color: 'var(--theme-primary)' }}>✓</span>
               )}
             </button>
           )
         })}
       </div>
+
+      {/* Botón Aplicar */}
+      <button
+        onClick={handleApply}
+        disabled={!isDirty || saving}
+        style={{
+          padding: '12px',
+          borderRadius: 10,
+          border: 'none',
+          background: isDirty
+            ? 'var(--theme-primary)'
+            : 'rgba(255,255,255,0.06)',
+          color: isDirty ? '#fff' : 'var(--text-dim)',
+          fontSize: 14, fontWeight: 600,
+          cursor: isDirty && !saving ? 'pointer' : 'default',
+          transition: 'all 0.2s',
+          opacity: saving ? 0.6 : 1,
+        }}
+      >
+        {saving ? 'Aplicando...' : isDirty ? 'Aplicar tema' : 'Sin cambios'}
+      </button>
     </div>
   )
 }
