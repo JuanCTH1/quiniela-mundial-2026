@@ -33,7 +33,7 @@ export function ThemeSelector({ initialTheme, userId }: Props) {
     }
   }
 
-  const themeOptions: Theme[] = ['mexico', 'usa', 'argentina']
+  const themeOptions: Theme[] = ['mexico', 'usa', 'argentina', 'argentina_dia']
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -45,8 +45,10 @@ export function ThemeSelector({ initialTheme, userId }: Props) {
           style={{
             padding: '12px 14px',
             borderRadius: 10,
-            border: theme === t ? '2px solid var(--theme-primary)' : '1px solid rgba(255,255,255,0.12)',
-            background: theme === t ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.2)',
+            border: theme === t
+              ? '2px solid var(--theme-primary)'
+              : '1px solid var(--glass-border)',
+            background: theme === t ? 'var(--glass-bg-hover)' : 'var(--glass-bg)',
             color: 'var(--text-main)',
             fontSize: 14,
             fontWeight: theme === t ? 600 : 500,
@@ -60,7 +62,10 @@ export function ThemeSelector({ initialTheme, userId }: Props) {
         >
           <span style={{ fontSize: 18 }}>{THEMES[t].emoji}</span>
           <span style={{ flex: 1, textAlign: 'left' }}>{THEMES[t].name}</span>
-          {theme === t && <span style={{ fontSize: 14 }}>✓</span>}
+          <span style={{ fontSize: 10, color: 'var(--text-dim)' }}>
+            {THEMES[t].mode === 'light' ? '☀️' : '🌙'}
+          </span>
+          {theme === t && <span style={{ fontSize: 14, color: 'var(--primary)' }}>✓</span>}
         </button>
       ))}
     </div>

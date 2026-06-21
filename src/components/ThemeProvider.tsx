@@ -18,6 +18,9 @@ export function ThemeProvider({ theme, children }: Props) {
       root.style.setProperty(`--theme-${key}`, value)
     })
 
+    // Aplicar modo (light/dark) — activa overrides CSS en [data-mode="light"]
+    root.setAttribute('data-mode', t.mode)
+
     // Aplicar header si existe
     if (t.header) {
       const headerEl = document.querySelector('[data-theme-header]')

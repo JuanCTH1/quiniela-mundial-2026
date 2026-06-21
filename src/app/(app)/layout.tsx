@@ -53,8 +53,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         position: 'sticky', top: 0, zIndex: 50,
         backdropFilter: 'blur(20px) saturate(180%)',
         WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-        background: 'rgba(6,12,10,0.75)',
-        borderBottom: '1px solid rgba(255,255,255,0.06)',
+        background: 'var(--header-bg)',
+        borderBottom: '1px solid var(--header-border)',
       }}>
         {appMode === 'test' && <TestModeBanner theme={theme} />}
         {alertRes.data && (

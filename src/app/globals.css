@@ -44,6 +44,70 @@
   --danger:   var(--mx-red);
   --success:  #34A853;
   --warning:  #F59E0B;
+
+  /* === CHROME ESTRUCTURAL (nav/header) === */
+  --header-bg:     rgba(6,12,10,0.75);
+  --header-border: rgba(255,255,255,0.06);
+  --nav-bg:        rgba(6,12,10,0.92);
+  --nav-border:    rgba(255,255,255,0.07);
+}
+
+/* ─────────────────────────────────────────────────────
+   LIGHT MODE — [data-mode="light"]
+   Glassmorphism en fondo claro:
+   • Cards: blanco semi-opaco (0.55) con borde oscuro sutil
+   • Top highlight: blanco fuerte (0.90) simula el filo del vidrio
+   • Shadow: más suave (0.10 vs 0.35 del dark)
+   • Blobs: menor opacidad para no aplastar el fondo claro
+   • Texto: oscuro
+   ───────────────────────────────────────────────────── */
+[data-mode="light"] {
+  /* Glass system */
+  --glass-bg:         rgba(255, 255, 255, 0.55);
+  --glass-bg-hover:   rgba(255, 255, 255, 0.76);
+  --glass-border:     rgba(0, 0, 0, 0.08);
+  --glass-border-top: rgba(255, 255, 255, 0.88);
+  --glass-glow:       color-mix(in srgb, var(--theme-primary) 18%, transparent);
+  --glass-blur:       blur(20px);
+
+  /* Chrome */
+  --header-bg:     rgba(255, 255, 255, 0.80);
+  --header-border: rgba(0, 0, 0, 0.06);
+  --nav-bg:        rgba(255, 255, 255, 0.88);
+  --nav-border:    rgba(0, 0, 0, 0.07);
+}
+
+/* Glass card — shadow override en light */
+[data-mode="light"] .glass-card {
+  border-color: var(--glass-border);
+  border-top-color: var(--glass-border-top);
+  border-left-color: rgba(255, 255, 255, 0.70);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    0 2px 12px rgba(0, 0, 0, 0.08),
+    0 1px 3px rgba(0, 0, 0, 0.04);
+}
+[data-mode="light"] .glass-card:hover {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.92),
+    0 6px 28px rgba(0, 0, 0, 0.12),
+    0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+/* Blobs más tenues en light para no tapar el fondo */
+[data-mode="light"] .g-blob-1 { opacity: 0.30; }
+[data-mode="light"] .g-blob-2 { opacity: 0.18; }
+[data-mode="light"] .g-blob-3 { opacity: 0.14; }
+
+/* Scrollbar en light */
+[data-mode="light"] ::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); }
+[data-mode="light"] ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.16); }
+[data-mode="light"] ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.28); }
+
+/* rank-last en light — el dark red necesita más opacidad */
+[data-mode="light"] .rank-last {
+  background: rgba(139, 0, 0, 0.08) !important;
+  border-color: rgba(139, 0, 0, 0.25) !important;
 }
 
 @theme inline {
