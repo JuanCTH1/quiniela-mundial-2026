@@ -140,14 +140,17 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Patrón de fondo fijo — el contenido scrollea sobre él (parallax natural, funciona en iOS) */
-body::before {
-  content: '';
+/* #parallax-bg — manejado por ParallaxBackground.tsx vía JS scroll */
+#parallax-bg {
   position: fixed;
-  inset: 0;
+  top: -50%;
+  left: -5%;
+  right: -5%;
+  bottom: -50%;
   z-index: -2;
   background-image: var(--theme-pattern, none);
   pointer-events: none;
+  will-change: transform;
 }
 
 /* ── SCROLLBAR ── */

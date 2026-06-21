@@ -7,6 +7,7 @@ import { SystemAlertBanner } from '@/components/SystemAlertBanner'
 import { NextMatchBannerWrapper } from '@/components/NextMatchBannerWrapper'
 import { BottomNav } from '@/components/BottomNav'
 import { ThemeProvider } from '@/components/ThemeProvider'
+import { ParallaxBackground } from '@/components/ParallaxBackground'
 import type { Theme } from '@/lib/themes'
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -48,6 +49,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <ThemeProvider theme={theme}>
+      <ParallaxBackground />
       <div style={{ paddingBottom: 'calc(72px + env(safe-area-inset-bottom))', maxWidth: 480, margin: '0 auto' }}>
       <div style={{
         position: 'sticky', top: 0, zIndex: 50,
