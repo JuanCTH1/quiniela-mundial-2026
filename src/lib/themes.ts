@@ -84,15 +84,15 @@ export const THEMES: Record<Theme, {
     locale: 'en-US',
     mode: 'dark',
     colors: {
-      primary: '#1E3A8A',
+      primary: '#3B82F6',
       secondary: '#DC2626',
-      accent: '#FFFFFF',
-      background: '#060912',
+      accent: '#DC2626',
+      background: '#050D1E',
       text_main: '#EEF2FF',
       text_muted: '#94A3B8',
       text_dim: '#475569',
     },
-    pattern: 'repeating-linear-gradient(180deg, rgba(220,38,38,0.055) 0, rgba(220,38,38,0.055) 1px, transparent 1px, transparent 20px)',
+    pattern: 'repeating-linear-gradient(180deg, rgba(220,38,38,0.11) 0, rgba(220,38,38,0.11) 6px, transparent 6px, transparent 24px)',
     texts: {
       testMode: 'Test Mode — data is not real',
       open: 'Open', locked: 'Locked', finished: 'Final', live: '● In Play',
@@ -154,7 +154,7 @@ export const THEMES: Record<Theme, {
       text_muted: '#7FB3CC',
       text_dim: '#3A6A8A',
     },
-    pattern: 'repeating-linear-gradient(90deg, transparent 0, transparent 36px, rgba(41,171,226,0.10) 36px, rgba(41,171,226,0.10) 72px)',
+    pattern: 'repeating-linear-gradient(90deg, transparent 0, transparent 36px, rgba(41,171,226,0.05) 36px, rgba(41,171,226,0.05) 72px)',
     texts: {
       testMode: 'Modo de prueba — los datos no son reales',
       open: 'Abierto boludo', locked: 'Se cierra', finished: 'Terminó', live: '¡Dale, en vivo!',

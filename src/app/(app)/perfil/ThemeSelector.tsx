@@ -11,10 +11,10 @@ interface Props {
 
 type Country = 'mexico' | 'usa' | 'argentina'
 
-const COUNTRIES: { id: Country; emoji: string; name: string }[] = [
-  { id: 'mexico',    emoji: '🇲🇽', name: 'México' },
-  { id: 'usa',       emoji: '🇺🇸', name: 'USA' },
-  { id: 'argentina', emoji: '🇦🇷', name: 'Argentina' },
+const COUNTRIES: { id: Country; emoji: string; name: string; color: string }[] = [
+  { id: 'mexico',    emoji: '🇲🇽', name: 'México',    color: '#006847' },
+  { id: 'usa',       emoji: '🇺🇸', name: 'USA',       color: '#3B82F6' },
+  { id: 'argentina', emoji: '🇦🇷', name: 'Argentina', color: '#29ABE2' },
 ]
 
 function parseTheme(theme: string): { country: Country; isDia: boolean } {
@@ -102,9 +102,9 @@ export function ThemeSelector({ initialTheme, userId }: Props) {
                 gap: 6, padding: '14px 8px',
                 borderRadius: 12,
                 border: active
-                  ? '2px solid var(--theme-primary)'
+                  ? `2px solid ${c.color}`
                   : '1px solid var(--glass-border)',
-                background: active ? 'var(--glass-bg-hover)' : 'var(--glass-bg)',
+                background: active ? `${c.color}22` : 'var(--glass-bg)',
                 cursor: 'pointer',
                 transition: 'all 0.2s',
               }}
@@ -112,12 +112,12 @@ export function ThemeSelector({ initialTheme, userId }: Props) {
               <span style={{ fontSize: 32, lineHeight: 1 }}>{c.emoji}</span>
               <span style={{
                 fontSize: 12, fontWeight: active ? 700 : 500,
-                color: active ? 'var(--theme-primary)' : 'var(--text-muted)',
+                color: active ? c.color : 'var(--text-muted)',
               }}>
                 {c.name}
               </span>
               {active && (
-                <span style={{ fontSize: 10, color: 'var(--theme-primary)' }}>✓</span>
+                <span style={{ fontSize: 10, color: c.color }}>✓</span>
               )}
             </button>
           )
