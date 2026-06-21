@@ -22,7 +22,7 @@
   --glass-border:     rgba(255, 255, 255, 0.07);
   --glass-border-top: rgba(255, 255, 255, 0.20);
   --glass-glow:       color-mix(in srgb, var(--theme-primary) 35%, transparent);
-  --glass-blur:       blur(56px);
+  --glass-blur:       blur(12px) saturate(180%);
 
   /* === TEMA DINÁMICO (defaults = México) === */
   --theme-primary: var(--mx-green);
@@ -68,7 +68,7 @@
   --glass-border:     rgba(0, 0, 0, 0.08);
   --glass-border-top: rgba(255, 255, 255, 0.88);
   --glass-glow:       color-mix(in srgb, var(--theme-primary) 18%, transparent);
-  --glass-blur:       blur(44px);
+  --glass-blur:       blur(12px) saturate(180%);
 
   /* Chrome */
   --header-bg:     rgba(255, 255, 255, 0.80);
@@ -172,8 +172,7 @@ body {
 /* ── GLASS CARD ── */
 .glass-card {
   background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur) saturate(180%);
-  -webkit-backdrop-filter: var(--glass-blur) saturate(180%);
+  backdrop-filter: blur(12px) saturate(180%);
   border: 1px solid var(--glass-border);
   border-top: 1px solid var(--glass-border-top);
   border-left: 1px solid rgba(255, 255, 255, 0.10);
