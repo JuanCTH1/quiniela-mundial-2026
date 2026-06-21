@@ -40,7 +40,12 @@ export function ProfileForm({ initialName, initialTimezone, initialAvatarUrl, us
     const path = `${userId}/avatar.${ext}`
 
     const { error } = await supabase.storage.from('avatares').upload(path, file, { upsert: true })
-    if (error) { setAvatarError('Error al subir imagen'); setAvatarUploading(false); return }
+    if (error) {
+      const msg = /mime|content type/i.test(error.message) ? 'Formato no soportado. Usa JPG, PNG o WebP.'
+        : /size|exceed|large|payload/i.test(error.message) ? 'Imagen muy pesada (máx 2 MB).'
+        : error.message || 'Error al subir imagen'
+      setAvatarError(msg); setAvatarUploading(false); return
+    }
 
     const { data: { publicUrl } } = supabase.storage.from('avatares').getPublicUrl(path)
 

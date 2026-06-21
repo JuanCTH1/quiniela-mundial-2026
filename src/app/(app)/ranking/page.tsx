@@ -9,12 +9,16 @@ export default async function RankingPage() {
   const { data: { user } } = await supabase.auth.getUser()
 
   const [{ data: rows }, profileRes] = await Promise.all([
-    supabase
-      .from('leaderboard')
-      .select('*')
-      .order('total_points', { ascending: false })
-      .order('exact_count', { ascending: false })
-      .order('diff_count', { ascending: false }),
+    (() => {
+      const q = supabase
+        .from('leaderboard')
+        .select('*')
+        .order('total_points', { ascending: false })
+        .order('exact_count', { ascending: false })
+        .order('diff_count', { ascending: false })
+      // En prod escondemos a los usuarios de prueba (is_test); en QA se ven todos
+      return process.env.NEXT_PUBLIC_APP_ENV === 'production' ? q.eq('is_test', false) : q
+    })(),
     supabase.from('profiles').select('theme').eq('id', user!.id).single(),
   ])
 

@@ -126,7 +126,7 @@ export function AdminActions({ appMode, bloqueoMinutos, users, logs }: Props) {
         </div>
         {confirmReal && (
           <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>
-            Esto borra datos de prueba y activa el torneo. No hay vuelta atrás.
+            Activa el torneo de forma definitiva: las reglas y el modo quedan bloqueados y los usuarios de prueba se ocultan. No hay vuelta atrás.
           </p>
         )}
       </div>

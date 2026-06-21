@@ -294,6 +294,7 @@ export type Database = {
           exact_count: number | null
           fail_count: number | null
           is_admin: boolean | null
+          is_test: boolean | null
           matches_scored: number | null
           total_points: number | null
           trend_count: number | null

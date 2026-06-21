@@ -198,9 +198,15 @@ export function RulesDisplay({ rule, isAdmin }: Props) {
       </div>
 
       {/* Notas */}
-      <div style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.6 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.6 }}>
         <p>
-          <strong>Nota:</strong> Los mismos puntos aplican en todas las etapas del torneo (grupos, eliminatorias, final).
+          <strong>Puntaje:</strong> Los mismos puntos aplican en todas las etapas del torneo (grupos, eliminatorias, final).
+        </p>
+        <p>
+          <strong>Grupos:</strong> Se usa el marcador al final de los 90' (incluyendo tiempo de descuento).
+        </p>
+        <p>
+          <strong>Eliminatorias:</strong> Se usa el marcador al final de los 120' (prórroga incluida). Si el partido se va a penales, el resultado es el del minuto 120 — los penales no suman goles.
         </p>
       </div>
     </div>
