@@ -60,8 +60,13 @@ export function MatchCard({
     hour: '2-digit', minute: '2-digit',
   }).format(new Date(match.scheduled_time))
 
+  const stateBorder =
+    isFinished ? 'rgba(255,255,255,0.15)' :
+    isLive     ? 'var(--warning)' :
+    isLocked   ? 'var(--warning)' : 'var(--primary)'
+
   const stateColor =
-    isFinished ? 'rgba(255,255,255,0.2)' :
+    isFinished ? 'var(--text-muted)' :
     isLive     ? 'var(--warning)' :
     isLocked   ? 'var(--warning)' : 'var(--primary)'
 
@@ -81,7 +86,7 @@ export function MatchCard({
       className="glass-card"
       style={{
         padding: '10px 14px', marginBottom: 8,
-        borderLeft: `3px solid ${stateColor}`,
+        borderLeft: `3px solid ${stateBorder}`,
         ...(isLive && {
           background: 'rgba(245,158,11,0.07)',
           boxShadow: '0 0 0 1px rgba(245,158,11,0.2), 0 4px 20px rgba(245,158,11,0.08)',
