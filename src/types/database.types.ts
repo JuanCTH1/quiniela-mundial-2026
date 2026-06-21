@@ -169,6 +169,7 @@ export type Database = {
           display_name: string
           id: string
           is_admin: boolean
+          theme: string | null
           timezone: string
         }
         Insert: {
@@ -177,6 +178,7 @@ export type Database = {
           display_name: string
           id: string
           is_admin?: boolean
+          theme?: string | null
           timezone?: string
         }
         Update: {
@@ -185,6 +187,7 @@ export type Database = {
           display_name?: string
           id?: string
           is_admin?: boolean
+          theme?: string | null
           timezone?: string
         }
         Relationships: []

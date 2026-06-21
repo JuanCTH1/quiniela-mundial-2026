@@ -2,20 +2,23 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { getTheme, type Theme } from '@/lib/themes'
 
 interface Props {
   isAdmin: boolean
+  theme?: Theme
 }
 
-const NAV = [
-  { href: '/partidos', label: 'Partidos', icon: '⚽' },
-  { href: '/ranking', label: 'Ranking', icon: '🏆' },
-  { href: '/reglamento', label: 'Reglas', icon: '📋' },
-  { href: '/perfil', label: 'Perfil', icon: '👤' },
-]
-
-export function BottomNav({ isAdmin }: Props) {
+export function BottomNav({ isAdmin, theme = 'mexico' }: Props) {
   const path = usePathname()
+  const t = getTheme(theme)
+
+  const NAV = [
+    { href: '/partidos', label: t.texts.matches, icon: '⚽' },
+    { href: '/ranking', label: t.texts.ranking, icon: '🏆' },
+    { href: '/reglamento', label: t.texts.rules, icon: '📋' },
+    { href: '/perfil', label: t.texts.profile, icon: '👤' },
+  ]
 
   return (
     <nav
@@ -45,7 +48,7 @@ export function BottomNav({ isAdmin }: Props) {
               alignItems: 'center',
               gap: 3,
               fontSize: 10,
-              color: active ? 'var(--mx-green)' : 'var(--text-muted)',
+              color: active ? 'var(--primary)' : 'var(--text-muted)',
               textDecoration: 'none',
               transition: 'color 0.2s',
               minWidth: 56,
@@ -65,7 +68,7 @@ export function BottomNav({ isAdmin }: Props) {
             alignItems: 'center',
             gap: 3,
             fontSize: 10,
-            color: path.startsWith('/admin') ? 'var(--mx-red)' : 'var(--text-muted)',
+            color: path.startsWith('/admin') ? 'var(--danger)' : 'var(--text-muted)',
             textDecoration: 'none',
             transition: 'color 0.2s',
             minWidth: 56,

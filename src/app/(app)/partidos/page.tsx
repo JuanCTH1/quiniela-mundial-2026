@@ -4,6 +4,7 @@ import { MatchCard } from '@/components/MatchCard'
 import { isMatchLocked } from '@/lib/utils'
 import { DateNav } from './DateNav'
 import { SwipeNav } from './SwipeNav'
+import type { Theme } from '@/lib/themes'
 
 export default async function PartidosPage({
   searchParams,
@@ -16,7 +17,7 @@ export default async function PartidosPage({
   const [user, bloqueoMinutos] = await Promise.all([getUser(), getBloqueoMinutos()])
   const profile = user ? await getProfile(user.id) : null
   const timezone = profile?.timezone ?? 'America/Mexico_City'
-  const theme = (profile?.theme as any) ?? 'mexico'
+  const theme = (profile?.theme as Theme) ?? 'mexico'
 
   const supabase = await createClient()
 
