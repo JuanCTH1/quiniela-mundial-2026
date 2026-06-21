@@ -85,12 +85,12 @@ export default async function PartidosPage({
     profiles: { display_name: string; avatar_url: string | null } | null
   }
 
-  const allPreds: PredWithProfile[] = (allPredsRes.data ?? []).map(p => ({
-    ...p,
-    profiles: profileMap.has(p.user_id)
-      ? { display_name: profileMap.get(p.user_id)!.display_name, avatar_url: profileMap.get(p.user_id)!.avatar_url }
-      : null,
-  }))
+  const allPreds: PredWithProfile[] = (allPredsRes.data ?? [])
+    .filter(p => profileMap.has(p.user_id))
+    .map(p => ({
+      ...p,
+      profiles: { display_name: profileMap.get(p.user_id)!.display_name, avatar_url: profileMap.get(p.user_id)!.avatar_url },
+    }))
 
   const myPredMap = new Map(myPredsRes.data?.map(p => [p.match_id, p]) ?? [])
   const allPredMap = new Map<string, PredWithProfile[]>()
@@ -107,7 +107,16 @@ export default async function PartidosPage({
           Partidos
         </h1>
 
-        <DateNav currentFecha={fecha} currentEtapa={etapa} timezone={timezone} availableDates={availableDates} />
+        <div style={{
+          position: 'sticky', top: 0, zIndex: 40,
+          margin: '0 -16px', padding: '10px 16px 0',
+          backdropFilter: 'blur(20px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+          background: 'var(--header-bg)',
+          borderBottom: '1px solid var(--header-border)',
+        }}>
+          <DateNav currentFecha={fecha} currentEtapa={etapa} timezone={timezone} availableDates={availableDates} />
+        </div>
 
         {!matches?.length ? (
           <p style={{ color: 'var(--text-muted)', fontSize: 14, textAlign: 'center', marginTop: 40 }}>

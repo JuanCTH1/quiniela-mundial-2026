@@ -2,7 +2,8 @@ import Link from 'next/link'
 import { PredictionForm } from './PredictionForm'
 import { Countdown } from './Countdown'
 import { RankingPreview } from './RankingPreview'
-import { getTeamFlag, calcResult, getLockTime, STAGE_LABELS } from '@/lib/utils'
+import { calcResult, getLockTime, STAGE_LABELS } from '@/lib/utils'
+import { TeamFlag } from './TeamFlag'
 import { getTheme, type Theme } from '@/lib/themes'
 import type { Tables } from '@/types/database.types'
 type Match = Tables<'matches'>
@@ -110,7 +111,7 @@ export function MatchCard({
           {/* Home */}
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'flex-end' }}>
             <span style={{ fontSize: 13, fontWeight: 600 }}>{match.home_team}</span>
-            <span style={{ fontSize: 22 }}>{getTeamFlag(match.home_team)}</span>
+            <TeamFlag name={match.home_team} size={22} />
           </div>
 
           {/* Score / time */}
@@ -136,7 +137,7 @@ export function MatchCard({
 
           {/* Away */}
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ fontSize: 22 }}>{getTeamFlag(match.away_team)}</span>
+            <TeamFlag name={match.away_team} size={22} />
             <span style={{ fontSize: 13, fontWeight: 600 }}>{match.away_team}</span>
           </div>
         </div>

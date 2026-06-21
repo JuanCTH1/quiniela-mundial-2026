@@ -24,7 +24,7 @@ const FLAGS: Record<string, string> = {
   'Croatia': '🇭🇷',
   'Morocco': '🇲🇦',
   'Japan': '🇯🇵',
-  'South Korea': '🇰🇷',
+  'South Korea': '🇰🇷', 'Korea Republic': '🇰🇷',
   'Australia': '🇦🇺',
   'Colombia': '🇨🇴',
   'Uruguay': '🇺🇾',
@@ -80,6 +80,11 @@ const FLAGS: Record<string, string> = {
   'Iraq': '🇮🇶',
   'Jordan': '🇯🇴',
   'United Arab Emirates': '🇦🇪',
+  'Norway': '🇳🇴',
+  'Sweden': '🇸🇪',
+  'Curaçao': '🇨🇼',
+  'Bosnia-H.': '🇧🇦', 'Bosnia and Herzegovina': '🇧🇦',
+  'Congo DR': '🇨🇩', 'Congo': '🇨🇩',
   'TBD': '🏳️',
 }
 

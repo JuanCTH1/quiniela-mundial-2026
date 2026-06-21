@@ -4,7 +4,8 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { Avatar } from '@/components/Avatar'
 import { PredictionForm } from '@/components/PredictionForm'
 import { RankingPreview } from '@/components/RankingPreview'
-import { getTeamFlag, isMatchLocked, STAGE_LABELS } from '@/lib/utils'
+import { isMatchLocked, STAGE_LABELS } from '@/lib/utils'
+import { TeamFlag } from '@/components/TeamFlag'
 import { getTheme, type Theme } from '@/lib/themes'
 import { LiveMatchClient } from './LiveMatchClient'
 import Link from 'next/link'
@@ -108,7 +109,7 @@ export default async function PartidoPage({ params }: { params: Promise<{ id: st
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
           <div style={{ flex: 1, textAlign: 'center' }}>
-            <div style={{ fontSize: 36 }}>{getTeamFlag(match.home_team)}</div>
+            <TeamFlag name={match.home_team} size={36} />
             <div style={{ fontSize: 15, fontWeight: 700, marginTop: 4 }}>{match.home_team}</div>
           </div>
 
@@ -129,7 +130,7 @@ export default async function PartidoPage({ params }: { params: Promise<{ id: st
           </div>
 
           <div style={{ flex: 1, textAlign: 'center' }}>
-            <div style={{ fontSize: 36 }}>{getTeamFlag(match.away_team)}</div>
+            <TeamFlag name={match.away_team} size={36} />
             <div style={{ fontSize: 15, fontWeight: 700, marginTop: 4 }}>{match.away_team}</div>
           </div>
         </div>
