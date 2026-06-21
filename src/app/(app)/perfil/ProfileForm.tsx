@@ -103,6 +103,7 @@ export function ProfileForm({ initialName, initialTimezone, initialAvatarUrl, us
   const initials = name.trim().split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase() || '?'
 
   return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
       {/* Avatar upload */}
@@ -221,5 +222,6 @@ export function ProfileForm({ initialName, initialTimezone, initialAvatarUrl, us
         {pwPending ? 'Guardando...' : pwSaved ? '✓ Contraseña actualizada' : 'Actualizar contraseña'}
       </button>
     </form>
+    </div>
   )
 }
