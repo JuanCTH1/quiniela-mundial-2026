@@ -102,7 +102,7 @@ export function MatchCard({
             {STAGE_LABELS[match.stage] ?? match.stage}
             {match.group_name ? ` · G${match.group_name.replace('GROUP_', '')}` : ''}
           </span>
-          <span style={{ fontSize: 12, fontWeight: 600, color: stateColor }}>{stateLabel}</span>
+          <span style={{ fontSize: 14, fontWeight: 600, color: stateColor }}>{stateLabel}</span>
         </div>
 
         {/* Teams + score */}
