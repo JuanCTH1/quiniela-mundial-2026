@@ -137,6 +137,30 @@ Para siguiente versión: aplicar temas es #1 en backlog.
 **Cómo mejorar:**
 - Agregar "lecciones aprendidas" cada sesión (como este archivo)
 - Documentar el "qué no hacer" además del "qué hacer"
+
+---
+
+## Crear usuarios manualmente en Supabase: 3 pasos OBLIGATORIOS (2026-06-21)
+
+**El flujo de invite por email no funciona** para usuarios con Outlook u otros clientes que escanean links: el OTP de un solo uso se consume antes de que el usuario abra el correo.
+
+**Solución: SQL directo. Requiere exactamente 3 pasos o GoTrue no deja entrar:**
+
+1. `INSERT INTO auth.users` con `encrypted_password = crypt('pwd', gen_salt('bf', 10))`
+2. `INSERT INTO auth.identities` con `provider_id` — **sin esto, "credenciales incorrectas" siempre**
+3. `UPDATE auth.users SET confirmation_token = '', recovery_token = '', ...` — **campos NULL hacen explotar a GoTrue con un 500 interno**
+
+Ver procedimiento completo en `docs/Crear_Usuario_Prod.md`.
+
+**Cómo debuggear auth failures:** Supabase Dashboard → Logs → Auth. El mensaje de error exacto de GoTrue aparece ahí (no en la UI de la app).
+
+---
+
+## Email scanners consumen OTPs de Supabase (2026-06-21)
+
+**Qué pasa:** Outlook y Gmail con Enhanced Safe Browsing pre-fetchean todos los links del correo para verificar que no sean phishing. El OTP de Supabase es de un solo uso — al ser "clickeado" por el scanner, queda inválido. El usuario abre el correo y ya expiró.
+
+**No hay fix del lado de Supabase** (sin plan Enterprise). Workaround definitivo: crear usuario via SQL + compartir credenciales por WhatsApp.
 - Guardar checkpoints (tags) cuando haya milestone
 
 ---
