@@ -1,5 +1,5 @@
-@import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
+@import "tailwindcss";
 
 /*
   DESIGN SYSTEM — Quiniela Overrated 2026
@@ -9,40 +9,112 @@
 */
 
 :root {
-  /* === PALETA MUNDIAL / MÉXICO (pendiente de afinar en Fase 0) === */
+  /* === DEFAULTS (México) === */
   --mx-green:  #006847;   /* verde bandera México */
   --mx-red:    #CE1126;   /* rojo bandera México */
   --mx-white:  #FFFFFF;
   --gold:      #D4AF37;   /* dorado trofeo / primer lugar */
   --shame-red: #8B0000;   /* rojo denigrante / último lugar */
 
-  /* === CORE DARK === */
-  --bg-dark:   #060c0a;   /* casi negro con tinte verde */
-  --text-main: rgba(255, 255, 255, 0.95);
-  --text-muted: rgba(255, 255, 255, 0.62);
-  --text-dim:  rgba(255, 255, 255, 0.25);
-
   /* === GLASSMORPHISM === */
-  --glass-bg:         rgba(0, 104, 71, 0.08);
-  --glass-bg-hover:   rgba(0, 104, 71, 0.14);
+  --glass-bg:         rgba(255, 255, 255, 0.07);
+  --glass-bg-hover:   rgba(255, 255, 255, 0.13);
   --glass-border:     rgba(255, 255, 255, 0.07);
   --glass-border-top: rgba(255, 255, 255, 0.20);
-  --glass-glow:       rgba(0, 104, 71, 0.35);
-  --glass-blur:       blur(24px);
+  --glass-glow:       color-mix(in srgb, var(--theme-primary) 35%, transparent);
+  --glass-blur:       blur(12px) saturate(180%);
+
+  /* === TEMA DINÁMICO (defaults = México) === */
+  --theme-primary: var(--mx-green);
+  --theme-secondary: var(--gold);
+  --theme-accent: var(--mx-red);
+  --theme-background: #0a0f0d;
+  --theme-text_main: rgba(255,255,255,0.97);
+  --theme-text_muted: rgba(255,255,255,0.78);
+  --theme-text_dim: rgba(255,255,255,0.42);
+
+  /* === CORE (referencian tema) === */
+  --text-main: var(--theme-text_main);
+  --text-muted: var(--theme-text_muted);
+  --text-dim: var(--theme-text_dim);
 
   /* === SEMÁNTICOS === */
-  --accent:   var(--gold);
-  --primary:  var(--mx-green);
+  --accent:   var(--theme-secondary);
+  --primary:  var(--theme-primary);
   --danger:   var(--mx-red);
   --success:  #34A853;
   --warning:  #F59E0B;
+
+  /* === CHROME ESTRUCTURAL (nav/header) === */
+  --header-bg:     rgba(6,12,10,0.75);
+  --header-border: rgba(255,255,255,0.06);
+  --nav-bg:        rgba(6,12,10,0.92);
+  --nav-border:    rgba(255,255,255,0.07);
+}
+
+/* ─────────────────────────────────────────────────────
+   LIGHT MODE — [data-mode="light"]
+   Glassmorphism en fondo claro:
+   • Cards: blanco semi-opaco (0.55) con borde oscuro sutil
+   • Top highlight: blanco fuerte (0.90) simula el filo del vidrio
+   • Shadow: más suave (0.10 vs 0.35 del dark)
+   • Blobs: menor opacidad para no aplastar el fondo claro
+   • Texto: oscuro
+   ───────────────────────────────────────────────────── */
+[data-mode="light"] {
+  /* Glass system */
+  --glass-bg:         rgba(255, 255, 255, 0.10);
+  --glass-bg-hover:   rgba(255, 255, 255, 0.20);
+  --glass-border:     rgba(0, 0, 0, 0.08);
+  --glass-border-top: rgba(255, 255, 255, 0.88);
+  --glass-glow:       color-mix(in srgb, var(--theme-primary) 18%, transparent);
+  --glass-blur:       blur(12px) saturate(180%);
+
+  /* Chrome */
+  --header-bg:     rgba(255, 255, 255, 0.80);
+  --header-border: rgba(0, 0, 0, 0.06);
+  --nav-bg:        rgba(255, 255, 255, 0.88);
+  --nav-border:    rgba(0, 0, 0, 0.07);
+}
+
+/* Glass card — shadow override en light */
+[data-mode="light"] .glass-card {
+  border-color: var(--glass-border);
+  border-top-color: var(--glass-border-top);
+  border-left-color: rgba(255, 255, 255, 0.70);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    0 2px 12px rgba(0, 0, 0, 0.08),
+    0 1px 3px rgba(0, 0, 0, 0.04);
+}
+[data-mode="light"] .glass-card:hover {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.92),
+    0 6px 28px rgba(0, 0, 0, 0.12),
+    0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+/* Blobs más tenues en light para no tapar el fondo */
+[data-mode="light"] .g-blob-1 { opacity: 0.30; }
+[data-mode="light"] .g-blob-2 { opacity: 0.18; }
+[data-mode="light"] .g-blob-3 { opacity: 0.14; }
+
+/* Scrollbar en light */
+[data-mode="light"] ::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); }
+[data-mode="light"] ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.16); }
+[data-mode="light"] ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.28); }
+
+/* rank-last en light — el dark red necesita más opacidad */
+[data-mode="light"] .rank-last {
+  background: rgba(139, 0, 0, 0.08) !important;
+  border-color: rgba(139, 0, 0, 0.25) !important;
 }
 
 @theme inline {
-  --color-background:  var(--bg-dark);
+  --color-background:  var(--theme-background);
   --color-foreground:  var(--text-main);
-  --color-primary:     var(--mx-green);
-  --color-accent:      var(--gold);
+  --color-primary:     var(--theme-primary);
+  --color-accent:      var(--theme-secondary);
   --color-danger:      var(--mx-red);
   --color-success:     #34A853;
   --color-warning:     #F59E0B;
@@ -60,12 +132,25 @@
 
 body {
   font-family: var(--font-sans);
-  background: linear-gradient(135deg, #040a07 0%, #071410 50%, #020604 100%);
+  background-color: var(--theme-background);
   color: var(--text-main);
   min-height: 100vh;
   isolation: isolate;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
+}
+
+/* #parallax-bg — manejado por ParallaxBackground.tsx vía JS scroll */
+#parallax-bg {
+  position: fixed;
+  top: -50%;
+  left: -5%;
+  right: -5%;
+  bottom: -50%;
+  z-index: -2;
+  background-image: var(--theme-pattern, none);
+  pointer-events: none;
+  will-change: transform;
 }
 
 /* ── SCROLLBAR ── */
@@ -77,9 +162,9 @@ body {
 /* ── BLOBS DE FONDO ── */
 .g-blob-wrap { position: fixed; inset: 0; pointer-events: none; z-index: -1; }
 .g-blob { position: absolute; border-radius: 50%; }
-.g-blob-1 { width: 55vw; height: 45vh; left: -10%; top: -5%;    background: rgba(0, 104, 71, 0.25);  filter: blur(90px); animation: gb1 30s ease-in-out infinite; }
-.g-blob-2 { width: 45vw; height: 35vh; right: -10%; bottom: -5%; background: rgba(206, 17, 38, 0.12);  filter: blur(80px); animation: gb2 38s ease-in-out infinite; }
-.g-blob-3 { width: 40vw; height: 30vh; left: 35%; top: 20%;     background: rgba(212, 175, 55, 0.10); filter: blur(70px); animation: gb3 25s ease-in-out infinite; }
+.g-blob-1 { width: 55vw; height: 45vh; left: -10%; top: -5%;    background: color-mix(in srgb, var(--theme-primary) 25%, transparent);   filter: blur(90px); animation: gb1 30s ease-in-out infinite; }
+.g-blob-2 { width: 45vw; height: 35vh; right: -10%; bottom: -5%; background: color-mix(in srgb, var(--theme-accent) 12%, transparent);  filter: blur(80px); animation: gb2 38s ease-in-out infinite; }
+.g-blob-3 { width: 40vw; height: 30vh; left: 35%; top: 20%;     background: color-mix(in srgb, var(--theme-secondary) 10%, transparent); filter: blur(70px); animation: gb3 25s ease-in-out infinite; }
 @keyframes gb1 { 0%,100%{transform:translate(0,0) scale(1)} 35%{transform:translate(5%,4%) scale(1.07)} 70%{transform:translate(-3%,3%) scale(0.95)} }
 @keyframes gb2 { 0%,100%{transform:translate(0,0) scale(1)} 40%{transform:translate(-5%,-4%) scale(1.05)} 75%{transform:translate(4%,-2%) scale(0.96)} }
 @keyframes gb3 { 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(-5%,6%) scale(1.09)} }
@@ -87,8 +172,7 @@ body {
 /* ── GLASS CARD ── */
 .glass-card {
   background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur) saturate(180%);
-  -webkit-backdrop-filter: var(--glass-blur) saturate(180%);
+  backdrop-filter: blur(6px) saturate(180%);
   border: 1px solid var(--glass-border);
   border-top: 1px solid var(--glass-border-top);
   border-left: 1px solid rgba(255, 255, 255, 0.10);
@@ -98,11 +182,51 @@ body {
 }
 .glass-card:hover {
   background: var(--glass-bg-hover);
-  box-shadow: 0 12px 40px 0 rgba(0, 104, 71, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  box-shadow: 0 12px 40px 0 color-mix(in srgb, var(--theme-primary) 15%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* ── PRESS / TAP EFFECTS ── */
+/* Quita el highlight azul del browser en mobile */
+* { -webkit-tap-highlight-color: transparent; }
+
+button {
+  transition: transform 0.08s ease, opacity 0.08s ease, background 0.15s ease;
+}
+button:active:not(:disabled) {
+  transform: scale(0.95);
+  opacity: 0.82;
+}
+
+/* Links usados como cards o chips */
+a {
+  transition: transform 0.08s ease, opacity 0.08s ease;
+}
+a:active {
+  transform: scale(0.97);
+  opacity: 0.85;
+}
+
+/* Glass cards clicables (MatchCard, ranking row) */
+a > .glass-card,
+.glass-card a {
+  transition: transform 0.08s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+a:active > .glass-card {
+  transform: scale(0.985);
+}
+
+/* ── PARTIDO EN VIVO: pulso ── */
+@keyframes live-pulse {
+  0%, 100% { box-shadow: 0 0 0 1px rgba(245,158,11,0.2), 0 4px 20px rgba(245,158,11,0.08); }
+  50%       { box-shadow: 0 0 0 1px rgba(245,158,11,0.4), 0 4px 24px rgba(245,158,11,0.18); }
+}
+@keyframes dot-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
 }
 
 /* ── TABLA DE POSICIONES: estados especiales ── */
-.rank-first  { box-shadow: 0 0 0 2px var(--gold), 0 0 20px rgba(212, 175, 55, 0.3); }
+.rank-first  { box-shadow: 0 0 0 2px var(--theme-secondary), 0 0 20px color-mix(in srgb, var(--theme-secondary) 30%, transparent); }
 .rank-last   { background: rgba(139, 0, 0, 0.15) !important; border-color: rgba(139, 0, 0, 0.4) !important; }
 
 /* ── ESTADO MODO PRUEBA ── */

@@ -1,0 +1,23 @@
+
+> quiniela-mundial-2026@0.1.0 build
+> next build
+
+▲ Next.js 16.2.9 (Turbopack)
+- Environments: .env.local
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 4.8s
+  Running TypeScript ...
+Failed to type check.
+
+./src/app/(app)/layout.tsx:40:27
+Type error: Property 'theme' does not exist on type '{ display_name: string; avatar_url: string | null; is_admin: boolean; timezone: string; }'.
+
+  [90m38 |[0m   [36mconst[0m bloqueoMinutos = parseInt(settings.find(s => s.key === [32m'bloqueo_minutos'[0m)?.value ?..[32m.[0m
+  [90m39 |[0m   [36mconst[0m timezone = profile?.timezone ?? [32m'America/Mexico_City'[0m
+[31m[1m>[0m [90m40 |[0m   [36mconst[0m theme = (profile?.theme [36mas[0m [33mTheme[0m) ?? [32m'mexico'[0m
+  [90m   |[0m                           [31m[1m^[0m
+  [90m41 |[0m   [36mconst[0m liveMatch = liveMatchRes.data ?? [36mnull[0m
+  [90m42 |[0m   [36mconst[0m nextMatch = nextMatchRes.data ?? [36mnull[0m
+  [90m43 |[0m
+Next.js build worker exited with code: 1 and signal: null
