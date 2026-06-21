@@ -67,6 +67,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             userId={user.id}
             bloqueoMinutos={bloqueoMinutos}
             timezone={timezone}
+            theme={theme}
           />
         </Suspense>
       </div>

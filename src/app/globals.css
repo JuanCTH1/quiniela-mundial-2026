@@ -16,12 +16,6 @@
   --gold:      #D4AF37;   /* dorado trofeo / primer lugar */
   --shame-red: #8B0000;   /* rojo denigrante / último lugar */
 
-  /* === CORE DARK === */
-  --bg-dark:   #060c0a;   /* casi negro con tinte verde */
-  --text-main: rgba(255, 255, 255, 0.95);
-  --text-muted: rgba(255, 255, 255, 0.62);
-  --text-dim:  rgba(255, 255, 255, 0.25);
-
   /* === GLASSMORPHISM === */
   --glass-bg:         color-mix(in srgb, var(--theme-primary) 8%, transparent);
   --glass-bg-hover:   color-mix(in srgb, var(--theme-primary) 14%, transparent);
@@ -30,14 +24,19 @@
   --glass-glow:       color-mix(in srgb, var(--theme-primary) 35%, transparent);
   --glass-blur:       blur(24px);
 
-  /* === TEMA DINÁMICO === */
+  /* === TEMA DINÁMICO (defaults = México) === */
   --theme-primary: var(--mx-green);
   --theme-secondary: var(--gold);
   --theme-accent: var(--mx-red);
   --theme-background: #0a0f0d;
-  --theme-text_main: #ffffff;
-  --theme-text_muted: #a0a8a6;
-  --theme-text_dim: #7a8280;
+  --theme-text_main: rgba(255,255,255,0.97);
+  --theme-text_muted: rgba(255,255,255,0.78);
+  --theme-text_dim: rgba(255,255,255,0.42);
+
+  /* === CORE (referencian tema) === */
+  --text-main: var(--theme-text_main);
+  --text-muted: var(--theme-text_muted);
+  --text-dim: var(--theme-text_dim);
 
   /* === SEMÁNTICOS === */
   --accent:   var(--theme-secondary);

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Countdown } from './Countdown'
 import { getTeamFlag, getLockTime } from '@/lib/utils'
+import { getTheme, type Theme } from '@/lib/themes'
 import type { Tables } from '@/types/database.types'
 
 type MatchSlim = Pick<Tables<'matches'>,
@@ -20,16 +21,16 @@ interface Props {
   prediction?: { home_score: number | null; away_score: number | null } | null
   bloqueoMinutos: number
   timezone: string
+  theme?: Theme
 }
 
-export function NextMatchBanner({ liveMatch, nextMatch, prediction, bloqueoMinutos, timezone }: Props) {
+export function NextMatchBanner({ liveMatch, nextMatch, prediction, bloqueoMinutos, timezone, theme = 'mexico' }: Props) {
   const pathname = usePathname()
+  const t = getTheme(theme)
 
-  // Ocultar en el detalle de un partido concreto — ya estás adentro
   if (pathname.startsWith('/partido/')) return null
   if (!liveMatch && !nextMatch) return null
 
-  // ── Partido en vivo ────────────────────────────────────────────────────────
   if (liveMatch) {
     const hasPred = prediction?.home_score != null
     return (
@@ -41,7 +42,7 @@ export function NextMatchBanner({ liveMatch, nextMatch, prediction, bloqueoMinut
             display: 'flex', alignItems: 'center', gap: 10,
           }}>
             <div style={{ fontSize: 10, color: 'var(--warning)', fontWeight: 700, flexShrink: 0, animation: 'dot-pulse 1.5s ease-in-out infinite' }}>
-              ● EN VIVO
+              {t.texts.liveNow}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -54,23 +55,22 @@ export function NextMatchBanner({ liveMatch, nextMatch, prediction, bloqueoMinut
               </div>
               {hasPred && (
                 <div style={{ fontSize: 10, color: 'var(--text-dim)' }}>
-                  tú: {prediction!.home_score}–{prediction!.away_score}
+                  {t.texts.you.toLowerCase()}: {prediction!.home_score}–{prediction!.away_score}
                 </div>
               )}
             </div>
           </div>
         </Link>
 
-        {/* Próximo partido en chiquito si hay uno */}
         {nextMatch && (
           <Link href={`/partido/${nextMatch.id}`} style={{ textDecoration: 'none', display: 'block' }}>
             <div style={{
-              background: 'rgba(0,104,71,0.05)',
+              background: 'color-mix(in srgb, var(--theme-primary) 5%, transparent)',
               borderTop: '1px solid rgba(255,255,255,0.04)',
               padding: '5px 16px',
               display: 'flex', alignItems: 'center', gap: 8,
             }}>
-              <div style={{ fontSize: 10, color: 'var(--text-dim)', flexShrink: 0 }}>Próximo</div>
+              <div style={{ fontSize: 10, color: 'var(--text-dim)', flexShrink: 0 }}>{t.texts.nextSmall}</div>
               <div style={{ fontSize: 11, color: 'var(--text-muted)', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {getTeamFlag(nextMatch.home_team)} {nextMatch.home_team} vs {nextMatch.away_team} {getTeamFlag(nextMatch.away_team)}
               </div>
@@ -82,7 +82,6 @@ export function NextMatchBanner({ liveMatch, nextMatch, prediction, bloqueoMinut
     )
   }
 
-  // ── Próximo partido (sin en vivo) ──────────────────────────────────────────
   const lockTime = getLockTime(nextMatch!.scheduled_time, bloqueoMinutos)
   const isLocked = Date.now() >= lockTime.getTime()
   const hasPred = prediction?.home_score != null
@@ -95,12 +94,12 @@ export function NextMatchBanner({ liveMatch, nextMatch, prediction, bloqueoMinut
   return (
     <Link href={`/partido/${nextMatch!.id}`} style={{ textDecoration: 'none', display: 'block' }}>
       <div style={{
-        background: 'rgba(0,104,71,0.08)',
+        background: 'var(--glass-bg)',
         padding: '10px 16px',
         display: 'flex', alignItems: 'center', gap: 10,
       }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 3 }}>Próximo partido</div>
+          <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 3 }}>{t.texts.nextMatch}</div>
           <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {getTeamFlag(nextMatch!.home_team)} {nextMatch!.home_team} vs {nextMatch!.away_team} {getTeamFlag(nextMatch!.away_team)}
           </div>
@@ -108,15 +107,15 @@ export function NextMatchBanner({ liveMatch, nextMatch, prediction, bloqueoMinut
         </div>
         <div style={{ textAlign: 'right', flexShrink: 0 }}>
           {hasPred ? (
-            <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--mx-green)' }}>
+            <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--primary)' }}>
               {prediction!.home_score} – {prediction!.away_score}
             </div>
           ) : (
-            <div style={{ fontSize: 11, color: 'var(--warning)' }}>Sin pronóstico</div>
+            <div style={{ fontSize: 11, color: 'var(--warning)' }}>{t.texts.noPrediction}</div>
           )}
           {!isLocked
-            ? <Countdown target={lockTime.toISOString()} label="Cierra en" />
-            : <Countdown target={nextMatch!.scheduled_time} label="Empieza en" />
+            ? <Countdown target={lockTime.toISOString()} label={t.texts.closesIn} />
+            : <Countdown target={nextMatch!.scheduled_time} label={t.texts.startsIn} />
           }
         </div>
       </div>

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { calcResult } from '@/lib/utils'
+import { getTheme, type Theme } from '@/lib/themes'
 import type { Tables } from '@/types/database.types'
 
 type Prediction = {
@@ -21,6 +22,7 @@ interface Props {
   currentUserId: string
   isFinished: boolean
   isLive?: boolean
+  theme?: Theme
 }
 
 interface RankedPred {
@@ -38,7 +40,8 @@ const RESULT_COLORS: Record<string, { text: string }> = {
   FALLO: { text: 'var(--mx-red)' },
 }
 
-export function RankingPreview({ matchId, match, allPredictions, currentUserId, isFinished, isLive }: Props) {
+export function RankingPreview({ matchId, match, allPredictions, currentUserId, isFinished, isLive, theme = 'mexico' }: Props) {
+  const t = getTheme(theme)
   const [ranked, setRanked] = useState<RankedPred[]>([])
   const [loading, setLoading] = useState(true)
   const [liveHome, setLiveHome] = useState<number | null>(match.home_score_fulltime ?? null)
@@ -50,7 +53,6 @@ export function RankingPreview({ matchId, match, allPredictions, currentUserId, 
     return supabaseRef.current
   }
 
-  // Suscripción en tiempo real para partidos en vivo
   useEffect(() => {
     if (!isLive) return
     const sb = getClient()
@@ -81,7 +83,6 @@ export function RankingPreview({ matchId, match, allPredictions, currentUserId, 
 
   useEffect(() => {
     async function calculateRanking() {
-      // Score a usar: quiniela (terminado) o live (en vivo)
       const scoreH = isFinished ? match.home_score_quiniela : liveHome
       const scoreA = isFinished ? match.away_score_quiniela : liveAway
       const hasScore = scoreH != null && scoreA != null
@@ -104,14 +105,12 @@ export function RankingPreview({ matchId, match, allPredictions, currentUserId, 
         .sort((a, b) => (isFinished || isLive) ? (b.pts - a.pts) : 0)
         .map((item, idx) => ({ ...item, rank: idx + 1 }))
 
-      // Calcular puntos globales (solo para el usuario actual cuando termina el partido)
       let withGlobalPts = withLocalPts
 
       if (isFinished) {
         try {
           const supabase = createClient()
 
-          // Traer todos los resultados de este usuario
           const { data: allResults } = await supabase
             .from('predictions')
             .select(`
@@ -122,7 +121,6 @@ export function RankingPreview({ matchId, match, allPredictions, currentUserId, 
             `)
             .eq('user_id', currentUserId)
 
-          // Calcular global
           let globalPts = 0
           if (allResults) {
             for (const result of allResults) {
@@ -134,7 +132,6 @@ export function RankingPreview({ matchId, match, allPredictions, currentUserId, 
             }
           }
 
-          // Agregar global solo al usuario actual
           withGlobalPts = withLocalPts.map(item =>
             item.pred.user_id === currentUserId ? { ...item, globalPts } : item
           )
@@ -156,9 +153,7 @@ export function RankingPreview({ matchId, match, allPredictions, currentUserId, 
   const positions = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣', '6️⃣']
 
   return (
-    <div style={{
-      display: 'flex', flexDirection: 'column', gap: 8,
-    }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
       {ranked.map(item => {
         const { pred, rank, pts, resultType, globalPts } = item
         const isMe = pred.user_id === currentUserId
@@ -172,41 +167,36 @@ export function RankingPreview({ matchId, match, allPredictions, currentUserId, 
             className="glass-card"
             style={{
               padding: '10px 12px', borderRadius: 8,
-              background: isMe ? 'rgba(0,104,71,0.12)' : 'rgba(255,255,255,0.03)',
-              border: `1px solid ${isMe ? 'rgba(0,104,71,0.3)' : 'rgba(255,255,255,0.08)'}`,
+              background: isMe ? 'color-mix(in srgb, var(--theme-primary) 12%, transparent)' : 'rgba(255,255,255,0.03)',
+              border: `1px solid ${isMe ? 'color-mix(in srgb, var(--theme-primary) 30%, transparent)' : 'rgba(255,255,255,0.08)'}`,
               display: 'flex', alignItems: 'center', gap: 10, fontSize: 12,
             }}
           >
-            {/* Posición con corona/número */}
             <span style={{ fontSize: 18, minWidth: 28, textAlign: 'center' }}>
               {posEmoji}
             </span>
 
-            {/* Nombre */}
             <span style={{
               fontSize: 13,
-              color: isMe ? 'var(--mx-green)' : 'var(--text-main)',
+              color: isMe ? 'var(--primary)' : 'var(--text-main)',
               fontWeight: isMe ? 700 : 500,
               flex: 1,
             }}>
-              {name}{isMe ? ' (tú)' : ''}
+              {name}{isMe ? ` (${t.texts.you.toLowerCase()})` : ''}
             </span>
 
-            {/* Pronóstico */}
             <span style={{ fontSize: 11, color: 'var(--text-dim)' }}>
               {pred.home_score != null ? `${pred.home_score}–${pred.away_score}` : '—'}
             </span>
 
-            {/* Puntos de este partido — solo cuando está terminado */}
             {isFinished && (
               <span style={{ fontSize: 13, fontWeight: 700, color: textColor, minWidth: 32, textAlign: 'right' }}>
                 +{pts} pts
               </span>
             )}
 
-            {/* Puntos globales — solo usuario cuando terminó */}
             {isMe && globalPts != null && (
-              <span style={{ fontSize: 11, color: 'var(--mx-green)', fontWeight: 600, paddingLeft: 8, borderLeft: '1px solid rgba(0,104,71,0.3)' }}>
+              <span style={{ fontSize: 11, color: 'var(--primary)', fontWeight: 600, paddingLeft: 8, borderLeft: '1px solid color-mix(in srgb, var(--theme-primary) 30%, transparent)' }}>
                 {globalPts}⭐
               </span>
             )}

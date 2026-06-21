@@ -37,6 +37,13 @@ export function MatchCard({
 }: Props) {
   const t = getTheme(theme)
 
+  const resultLabels: Record<string, string> = {
+    EXACTO: t.texts.exactLabel,
+    DIFERENCIA: t.texts.diffLabel,
+    TENDENCIA: t.texts.trendLabel,
+    FALLO: t.texts.missLabel,
+  }
+
   // FINISHED pero quiniela aún null (cron no corrió): usar fulltime como fallback visual
   const finalHome = match.home_score_quiniela ?? match.home_score_fulltime
   const finalAway = match.away_score_quiniela ?? match.away_score_fulltime
@@ -142,7 +149,7 @@ export function MatchCard({
               border: `1px solid ${myColors?.border ?? 'rgba(255,255,255,0.12)'}`,
             }}>
               <span style={{ fontSize: 10, color: myColors?.text ?? 'var(--text-muted)' }}>
-                {myResult ? myResult.type : 'Tú'}
+                {myResult ? (resultLabels[myResult.type] ?? myResult.type) : t.texts.you}
               </span>
               <span style={{ fontSize: 17, fontWeight: 700, color: myColors?.text ?? 'var(--text-main)', letterSpacing: 1 }}>
                 {myPrediction.home_score}–{myPrediction.away_score}
@@ -163,12 +170,12 @@ export function MatchCard({
           {/* Mi pronóstico cuando está abierto — arriba del form */}
           {myPrediction?.home_score != null && (
             <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>
-              Tu pronóstico actual: <span style={{ fontWeight: 700, color: 'var(--primary)', fontSize: 14 }}>
+              {t.texts.yourPrediction}: <span style={{ fontWeight: 700, color: 'var(--primary)', fontSize: 14 }}>
                 {myPrediction.home_score}–{myPrediction.away_score}
               </span>
             </div>
           )}
-          <Countdown target={lockTime.toISOString()} label="Cierra en" />
+          <Countdown target={lockTime.toISOString()} label={t.texts.closesIn} />
           <PredictionForm
             matchId={match.id}
             scheduledTime={match.scheduled_time}
@@ -189,6 +196,7 @@ export function MatchCard({
           currentUserId={currentUserId ?? ''}
           isFinished={isFinished}
           isLive={isLive}
+          theme={theme}
         />
       )}
     </div>

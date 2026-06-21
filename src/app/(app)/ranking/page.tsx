@@ -1,26 +1,33 @@
 import { createClient } from '@/lib/supabase/server'
 import { Avatar } from '@/components/Avatar'
 import { RANK_TITLES } from '@/lib/utils'
+import { getTheme, type Theme } from '@/lib/themes'
 
 export default async function RankingPage() {
   const supabase = await createClient()
 
-  const { data: rows } = await supabase
-    .from('leaderboard')
-    .select('*')
-    .order('total_points', { ascending: false })
-    .order('exact_count', { ascending: false })
-    .order('diff_count', { ascending: false })
-
   const { data: { user } } = await supabase.auth.getUser()
+
+  const [{ data: rows }, profileRes] = await Promise.all([
+    supabase
+      .from('leaderboard')
+      .select('*')
+      .order('total_points', { ascending: false })
+      .order('exact_count', { ascending: false })
+      .order('diff_count', { ascending: false }),
+    supabase.from('profiles').select('theme').eq('id', user!.id).single(),
+  ])
+
+  const theme = (profileRes.data?.theme as Theme) ?? 'mexico'
+  const t = getTheme(theme)
 
   return (
     <div style={{ padding: '16px 16px 0' }}>
       <h1 style={{ fontSize: 20, fontWeight: 700, margin: '0 0 4px', color: 'var(--text-main)' }}>
-        El Ranking
+        {t.texts.rankingTitle}
       </h1>
       <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '0 0 16px' }}>
-        Desempate: exactos → diferencias → sorteo
+        {t.texts.rankingSubtitle}
       </p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -40,7 +47,7 @@ export default async function RankingPage() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: 12,
-                background: isMe ? 'rgba(0,104,71,0.12)' : undefined,
+                background: isMe ? 'color-mix(in srgb, var(--theme-primary) 12%, transparent)' : undefined,
               }}
             >
               {/* Rank number */}
@@ -99,7 +106,7 @@ export default async function RankingPage() {
 
       {(!rows || rows.length === 0) && (
         <p style={{ color: 'var(--text-muted)', fontSize: 14, textAlign: 'center', marginTop: 40 }}>
-          Aún no hay puntos registrados
+          {t.texts.noPoints}
         </p>
       )}
     </div>

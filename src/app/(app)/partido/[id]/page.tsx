@@ -5,6 +5,7 @@ import { Avatar } from '@/components/Avatar'
 import { PredictionForm } from '@/components/PredictionForm'
 import { RankingPreview } from '@/components/RankingPreview'
 import { getTeamFlag, isMatchLocked, STAGE_LABELS } from '@/lib/utils'
+import { getTheme, type Theme } from '@/lib/themes'
 import { LiveMatchClient } from './LiveMatchClient'
 import Link from 'next/link'
 
@@ -20,7 +21,7 @@ export default async function PartidoPage({ params }: { params: Promise<{ id: st
   const [matchRes, settingsRes, profileRes, allProfilesRes, submittedIdsRes, myPredRes] = await Promise.all([
     supabase.from('matches').select('*').eq('id', id).single(),
     supabase.from('settings').select('key, value'),
-    supabase.from('profiles').select('timezone').eq('id', user!.id).single(),
+    supabase.from('profiles').select('timezone, theme').eq('id', user!.id).single(),
     supabase.from('profiles').select('id, display_name, avatar_url'),
     admin.from('predictions').select('user_id').eq('match_id', id),
     supabase.from('predictions').select('home_score, away_score').eq('match_id', id).eq('user_id', user!.id).maybeSingle(),
@@ -31,6 +32,8 @@ export default async function PartidoPage({ params }: { params: Promise<{ id: st
   const settings = settingsRes.data ?? []
   const bloqueoMinutos = parseInt(settings.find(s => s.key === 'bloqueo_minutos')?.value ?? '15')
   const timezone = profileRes.data?.timezone ?? 'America/Mexico_City'
+  const theme = (profileRes.data?.theme as Theme) ?? 'mexico'
+  const t = getTheme(theme)
   const locked = isMatchLocked(match.scheduled_time, bloqueoMinutos, match.early_unlock_at)
   const isFinished = match.status === 'FINISHED' && match.home_score_quiniela != null
   const isLive = match.status === 'IN_PROGRESS'
@@ -61,7 +64,7 @@ export default async function PartidoPage({ params }: { params: Promise<{ id: st
 
   const myPred = predictions.find(p => p.user_id === user!.id)
 
-  const matchTime = new Intl.DateTimeFormat('es-MX', {
+  const matchTime = new Intl.DateTimeFormat(t.locale, {
     timeZone: timezone,
     weekday: 'long',
     day: 'numeric',
@@ -73,14 +76,14 @@ export default async function PartidoPage({ params }: { params: Promise<{ id: st
   return (
     <div style={{ padding: '16px 16px 0' }}>
       <Link href="/partidos" style={{ fontSize: 13, color: 'var(--text-muted)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4, marginBottom: 14 }}>
-        ← Partidos
+        {t.texts.back}
       </Link>
 
       {/* Editor de pronóstico (OPEN) */}
       {!locked && !isFinished && !isLive && (
         <div className="glass-card" style={{ padding: '14px 16px', marginBottom: 14 }}>
           <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 10, textTransform: 'uppercase' }}>
-            Tu pronóstico
+            {t.texts.yourPredLabel}
           </div>
           <PredictionForm
             matchId={id}
@@ -88,6 +91,7 @@ export default async function PartidoPage({ params }: { params: Promise<{ id: st
             bloqueoMinutos={bloqueoMinutos}
             currentPrediction={myPredRes.data}
             disabled={false}
+            theme={theme}
           />
         </div>
       )}
@@ -96,7 +100,7 @@ export default async function PartidoPage({ params }: { params: Promise<{ id: st
       <div className="glass-card" style={{ padding: '20px 16px', marginBottom: 14, textAlign: 'center' }}>
         <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
           {STAGE_LABELS[match.stage] ?? match.stage}
-          {match.group_name ? ` · Grupo ${match.group_name.replace('GROUP_', '')}` : ''}
+          {match.group_name ? ` · ${t.texts.group} ${match.group_name.replace('GROUP_', '')}` : ''}
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
@@ -145,7 +149,7 @@ export default async function PartidoPage({ params }: { params: Promise<{ id: st
           <div style={{ fontSize: 16 }}>{locked ? '🤐' : '⏳'}</div>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 12, fontWeight: 600, color: locked ? 'var(--shame-red)' : 'var(--warning)', marginBottom: 6 }}>
-              {locked ? 'No jugaron' : `Falta${missingProfiles.length > 1 ? 'n' : ''} pronóstico${missingProfiles.length > 1 ? 's' : ''}`}
+              {locked ? t.texts.noPlayed : t.texts.missingPred}
             </div>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               {missingProfiles.map(p => (
@@ -163,7 +167,7 @@ export default async function PartidoPage({ params }: { params: Promise<{ id: st
       {(locked || isFinished || isLive) && predictions.length > 0 && (
         <div style={{ marginBottom: 14 }}>
           <h2 style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-muted)', margin: '0 0 10px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-            Ranking
+            {t.texts.rankingTitle}
           </h2>
           <RankingPreview
             matchId={id}
@@ -172,13 +176,14 @@ export default async function PartidoPage({ params }: { params: Promise<{ id: st
             currentUserId={user!.id}
             isFinished={isFinished}
             isLive={isLive}
+            theme={theme}
           />
         </div>
       )}
 
       {!locked && !isLive && !isFinished && (
         <div className="glass-card" style={{ padding: '14px 16px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
-          Los pronósticos se revelan cuando el partido se bloquee
+          {t.texts.revealWhenLocked}
         </div>
       )}
     </div>
