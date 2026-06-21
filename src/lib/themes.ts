@@ -16,7 +16,7 @@ export const THEMES: Record<Theme, {
     locale: 'es-MX',
     mode: 'dark',
     colors: {
-      primary: '#006847',
+      primary: '#007850',
       secondary: '#D4AF37',
       accent: '#CE1126',
       background: '#0a0f0d',
@@ -51,12 +51,12 @@ export const THEMES: Record<Theme, {
     mode: 'light',
     colors: {
       primary: '#006847',
-      secondary: '#B8941F',
+      secondary: '#A8870F',
       accent: '#CE1126',
       background: '#F0F7F3',
       text_main: 'rgba(0,0,0,0.87)',
       text_muted: 'rgba(0,0,0,0.56)',
-      text_dim: 'rgba(0,0,0,0.35)',
+      text_dim: 'rgba(0,0,0,0.48)',
     },
     pattern: [
       'repeating-linear-gradient(135deg, rgba(0,104,71,0.07) 0, rgba(0,104,71,0.07) 1px, transparent 1px, transparent 28px)',
@@ -90,7 +90,7 @@ export const THEMES: Record<Theme, {
       background: '#050D1E',
       text_main: '#EEF2FF',
       text_muted: '#94A3B8',
-      text_dim: '#475569',
+      text_dim: '#5C7189',
     },
     pattern: 'repeating-linear-gradient(180deg, rgba(220,38,38,0.11) 0, rgba(220,38,38,0.11) 6px, transparent 6px, transparent 24px)',
     texts: {
@@ -121,7 +121,7 @@ export const THEMES: Record<Theme, {
       background: '#FFFFFF',
       text_main: 'rgba(0,0,0,0.87)',
       text_muted: 'rgba(0,0,0,0.54)',
-      text_dim: 'rgba(0,0,0,0.32)',
+      text_dim: 'rgba(0,0,0,0.45)',
     },
     pattern: 'repeating-linear-gradient(180deg, rgba(185,28,28,0.09) 0, rgba(185,28,28,0.09) 7px, transparent 7px, transparent 24px)',
     texts: {
@@ -183,7 +183,7 @@ export const THEMES: Record<Theme, {
       background: '#EEF8FF',
       text_main: 'rgba(0,0,0,0.87)',
       text_muted: 'rgba(0,0,0,0.56)',
-      text_dim: 'rgba(0,0,0,0.35)',
+      text_dim: 'rgba(0,0,0,0.48)',
     },
     pattern: 'repeating-linear-gradient(90deg, transparent 0, transparent 36px, rgba(0,112,184,0.10) 36px, rgba(0,112,184,0.10) 72px)',
     texts: {
