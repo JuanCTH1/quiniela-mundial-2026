@@ -24,9 +24,12 @@ export default function AuthCallbackPage() {
     const hash = new URLSearchParams(window.location.hash.slice(1))
     const accessToken = hash.get('access_token')
     const refreshToken = hash.get('refresh_token')
+    const type = hash.get('type')
     if (accessToken && refreshToken) {
       supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken }).then(({ error }) => {
-        router.replace(error ? '/login?error=auth_callback' : '/partidos')
+        if (error) { router.replace('/login?error=auth_callback'); return }
+        // Invites: pedir que creen su password antes de entrar
+        router.replace(type === 'invite' ? '/perfil?bienvenido=1' : '/partidos')
       })
       return
     }

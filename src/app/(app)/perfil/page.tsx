@@ -2,8 +2,14 @@ import { createClient } from '@/lib/supabase/server'
 import { logout } from '@/app/actions/auth'
 import { ProfileForm } from './ProfileForm'
 import { ThemeSelector } from './ThemeSelector'
+import { SetPasswordForm } from './SetPasswordForm'
 
-export default async function PerfilPage() {
+export default async function PerfilPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ bienvenido?: string }>
+}) {
+  const { bienvenido } = await searchParams
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   const { data: profile } = await supabase
@@ -29,6 +35,8 @@ export default async function PerfilPage() {
           </span>
         )}
       </div>
+
+      {bienvenido === '1' && <SetPasswordForm />}
 
       <ProfileForm
         initialName={profile?.display_name ?? ''}
