@@ -57,12 +57,12 @@ export default async function PartidoPage({ params }: { params: Promise<{ id: st
   if (locked || isFinished || isLive) {
     const predsRes = await supabase.from('predictions').select('user_id, home_score, away_score').eq('match_id', id)
     const profileMap = new Map(allProfiles.map(p => [p.id, p]))
-    predictions = (predsRes.data ?? []).map(p => ({
-      ...p,
-      profiles: profileMap.has(p.user_id)
-        ? { display_name: profileMap.get(p.user_id)!.display_name, avatar_url: profileMap.get(p.user_id)!.avatar_url }
-        : null,
-    }))
+    predictions = (predsRes.data ?? [])
+      .filter(p => profileMap.has(p.user_id))
+      .map(p => ({
+        ...p,
+        profiles: { display_name: profileMap.get(p.user_id)!.display_name, avatar_url: profileMap.get(p.user_id)!.avatar_url },
+      }))
   }
 
   const myPred = predictions.find(p => p.user_id === user!.id)

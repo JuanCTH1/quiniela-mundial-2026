@@ -7,7 +7,10 @@ export default async function AdminPage() {
   const [settingsRes, logsRes, usersRes] = await Promise.all([
     supabase.from('settings').select('key, value'),
     supabase.from('system_logs').select('*').order('created_at', { ascending: false }).limit(50),
-    supabase.from('profiles').select('id, display_name, is_admin').order('display_name'),
+    (() => {
+      const q = supabase.from('profiles').select('id, display_name, is_admin').order('display_name')
+      return process.env.NEXT_PUBLIC_APP_ENV === 'production' ? q.eq('is_test', false) : q
+    })(),
   ])
 
   const settings = settingsRes.data ?? []
