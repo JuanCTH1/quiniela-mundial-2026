@@ -123,7 +123,7 @@ export const THEMES: Record<Theme, {
       text_muted: 'rgba(0,0,0,0.54)',
       text_dim: 'rgba(0,0,0,0.45)',
     },
-    pattern: 'repeating-linear-gradient(180deg, rgba(185,28,28,0.14) 0, rgba(185,28,28,0.14) 16px, transparent 16px, transparent 32px)',
+    pattern: 'repeating-linear-gradient(180deg, rgba(185,28,28,0.28) 0, rgba(185,28,28,0.28) 16px, transparent 16px, transparent 32px)',
     texts: {
       testMode: 'Test Mode — data is not real',
       open: 'Open', locked: 'Locked', finished: 'Final', live: '● In Play',
