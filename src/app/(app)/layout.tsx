@@ -73,7 +73,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           />
         </Suspense>
       </div>
-      <div style={{ padding: '0 16px' }}>
+      <div style={{ padding: '0 16px', backdropFilter: 'blur(0px)', WebkitBackdropFilter: 'blur(0px)' }}>
         {children}
       </div>
       <BottomNav isAdmin={profile?.is_admin ?? false} theme={theme} />
