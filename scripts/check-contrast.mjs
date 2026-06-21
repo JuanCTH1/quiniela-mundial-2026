@@ -90,8 +90,8 @@ const THEMES = {
     text_main:  'rgba(0,0,0,0.87)',
     text_muted: 'rgba(0,0,0,0.54)',
     text_dim:   'rgba(0,0,0,0.45)',
-    primary:    '#B91C1C',
-    secondary:  '#1E3A8A',
+    primary:    '#1E3A8A',
+    secondary:  '#B91C1C',
     accent:     '#1E3A8A',
   },
   argentina: {

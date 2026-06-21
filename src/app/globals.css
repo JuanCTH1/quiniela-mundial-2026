@@ -133,12 +133,21 @@
 body {
   font-family: var(--font-sans);
   background-color: var(--theme-background);
-  background-image: var(--theme-pattern, none);
   color: var(--text-main);
   min-height: 100vh;
   isolation: isolate;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Patrón de fondo fijo — el contenido scrollea sobre él (parallax natural, funciona en iOS) */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background-image: var(--theme-pattern, none);
+  pointer-events: none;
 }
 
 /* ── SCROLLBAR ── */
