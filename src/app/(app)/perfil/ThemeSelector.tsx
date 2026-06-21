@@ -28,7 +28,8 @@ export function ThemeSelector({ initialTheme, userId }: Props) {
       // Forzar reload para aplicar tema
       setTimeout(() => window.location.reload(), 200)
     } catch (err) {
-      alert('Error al cambiar tema: ' + (err instanceof Error ? err.message : String(err)))
+      const msg = err instanceof Error ? err.message : (err as any)?.message ?? JSON.stringify(err)
+      alert('Error al cambiar tema: ' + msg)
       setSaving(false)
     }
   }
