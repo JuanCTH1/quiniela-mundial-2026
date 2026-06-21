@@ -22,7 +22,7 @@
   --glass-border:     rgba(255, 255, 255, 0.07);
   --glass-border-top: rgba(255, 255, 255, 0.20);
   --glass-glow:       color-mix(in srgb, var(--theme-primary) 35%, transparent);
-  --glass-blur:       blur(8px);
+  --glass-blur:       blur(56px);
 
   /* === TEMA DINÁMICO (defaults = México) === */
   --theme-primary: var(--mx-green);
@@ -68,7 +68,7 @@
   --glass-border:     rgba(0, 0, 0, 0.08);
   --glass-border-top: rgba(255, 255, 255, 0.88);
   --glass-glow:       color-mix(in srgb, var(--theme-primary) 18%, transparent);
-  --glass-blur:       blur(7px);
+  --glass-blur:       blur(44px);
 
   /* Chrome */
   --header-bg:     rgba(255, 255, 255, 0.80);
@@ -133,16 +133,24 @@
 body {
   font-family: var(--font-sans);
   background-color: var(--theme-background);
-  /* Patrón en-flujo (scroll attachment): las glass-card SÍ lo pueden
-     blurear vía backdrop-filter en todos los motores (incl. Safari/iOS).
-     NO va en un elemento position:fixed — Safari no samplea capas fixed
-     compositeadas como backdrop. El parallax lo dan los blobs. */
-  background-image: var(--theme-pattern, none);
   color: var(--text-main);
   min-height: 100vh;
   isolation: isolate;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
+}
+
+/* #parallax-bg — manejado por ParallaxBackground.tsx vía JS scroll */
+#parallax-bg {
+  position: fixed;
+  top: -50%;
+  left: -5%;
+  right: -5%;
+  bottom: -50%;
+  z-index: -2;
+  background-image: var(--theme-pattern, none);
+  pointer-events: none;
+  will-change: transform;
 }
 
 /* ── SCROLLBAR ── */

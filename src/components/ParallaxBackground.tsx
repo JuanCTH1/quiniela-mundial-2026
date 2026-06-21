@@ -1,21 +1,24 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 
-// Parallax solo en los blobs (.g-blob-wrap) — se mueven a 18% del scroll.
-// El patrón NO se parallaxea: vive en el background del body (en-flujo) para
-// que las glass-card lo puedan blurear vía backdrop-filter en todos los motores.
-// passive scroll + rAF: sin jank en iOS ni Android.
+// Patrón a 8% y blobs a 18% de velocidad del scroll — parallax sutil, sin mareo.
+// 3 capas de profundidad: patrón (muy lento) → blobs (lento) → contenido (normal).
+// Usa passive scroll + rAF: sin jank en iOS ni Android.
 export function ParallaxBackground() {
+  const patternRef = useRef<HTMLDivElement>(null)
+
   useEffect(() => {
+    const patternEl = patternRef.current
     const blobsEl = document.querySelector<HTMLElement>('.g-blob-wrap')
-    if (!blobsEl) return
     let frame: number
 
     const onScroll = () => {
       cancelAnimationFrame(frame)
       frame = requestAnimationFrame(() => {
-        blobsEl.style.transform = `translateY(${window.scrollY * 0.18}px)`
+        const y = window.scrollY
+        if (patternEl) patternEl.style.transform = `translateY(${y * 0.08}px)`
+        if (blobsEl)   blobsEl.style.transform   = `translateY(${y * 0.18}px)`
       })
     }
 
@@ -26,5 +29,5 @@ export function ParallaxBackground() {
     }
   }, [])
 
-  return null
+  return <div ref={patternRef} id="parallax-bg" aria-hidden="true" />
 }
