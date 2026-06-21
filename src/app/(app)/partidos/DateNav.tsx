@@ -58,17 +58,17 @@ export function DateNav({ currentFecha, currentEtapa, timezone, availableDates }
     backdropFilter: 'blur(12px) saturate(180%)',
     WebkitBackdropFilter: 'blur(12px) saturate(180%)',
     background: active
-      ? 'var(--mx-green)'
+      ? 'var(--primary)'
       : 'rgba(255,255,255,0.07)',
     border: active
-      ? '1px solid rgba(0,104,71,0.6)'
+      ? '1px solid color-mix(in srgb, var(--primary) 60%, transparent)'
       : '1px solid rgba(255,255,255,0.10)',
     borderTop: active
-      ? '1px solid rgba(0,104,71,0.6)'
+      ? '1px solid color-mix(in srgb, var(--primary) 60%, transparent)'
       : '1px solid rgba(255,255,255,0.20)',
     color: active ? '#fff' : 'var(--text-muted)',
     boxShadow: active
-      ? '0 2px 12px rgba(0,104,71,0.25), inset 0 1px 0 rgba(255,255,255,0.15)'
+      ? '0 2px 12px color-mix(in srgb, var(--primary) 25%, transparent), inset 0 1px 0 rgba(255,255,255,0.15)'
       : 'inset 0 1px 0 rgba(255,255,255,0.06)',
   })
 
@@ -83,15 +83,15 @@ export function DateNav({ currentFecha, currentEtapa, timezone, availableDates }
     backdropFilter: 'blur(12px) saturate(180%)',
     WebkitBackdropFilter: 'blur(12px) saturate(180%)',
     background: active
-      ? 'rgba(0,104,71,0.25)'
+      ? 'color-mix(in srgb, var(--primary) 22%, transparent)'
       : 'rgba(255,255,255,0.05)',
     border: active
-      ? '1px solid rgba(0,104,71,0.5)'
+      ? '1px solid color-mix(in srgb, var(--primary) 50%, transparent)'
       : '1px solid rgba(255,255,255,0.08)',
     borderTop: active
-      ? '1px solid rgba(0,104,71,0.5)'
+      ? '1px solid color-mix(in srgb, var(--primary) 50%, transparent)'
       : '1px solid rgba(255,255,255,0.15)',
-    color: active ? 'var(--mx-green)' : 'var(--text-muted)',
+    color: active ? 'var(--primary)' : 'var(--text-muted)',
     boxShadow: active
       ? 'inset 0 1px 0 rgba(255,255,255,0.10)'
       : 'inset 0 1px 0 rgba(255,255,255,0.04)',

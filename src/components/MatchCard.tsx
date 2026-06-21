@@ -63,7 +63,7 @@ export function MatchCard({
   const stateColor =
     isFinished ? 'rgba(255,255,255,0.2)' :
     isLive     ? 'var(--warning)' :
-    isLocked   ? 'var(--warning)' : 'var(--success)'
+    isLocked   ? 'var(--warning)' : 'var(--primary)'
 
   const stateLabel =
     isFinished ? t.texts.finished :
