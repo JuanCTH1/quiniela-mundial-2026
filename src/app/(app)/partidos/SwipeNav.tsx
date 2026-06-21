@@ -7,6 +7,7 @@ interface Props {
   children: React.ReactNode
   currentFecha: string
   currentEtapa?: string
+  primaryColor?: string
 }
 
 function startsInScrollable(target: EventTarget | null): boolean {
@@ -20,7 +21,7 @@ function startsInScrollable(target: EventTarget | null): boolean {
   return false
 }
 
-export function SwipeNav({ children, currentFecha, currentEtapa }: Props) {
+export function SwipeNav({ children, currentFecha, currentEtapa, primaryColor = '#006847' }: Props) {
   const router = useRouter()
   const touchStart = useRef<{ x: number; y: number } | null>(null)
   const blocked = useRef(false)
@@ -79,7 +80,7 @@ export function SwipeNav({ children, currentFecha, currentEtapa }: Props) {
             color: 'rgba(255,255,255,0.85)',
             pointerEvents: 'none',
             animation: `arrow-${swipe} 0.5s ease-out forwards`,
-            textShadow: '0 0 20px rgba(0,104,71,0.8)',
+            textShadow: `0 0 20px ${primaryColor}cc`,
           }}
         >
           {swipe === 'left' ? '→' : '←'}
@@ -87,12 +88,12 @@ export function SwipeNav({ children, currentFecha, currentEtapa }: Props) {
       )}
       <style>{`
         @keyframes swipe-flash-left {
-          0%   { background: linear-gradient(to left, rgba(0,104,71,0.35) 0%, transparent 50%); opacity: 1; }
-          100% { background: linear-gradient(to left, rgba(0,104,71,0.35) 0%, transparent 50%); opacity: 0; }
+          0%   { background: linear-gradient(to left, ${primaryColor}59 0%, transparent 50%); opacity: 1; }
+          100% { background: linear-gradient(to left, ${primaryColor}59 0%, transparent 50%); opacity: 0; }
         }
         @keyframes swipe-flash-right {
-          0%   { background: linear-gradient(to right, rgba(0,104,71,0.35) 0%, transparent 50%); opacity: 1; }
-          100% { background: linear-gradient(to right, rgba(0,104,71,0.35) 0%, transparent 50%); opacity: 0; }
+          0%   { background: linear-gradient(to right, ${primaryColor}59 0%, transparent 50%); opacity: 1; }
+          100% { background: linear-gradient(to right, ${primaryColor}59 0%, transparent 50%); opacity: 0; }
         }
         @keyframes arrow-left {
           0%   { opacity: 0; transform: translateY(-50%) translateX(-10px); }

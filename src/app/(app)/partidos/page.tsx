@@ -4,7 +4,7 @@ import { MatchCard } from '@/components/MatchCard'
 import { isMatchLocked } from '@/lib/utils'
 import { DateNav } from './DateNav'
 import { SwipeNav } from './SwipeNav'
-import type { Theme } from '@/lib/themes'
+import { getTheme, type Theme } from '@/lib/themes'
 
 export default async function PartidosPage({
   searchParams,
@@ -101,7 +101,7 @@ export default async function PartidosPage({
   const activeFecha = fecha ?? new Date().toISOString().slice(0, 10)
 
   return (
-    <SwipeNav currentFecha={activeFecha} currentEtapa={etapa}>
+    <SwipeNav currentFecha={activeFecha} currentEtapa={etapa} primaryColor={getTheme(theme).colors.primary}>
       <div style={{ paddingTop: 14 }}>
         <h1 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 12px', color: 'var(--text-main)' }}>
           Partidos
