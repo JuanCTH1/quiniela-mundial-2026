@@ -1,10 +1,18 @@
 'use client'
 
-import { useActionState } from 'react'
+import { useActionState, useEffect, useState } from 'react'
 import { login } from '@/app/actions/auth'
 
 export default function LoginPage() {
   const [state, action, pending] = useActionState(login, undefined)
+  const [hashError, setHashError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const hash = new URLSearchParams(window.location.hash.slice(1))
+    const code = hash.get('error_code')
+    if (code === 'otp_expired') setHashError('El link de invitación expiró. Pídele al admin que te mande uno nuevo.')
+    else if (hash.get('error')) setHashError('El link de acceso no es válido. Pídele al admin que te mande uno nuevo.')
+  }, [])
 
   return (
     <div
@@ -83,6 +91,9 @@ export default function LoginPage() {
             />
           </div>
 
+          {hashError && (
+            <p style={{ fontSize: 12, color: 'var(--mx-red)', margin: 0 }}>{hashError}</p>
+          )}
           {state?.error && (
             <p style={{ fontSize: 12, color: 'var(--mx-red)', margin: 0 }}>{state.error}</p>
           )}
