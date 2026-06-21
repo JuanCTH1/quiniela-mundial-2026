@@ -51,30 +51,28 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <ThemeProvider theme={theme}>
       <ParallaxBackground />
       <div style={{ paddingBottom: 'calc(72px + env(safe-area-inset-bottom))', maxWidth: 480, margin: '0 auto' }}>
-      {(appMode === 'test' || alertRes.data) && (
-        <div style={{
-          position: 'sticky', top: 0, zIndex: 50,
-          backdropFilter: 'blur(20px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-          background: 'var(--header-bg)',
-          borderBottom: '1px solid var(--header-border)',
-        }}>
-          {appMode === 'test' && <TestModeBanner theme={theme} />}
-          {alertRes.data && (
-            <SystemAlertBanner message={alertRes.data.message} createdAt={alertRes.data.created_at} />
-          )}
-        </div>
-      )}
-      <Suspense fallback={bannerSkeleton}>
-        <NextMatchBannerWrapper
-          liveMatch={liveMatch}
-          nextMatch={nextMatch}
-          userId={user.id}
-          bloqueoMinutos={bloqueoMinutos}
-          timezone={timezone}
-          theme={theme}
-        />
-      </Suspense>
+      <div style={{
+        position: 'sticky', top: 0, zIndex: 50,
+        backdropFilter: 'blur(20px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+        background: 'var(--header-bg)',
+        borderBottom: '1px solid var(--header-border)',
+      }}>
+        {appMode === 'test' && <TestModeBanner theme={theme} />}
+        {alertRes.data && (
+          <SystemAlertBanner message={alertRes.data.message} createdAt={alertRes.data.created_at} />
+        )}
+        <Suspense fallback={bannerSkeleton}>
+          <NextMatchBannerWrapper
+            liveMatch={liveMatch}
+            nextMatch={nextMatch}
+            userId={user.id}
+            bloqueoMinutos={bloqueoMinutos}
+            timezone={timezone}
+            theme={theme}
+          />
+        </Suspense>
+      </div>
       <div style={{ padding: '0 16px' }}>
         {children}
       </div>

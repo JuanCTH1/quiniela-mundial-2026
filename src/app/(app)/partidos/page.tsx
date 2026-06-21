@@ -107,16 +107,7 @@ export default async function PartidosPage({
           Partidos
         </h1>
 
-        <div style={{
-          position: 'sticky', top: 0, zIndex: 40,
-          margin: '0 -16px', padding: '10px 16px 0',
-          backdropFilter: 'blur(20px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-          background: 'var(--header-bg)',
-          borderBottom: '1px solid var(--header-border)',
-        }}>
-          <DateNav currentFecha={fecha} currentEtapa={etapa} timezone={timezone} availableDates={availableDates} />
-        </div>
+        <DateNav currentFecha={fecha} currentEtapa={etapa} timezone={timezone} availableDates={availableDates} />
 
         {!matches?.length ? (
           <p style={{ color: 'var(--text-muted)', fontSize: 14, textAlign: 'center', marginTop: 40 }}>
