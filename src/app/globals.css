@@ -17,8 +17,8 @@
   --shame-red: #8B0000;   /* rojo denigrante / último lugar */
 
   /* === GLASSMORPHISM === */
-  --glass-bg:         color-mix(in srgb, var(--theme-primary) 8%, transparent);
-  --glass-bg-hover:   color-mix(in srgb, var(--theme-primary) 14%, transparent);
+  --glass-bg:         rgba(255, 255, 255, 0.07);
+  --glass-bg-hover:   rgba(255, 255, 255, 0.13);
   --glass-border:     rgba(255, 255, 255, 0.07);
   --glass-border-top: rgba(255, 255, 255, 0.20);
   --glass-glow:       color-mix(in srgb, var(--theme-primary) 35%, transparent);
@@ -63,8 +63,8 @@
    ───────────────────────────────────────────────────── */
 [data-mode="light"] {
   /* Glass system */
-  --glass-bg:         rgba(255, 255, 255, 0.55);
-  --glass-bg-hover:   rgba(255, 255, 255, 0.76);
+  --glass-bg:         rgba(255, 255, 255, 0.10);
+  --glass-bg-hover:   rgba(255, 255, 255, 0.20);
   --glass-border:     rgba(0, 0, 0, 0.08);
   --glass-border-top: rgba(255, 255, 255, 0.88);
   --glass-glow:       color-mix(in srgb, var(--theme-primary) 18%, transparent);
