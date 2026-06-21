@@ -4,18 +4,20 @@ import { AdminActions } from './AdminActions'
 export default async function AdminPage() {
   const supabase = await createClient()
 
-  const [settingsRes, logsRes, usersRes] = await Promise.all([
+  const [settingsRes, logsRes, usersRes, matchesRes] = await Promise.all([
     supabase.from('settings').select('key, value'),
     supabase.from('system_logs').select('*').order('created_at', { ascending: false }).limit(50),
     (() => {
       const q = supabase.from('profiles').select('id, display_name, is_admin').order('display_name')
       return process.env.NEXT_PUBLIC_APP_ENV === 'production' ? q.eq('is_test', false) : q
     })(),
+    supabase.from('matches').select('id, home_team, away_team, scheduled_time').order('scheduled_time').limit(80),
   ])
 
   const settings = settingsRes.data ?? []
   const logs = logsRes.data ?? []
   const users = usersRes.data ?? []
+  const matches = matchesRes.data ?? []
 
   const appMode = settings.find(s => s.key === 'app_mode')?.value ?? 'test'
   const bloqueoMinutos = settings.find(s => s.key === 'bloqueo_minutos')?.value ?? '15'
@@ -34,6 +36,7 @@ export default async function AdminPage() {
         bloqueoMinutos={bloqueoMinutos}
         users={users}
         logs={logs}
+        matches={matches}
       />
     </div>
   )

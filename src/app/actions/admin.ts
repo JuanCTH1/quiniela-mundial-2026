@@ -159,3 +159,36 @@ export async function adminActivateRealMode() {
 
   revalidatePath('/')
 }
+
+// ── Borrar pronósticos anteriores a un partido (limpieza de inicio) ───────────
+export async function adminDeletePredictionsBefore(matchId: string) {
+  const { userId, adminClient } = await requireAdmin()
+
+  const { data: match } = await adminClient
+    .from('matches')
+    .select('scheduled_time, home_team, away_team')
+    .eq('id', matchId)
+    .single()
+
+  if (!match) throw new Error('Partido no encontrado')
+
+  const { data: toDelete } = await adminClient
+    .from('matches')
+    .select('id')
+    .lt('scheduled_time', match.scheduled_time)
+
+  const ids = (toDelete ?? []).map(m => m.id)
+  if (!ids.length) throw new Error('No hay partidos anteriores a ese')
+
+  await adminClient.from('predictions').delete().in('match_id', ids)
+
+  await adminClient.from('audit_log').insert({
+    actor_id: userId,
+    action_type: 'DELETE_PREDICTIONS_BEFORE',
+    match_id: matchId,
+    notes: `Predicciones borradas para partidos anteriores a ${match.home_team} vs ${match.away_team}`,
+  })
+
+  revalidatePath('/')
+  return { before: `${match.home_team} vs ${match.away_team}` }
+}
