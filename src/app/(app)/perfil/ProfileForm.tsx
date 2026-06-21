@@ -21,6 +21,11 @@ export function ProfileForm({ initialName, initialTimezone, initialAvatarUrl, us
   const [avatarError, setAvatarError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
   const [isPending, startTransition] = useTransition()
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [pwError, setPwError] = useState<string | null>(null)
+  const [pwSaved, setPwSaved] = useState(false)
+  const [pwPending, setPwPending] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const supabase = createBrowserClient<Database>(
@@ -56,6 +61,21 @@ export function ProfileForm({ initialName, initialTimezone, initialAvatarUrl, us
     // Persist to profile
     await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', userId)
     setAvatarUploading(false)
+  }
+
+  async function handlePasswordChange(e: React.FormEvent) {
+    e.preventDefault()
+    setPwError(null)
+    if (newPassword.length < 6) { setPwError('Mínimo 6 caracteres'); return }
+    if (newPassword !== confirmPassword) { setPwError('Las contraseñas no coinciden'); return }
+    setPwPending(true)
+    const { error } = await supabase.auth.updateUser({ password: newPassword })
+    setPwPending(false)
+    if (error) { setPwError(error.message); return }
+    setPwSaved(true)
+    setNewPassword('')
+    setConfirmPassword('')
+    setTimeout(() => setPwSaved(false), 3000)
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -162,6 +182,43 @@ export function ProfileForm({ initialName, initialTimezone, initialAvatarUrl, us
         }}
       >
         {isPending ? 'Guardando...' : saved ? '✓ Guardado' : 'Guardar'}
+      </button>
+    </form>
+
+    {/* Cambiar contraseña */}
+    <form onSubmit={handlePasswordChange} style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 8 }}>
+      <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+        Cambiar contraseña
+      </div>
+      <input
+        type="password"
+        value={newPassword}
+        onChange={e => setNewPassword(e.target.value)}
+        placeholder="Nueva contraseña"
+        autoComplete="new-password"
+        style={inputStyle}
+      />
+      <input
+        type="password"
+        value={confirmPassword}
+        onChange={e => setConfirmPassword(e.target.value)}
+        placeholder="Confirmar contraseña"
+        autoComplete="new-password"
+        style={inputStyle}
+      />
+      {pwError && <span style={{ fontSize: 11, color: 'var(--mx-red)' }}>{pwError}</span>}
+      <button
+        type="submit"
+        disabled={pwPending || !newPassword}
+        style={{
+          padding: '11px',
+          background: pwSaved ? 'rgba(52,168,83,0.3)' : 'rgba(255,255,255,0.08)',
+          border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, color: '#fff',
+          fontSize: 14, fontWeight: 600, cursor: 'pointer',
+          opacity: (pwPending || !newPassword) ? 0.5 : 1, transition: 'all 0.2s',
+        }}
+      >
+        {pwPending ? 'Guardando...' : pwSaved ? '✓ Contraseña actualizada' : 'Actualizar contraseña'}
       </button>
     </form>
   )
