@@ -28,6 +28,8 @@ export async function logout() {
 export async function inviteUser(email: string) {
   const { createAdminClient } = await import('@/lib/supabase/admin')
   const admin = createAdminClient()
-  const { error } = await admin.auth.admin.inviteUserByEmail(email)
+  const { error } = await admin.auth.admin.inviteUserByEmail(email, {
+    redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
+  })
   if (error) throw new Error(error.message)
 }

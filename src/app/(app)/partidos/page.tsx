@@ -71,7 +71,10 @@ export default async function PartidosPage({
       ? supabase.from('predictions').select('match_id, user_id, home_score, away_score').in('match_id', lockedIds)
       : Promise.resolve({ data: [] }),
     lockedIds.length
-      ? supabase.from('profiles').select('id, display_name, avatar_url')
+      ? (() => {
+          const q = supabase.from('profiles').select('id, display_name, avatar_url')
+          return process.env.NEXT_PUBLIC_APP_ENV === 'production' ? q.eq('is_test', false) : q
+        })()
       : Promise.resolve({ data: [] }),
   ])
 

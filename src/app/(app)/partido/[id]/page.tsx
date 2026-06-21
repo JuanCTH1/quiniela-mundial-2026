@@ -22,7 +22,10 @@ export default async function PartidoPage({ params }: { params: Promise<{ id: st
     supabase.from('matches').select('*').eq('id', id).single(),
     supabase.from('settings').select('key, value'),
     supabase.from('profiles').select('timezone, theme').eq('id', user!.id).single(),
-    supabase.from('profiles').select('id, display_name, avatar_url'),
+    (() => {
+      const q = supabase.from('profiles').select('id, display_name, avatar_url')
+      return process.env.NEXT_PUBLIC_APP_ENV === 'production' ? q.eq('is_test', false) : q
+    })(),
     admin.from('predictions').select('user_id').eq('match_id', id),
     supabase.from('predictions').select('home_score, away_score').eq('match_id', id).eq('user_id', user!.id).maybeSingle(),
   ])
