@@ -21,10 +21,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Email requerido' }, { status: 400 })
   }
 
-  // Derivar la URL pública del request — más robusto que una env var en Railway
+  // Usar env var si está definida (Railway prod); si no, derivar del request
   const host = req.headers.get('x-forwarded-host') ?? req.headers.get('host') ?? ''
   const proto = req.headers.get('x-forwarded-proto') ?? 'https'
-  const appUrl = `${proto}://${host}`
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? `${proto}://${host}`
 
   const admin = createAdminClient()
   const { error } = await admin.auth.admin.inviteUserByEmail(email, {
