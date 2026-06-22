@@ -1,5 +1,29 @@
 # Changelog — Quiniela Overrated 2026
 
+## [Sorteo] — 2026-06-22
+
+### Features
+- **Tab Sorteo en `/ranking`**: pill navigation Puntos | Sorteo. El tab Sorteo muestra un ranking paralelo basado en probabilidades de apuestas, independiente de la quiniela de marcadores.
+- **SorteoCard expandible**: cada jugador tiene una card que se expande/contrae mostrando sus 8 equipos (4 por grupo) con probabilidad individual, barra visual proporcional, y equipos eliminados tachados con 💀.
+- **Edge Function `update-odds`**: desplegada en Supabase, llama a The-Odds-API, normaliza el margen de la casa, y upsertea probabilidades en `team_odds`. Corre cada 2 horas via pg_cron (pendiente: mover a cada hora).
+- **Tabla `team_odds`**: una fila por equipo, actualizada por el Edge Function.
+- **Config `player-groups.ts`**: asignación oficial de grupos del Mundial 2026 por jugador (hardcodeada, derivada de la DB).
+
+### Fixes
+- **Display names de jugadores reales**: actualizados via SQL: Ña→Ernesto, gustavoinzunza30→Gus, javieremmanuel→Javier, manuelrodriguezorti→Mani, jesus.tunaal→Chuy.
+- **`database.types.ts` regenerado**: incluye tabla `team_odds` (el build de Railway fallaba por tipo desconocido).
+- **`tsconfig.json`**: excluir `supabase/functions/` del check de TypeScript (código Deno, incompatible con compilador Node).
+
+### Infraestructura
+- **The-Odds-API**: key configurada en Railway (prod + QA) y como secret en Supabase Edge Functions.
+- **pg_cron `update-odds-daily`**: cron 2x/día (8 AM y 8 PM UTC). Pendiente migrar a `update-odds-hourly` (1x/hora, cabe en free tier dado reset mensual).
+
+### Backlog generado
+- Cambiar cron de odds a cada hora (chip creado, SQL listo).
+- Minuto a minuto con API-Football antes de los 32avos (chip creado, diseño acordado).
+
+---
+
 ## [Pre-Real] — 2026-06-21
 
 ### Features
