@@ -131,7 +131,7 @@ export const TIMEZONES = [
   { label: 'Ciudad de México / Monterrey (CST/CDT)', value: 'America/Mexico_City' },
   { label: 'Mazatlán / Chihuahua (MST/MDT)', value: 'America/Mazatlan' },
   { label: 'Tijuana / Mexicali (PST/PDT)', value: 'America/Tijuana' },
-  { label: 'Chicago / Midwest (CST/CDT)', value: 'America/Chicago' },
+  { label: 'Chicago / CDT (Central Daylight Time)', value: 'America/Chicago' },
   { label: 'Nueva York / Miami (EST/EDT)', value: 'America/New_York' },
   { label: 'Madrid / Barcelona (CET/CEST)', value: 'Europe/Madrid' },
   { label: 'UTC', value: 'UTC' },
