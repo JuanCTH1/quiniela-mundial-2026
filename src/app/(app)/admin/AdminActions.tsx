@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
 import type { Database } from '@/types/database.types'
-import { adminDeletePredictionsBefore } from '@/app/actions/admin'
+import { adminDeletePredictionsBefore, adminActivateRealMode } from '@/app/actions/admin'
 
 interface User {
   id: string
@@ -67,7 +67,7 @@ export function AdminActions({ appMode, bloqueoMinutos, users, logs, matches }: 
   function activateRealMode() {
     if (!confirmReal) { setConfirmReal(true); return }
     startTransition(async () => {
-      await upsertSetting('app_mode', 'real')
+      await adminActivateRealMode()
       setMode('real')
       setConfirmReal(false)
       router.refresh()
