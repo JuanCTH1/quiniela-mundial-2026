@@ -92,7 +92,7 @@ export const THEMES: Record<Theme, {
       text_muted: '#94A3B8',
       text_dim: '#5C7189',
     },
-    pattern: 'repeating-linear-gradient(180deg, rgba(220,38,38,0.11) 0, rgba(220,38,38,0.11) 18px, transparent 18px, transparent 72px)',
+    pattern: 'repeating-linear-gradient(180deg, rgba(220,38,38,0.35) 0, rgba(220,38,38,0.35) 18px, transparent 18px, transparent 72px)',
     texts: {
       testMode: 'Test Mode — data is not real',
       open: 'Open', locked: 'Locked', finished: 'Final', live: '● In Play',
