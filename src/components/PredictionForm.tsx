@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { getTheme, type Theme } from '@/lib/themes'
 
@@ -20,6 +21,7 @@ export function PredictionForm({ matchId, scheduledTime, bloqueoMinutos, current
       ? { home: currentPrediction.home_score, away: currentPrediction.away_score! }
       : null
   )
+  const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
   const homeRef = useRef<HTMLInputElement>(null)
@@ -75,6 +77,7 @@ export function PredictionForm({ matchId, scheduledTime, bloqueoMinutos, current
       }
 
       setSaved({ home, away })
+      router.refresh()
     })
   }
 
