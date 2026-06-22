@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
 import type { Database } from '@/types/database.types'
 import { adminDeletePredictionsBefore } from '@/app/actions/admin'
@@ -46,6 +47,7 @@ async function upsertSetting(key: string, value: string) {
 }
 
 export function AdminActions({ appMode, bloqueoMinutos, users, logs, matches }: Props) {
+  const router = useRouter()
   const [mode, setMode] = useState(appMode)
   const [bloqueo, setBloqueo] = useState(bloqueoMinutos)
   const [inviteEmail, setInviteEmail] = useState('')
@@ -68,6 +70,7 @@ export function AdminActions({ appMode, bloqueoMinutos, users, logs, matches }: 
       await upsertSetting('app_mode', 'real')
       setMode('real')
       setConfirmReal(false)
+      router.refresh()
     })
   }
 
