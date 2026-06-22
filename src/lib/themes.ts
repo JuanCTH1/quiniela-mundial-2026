@@ -92,7 +92,7 @@ export const THEMES: Record<Theme, {
       text_muted: '#94A3B8',
       text_dim: '#5C7189',
     },
-    pattern: 'repeating-linear-gradient(180deg, rgba(220,38,38,0.35) 0, rgba(220,38,38,0.35) 18px, transparent 18px, transparent 72px)',
+    pattern: 'repeating-linear-gradient(180deg, rgba(220,38,38,0.11) 0, rgba(220,38,38,0.11) 6px, transparent 6px, transparent 24px)',
     texts: {
       testMode: 'Test Mode — data is not real',
       open: 'Open', locked: 'Locked', finished: 'Final', live: '● In Play',
@@ -123,7 +123,7 @@ export const THEMES: Record<Theme, {
       text_muted: 'rgba(0,0,0,0.54)',
       text_dim: 'rgba(0,0,0,0.45)',
     },
-    pattern: 'repeating-linear-gradient(180deg, rgba(185,28,28,0.28) 0, rgba(185,28,28,0.28) 16px, transparent 16px, transparent 32px)',
+    pattern: 'repeating-linear-gradient(180deg, rgba(185,28,28,0.45) 0, rgba(185,28,28,0.45) 18px, transparent 18px, transparent 72px)',
     texts: {
       testMode: 'Test Mode — data is not real',
       open: 'Open', locked: 'Locked', finished: 'Final', live: '● In Play',
