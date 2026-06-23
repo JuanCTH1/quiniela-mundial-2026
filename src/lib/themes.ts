@@ -124,7 +124,7 @@ export const THEMES: Record<Theme, {
       text_dim: 'rgba(0,0,0,0.45)',
       warning: '#1E3A8A',
     },
-    pattern: 'repeating-linear-gradient(180deg, rgba(185,28,28,0.75) 0, rgba(185,28,28,0.75) 7px, transparent 7px, transparent 32px)',
+    pattern: 'repeating-linear-gradient(180deg, rgba(185,28,28,0.80) 0, rgba(185,28,28,0.80) 18px, transparent 18px, transparent 36px)',
     texts: {
       testMode: 'Test Mode — data is not real',
       open: 'Open', locked: 'Locked', finished: 'Final', live: '● In Play',
