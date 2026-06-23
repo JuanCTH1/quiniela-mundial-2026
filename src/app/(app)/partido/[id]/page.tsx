@@ -146,8 +146,8 @@ export default async function PartidoPage({ params }: { params: Promise<{ id: st
             display: 'flex',
             alignItems: 'center',
             gap: 10,
-            background: locked ? 'rgba(139,0,0,0.10)' : 'rgba(245,158,11,0.08)',
-            borderColor: locked ? 'rgba(139,0,0,0.3)' : 'rgba(245,158,11,0.25)',
+            background: locked ? 'rgba(139,0,0,0.10)' : 'color-mix(in srgb, var(--warning) 8%, transparent)',
+            borderColor: locked ? 'rgba(139,0,0,0.3)' : 'color-mix(in srgb, var(--warning) 25%, transparent)',
           }}
         >
           <div style={{ fontSize: 16 }}>{locked ? '🤐' : '⏳'}</div>

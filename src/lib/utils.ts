@@ -1,9 +1,9 @@
 export const RANK_TITLES = [
   { title: 'El Messias', color: 'var(--gold)', crown: true },
-  { title: 'El Escolta', color: 'rgba(255,255,255,0.7)', crown: false },
+  { title: 'El Escolta', color: 'var(--text-muted)', crown: false },
   { title: 'El de Bronce', color: '#CD7F32', crown: false },
-  { title: 'El del Montón', color: 'rgba(255,255,255,0.4)', crown: false },
-  { title: 'El Sparring', color: 'rgba(255,255,255,0.4)', crown: false },
+  { title: 'El del Montón', color: 'var(--text-dim)', crown: false },
+  { title: 'El Sparring', color: 'var(--text-dim)', crown: false },
   { title: 'El Analista de la FIFA', color: 'var(--shame-red)', crown: false },
 ]
 

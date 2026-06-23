@@ -37,7 +37,7 @@ export function NextMatchBanner({ liveMatch, nextMatch, prediction, bloqueoMinut
       <div>
         <Link href={`/partido/${liveMatch.id}`} style={{ textDecoration: 'none', display: 'block' }}>
           <div style={{
-            background: 'rgba(245,158,11,0.10)',
+            background: 'color-mix(in srgb, var(--warning) 10%, transparent)',
             padding: '8px 16px',
             display: 'flex', alignItems: 'center', gap: 10,
           }}>
