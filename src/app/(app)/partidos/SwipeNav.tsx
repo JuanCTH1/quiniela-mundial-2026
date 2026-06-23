@@ -29,8 +29,10 @@ export function SwipeNav({ children, currentFecha, currentEtapa, primaryColor = 
 
   useEffect(() => {
     if (!scrollToNextMatch) return
-    const el = document.getElementById('next-match')
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    const t = setTimeout(() => {
+      document.getElementById('next-match')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 80)
+    return () => clearTimeout(t)
   }, [scrollToNextMatch, searchParams])
   const blocked = useRef(false)
   const [swipe, setSwipe] = useState<'left' | 'right' | null>(null)
