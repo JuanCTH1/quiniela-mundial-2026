@@ -75,6 +75,9 @@
   --header-border: rgba(0, 0, 0, 0.06);
   --nav-bg:        rgba(255, 255, 255, 0.88);
   --nav-border:    rgba(0, 0, 0, 0.07);
+
+  /* Semánticos adaptados a fondo claro */
+  --gold: #92700A;
 }
 
 /* Glass card — shadow override en light */
