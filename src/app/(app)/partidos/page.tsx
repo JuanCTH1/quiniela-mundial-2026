@@ -126,7 +126,7 @@ export default async function PartidosPage({
             const locked = isMatchLocked(match.scheduled_time, bloqueoMinutos, match.early_unlock_at)
             const isNext = match.id === nextMatch?.id
             return (
-              <div key={match.id} id={isNext ? 'next-match' : undefined} style={isNext ? { scrollMarginTop: 120 } : undefined}>
+              <div key={match.id} id={isNext ? 'next-match' : undefined} style={isNext ? { scrollMarginTop: 80 } : undefined}>
                 <MatchCard
                   match={match}
                   myPrediction={myPredMap.get(match.id)}
