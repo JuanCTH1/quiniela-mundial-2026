@@ -18,6 +18,9 @@ export function ThemeProvider({ theme, children }: Props) {
       root.style.setProperty(`--theme-${key}`, value)
     })
 
+    // Override --warning si el tema lo define, si no usa el default ámbar
+    root.style.setProperty('--warning', (t.colors as Record<string, string>).warning ?? '#F59E0B')
+
     // Aplicar patrón de fondo
     root.style.setProperty('--theme-pattern', t.pattern)
 

@@ -217,8 +217,8 @@ a:active > .glass-card {
 
 /* ── PARTIDO EN VIVO: pulso ── */
 @keyframes live-pulse {
-  0%, 100% { box-shadow: 0 0 0 1px rgba(245,158,11,0.2), 0 4px 20px rgba(245,158,11,0.08); }
-  50%       { box-shadow: 0 0 0 1px rgba(245,158,11,0.4), 0 4px 24px rgba(245,158,11,0.18); }
+  0%, 100% { box-shadow: 0 0 0 1px color-mix(in srgb, var(--warning) 20%, transparent), 0 4px 20px color-mix(in srgb, var(--warning) 8%, transparent); }
+  50%       { box-shadow: 0 0 0 1px color-mix(in srgb, var(--warning) 40%, transparent), 0 4px 24px color-mix(in srgb, var(--warning) 18%, transparent); }
 }
 @keyframes dot-pulse {
   0%, 100% { opacity: 1; }

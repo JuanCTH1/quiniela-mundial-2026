@@ -89,8 +89,8 @@ export function MatchCard({
         padding: '10px 14px', marginBottom: 8,
         borderLeft: `3px solid ${stateBorder}`,
         ...(isLive && {
-          background: 'rgba(245,158,11,0.07)',
-          boxShadow: '0 0 0 1px rgba(245,158,11,0.2), 0 4px 20px rgba(245,158,11,0.08)',
+          background: 'color-mix(in srgb, var(--warning) 7%, transparent)',
+          boxShadow: '0 0 0 1px color-mix(in srgb, var(--warning) 20%, transparent), 0 4px 20px color-mix(in srgb, var(--warning) 8%, transparent)',
           animation: 'live-pulse 2.5s ease-in-out infinite',
         }),
       }}

@@ -122,6 +122,7 @@ export const THEMES: Record<Theme, {
       text_main: 'rgba(0,0,0,0.87)',
       text_muted: 'rgba(0,0,0,0.54)',
       text_dim: 'rgba(0,0,0,0.45)',
+      warning: '#1E3A8A',
     },
     pattern: 'repeating-linear-gradient(180deg, rgba(185,28,28,0.45) 0, rgba(185,28,28,0.45) 18px, transparent 18px, transparent 72px)',
     texts: {
@@ -178,12 +179,13 @@ export const THEMES: Record<Theme, {
     mode: 'light',
     colors: {
       primary: '#0070B8',
-      secondary: '#F5C100',
-      accent: '#F5C100',
+      secondary: '#74ACDF',
+      accent: '#74ACDF',
       background: '#EEF8FF',
       text_main: 'rgba(0,0,0,0.87)',
       text_muted: 'rgba(0,0,0,0.56)',
       text_dim: 'rgba(0,0,0,0.48)',
+      warning: '#5B9EC9',
     },
     pattern: 'repeating-linear-gradient(90deg, transparent 0, transparent 36px, rgba(0,112,184,0.10) 36px, rgba(0,112,184,0.10) 72px)',
     texts: {
