@@ -31,7 +31,7 @@ export function SwipeNav({ children, currentFecha, currentEtapa, primaryColor = 
     if (!scrollToNextMatch) return
     const t = setTimeout(() => {
       document.getElementById('next-match')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }, 150)
+    }, 350)
     return () => clearTimeout(t)
   }, [scrollToNextMatch, searchParams])
   const blocked = useRef(false)
