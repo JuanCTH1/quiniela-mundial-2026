@@ -29,15 +29,10 @@ export function SwipeNav({ children, currentFecha, currentEtapa, primaryColor = 
 
   useEffect(() => {
     if (!scrollToNextMatch) return
-    // Primer intento: después de hidratación inicial
-    const t1 = setTimeout(() => {
+    const t = setTimeout(() => {
       document.getElementById('next-match')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }, 150)
-    // Segundo intento: corrige layout shifts por imágenes/avatares que cargan tarde
-    const t2 = setTimeout(() => {
-      document.getElementById('next-match')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }, 600)
-    return () => { clearTimeout(t1); clearTimeout(t2) }
+    return () => clearTimeout(t)
   }, [scrollToNextMatch, searchParams])
   const blocked = useRef(false)
   const [swipe, setSwipe] = useState<'left' | 'right' | null>(null)
