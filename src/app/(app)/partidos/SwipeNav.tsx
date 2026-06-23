@@ -1,13 +1,14 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
-import { useRef, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { useEffect, useRef, useState } from 'react'
 
 interface Props {
   children: React.ReactNode
   currentFecha: string
   currentEtapa?: string
   primaryColor?: string
+  scrollToNextMatch?: boolean
 }
 
 function startsInScrollable(target: EventTarget | null): boolean {
@@ -21,9 +22,18 @@ function startsInScrollable(target: EventTarget | null): boolean {
   return false
 }
 
-export function SwipeNav({ children, currentFecha, currentEtapa, primaryColor = '#006847' }: Props) {
+export function SwipeNav({ children, currentFecha, currentEtapa, primaryColor = '#006847', scrollToNextMatch }: Props) {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const touchStart = useRef<{ x: number; y: number } | null>(null)
+
+  useEffect(() => {
+    if (!scrollToNextMatch) return
+    const t = setTimeout(() => {
+      document.getElementById('next-match')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 350)
+    return () => clearTimeout(t)
+  }, [scrollToNextMatch, searchParams])
   const blocked = useRef(false)
   const [swipe, setSwipe] = useState<'left' | 'right' | null>(null)
 

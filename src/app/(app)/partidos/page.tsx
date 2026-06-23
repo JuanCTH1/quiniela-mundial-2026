@@ -99,9 +99,17 @@ export default async function PartidosPage({
   }
 
   const activeFecha = fecha ?? new Date().toISOString().slice(0, 10)
+  const todayStr = new Date().toISOString().slice(0, 10)
+  const isToday = !etapa && activeFecha === todayStr
+
+  const now = new Date()
+  const nextMatch = isToday ? (
+    matches?.find(m => m.status === 'IN_PROGRESS') ??
+    matches?.find(m => new Date(m.scheduled_time) > now)
+  ) : null
 
   return (
-    <SwipeNav currentFecha={activeFecha} currentEtapa={etapa} primaryColor={getTheme(theme).colors.primary}>
+    <SwipeNav currentFecha={activeFecha} currentEtapa={etapa} primaryColor={getTheme(theme).colors.primary} scrollToNextMatch={!!nextMatch}>
       <div style={{ paddingTop: 14 }}>
         <h1 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 12px', color: 'var(--text-main)' }}>
           Partidos
@@ -116,18 +124,20 @@ export default async function PartidosPage({
         ) : (
           matches.map(match => {
             const locked = isMatchLocked(match.scheduled_time, bloqueoMinutos, match.early_unlock_at)
+            const isNext = match.id === nextMatch?.id
             return (
-              <MatchCard
-                key={match.id}
-                match={match}
-                myPrediction={myPredMap.get(match.id)}
-                allPredictions={locked || match.status === 'FINISHED' || match.status === 'IN_PROGRESS' ? (allPredMap.get(match.id) ?? []) : undefined}
-                isLocked={locked}
-                bloqueoMinutos={bloqueoMinutos}
-                timezone={timezone}
-                currentUserId={user!.id}
-                theme={theme}
-              />
+              <div key={match.id} id={isNext ? 'next-match' : undefined} style={isNext ? { scrollMarginTop: 80 } : undefined}>
+                <MatchCard
+                  match={match}
+                  myPrediction={myPredMap.get(match.id)}
+                  allPredictions={locked || match.status === 'FINISHED' || match.status === 'IN_PROGRESS' ? (allPredMap.get(match.id) ?? []) : undefined}
+                  isLocked={locked}
+                  bloqueoMinutos={bloqueoMinutos}
+                  timezone={timezone}
+                  currentUserId={user!.id}
+                  theme={theme}
+                />
+              </div>
             )
           })
         )}
