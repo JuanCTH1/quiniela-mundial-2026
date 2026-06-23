@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { usePathname, useSearchParams } from 'next/navigation'
 
 const STAGES = [
   { value: 'GROUP', label: 'Grupos' },
@@ -38,15 +39,21 @@ interface Props {
   availableDates?: string[]
 }
 
-function scrollToNextMatch() {
-  setTimeout(() => {
-    document.getElementById('next-match')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }, 80)
-}
-
 export function DateNav({ currentFecha, currentEtapa, timezone, availableDates }: Props) {
   const todayStr = new Date().toISOString().slice(0, 10)
   const activeFecha = currentFecha ?? todayStr
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+
+  // Solo scrollea si ya estamos en "Hoy" — si venimos de otra URL,
+  // el useEffect de SwipeNav lo maneja para evitar animación doble.
+  function handleTodayClick() {
+    const alreadyOnToday = pathname === '/partidos' && !searchParams.has('etapa')
+    if (!alreadyOnToday) return
+    setTimeout(() => {
+      document.getElementById('next-match')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 80)
+  }
 
   const datesToShow = currentEtapa && availableDates?.length
     ? availableDates
@@ -107,7 +114,7 @@ export function DateNav({ currentFecha, currentEtapa, timezone, availableDates }
     <div style={{ marginBottom: 12 }}>
       {/* Stage tabs */}
       <div style={{ display: 'flex', gap: 5, overflowX: 'auto', paddingBottom: 8, scrollbarWidth: 'none' }}>
-        <Link href="/partidos" onClick={scrollToNextMatch} style={glassChip(!currentEtapa)}>Hoy</Link>
+        <Link href="/partidos" onClick={handleTodayClick} style={glassChip(!currentEtapa)}>Hoy</Link>
         {STAGES.map(s => (
           <Link key={s.value} href={`/partidos?etapa=${s.value}`} style={glassChip(currentEtapa === s.value)}>
             {s.label}
@@ -124,7 +131,7 @@ export function DateNav({ currentFecha, currentEtapa, timezone, availableDates }
               key={fecha}
               href={currentEtapa ? `/partidos?etapa=${currentEtapa}&fecha=${fecha}` : `/partidos?fecha=${fecha}`}
               style={glassDateChip(active)}
-              onClick={fecha === todayStr ? scrollToNextMatch : undefined}
+              onClick={fecha === todayStr ? handleTodayClick : undefined}
             >
               {formatDateLabel(fecha, timezone)}
             </Link>
