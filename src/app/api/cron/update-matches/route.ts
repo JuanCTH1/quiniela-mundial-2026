@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
   // home_score_fulltime/away_score_fulltime incluidos para detectar cambios de marcador
   const { data: candidates, error: fetchErr } = await supabase
     .from('matches')
-    .select('id, external_id, status, stage, scheduled_time, actual_start_time, home_score_fulltime, away_score_fulltime, current_minute')
+    .select('id, external_id, status, stage, scheduled_time, actual_start_time, home_score_fulltime, away_score_fulltime, current_minute, current_period')
     .in('status', ['SCHEDULED', 'IN_PROGRESS'])
     .lte('scheduled_time', new Date(Date.now() + 30 * 60 * 1000).toISOString())
 
@@ -72,7 +72,7 @@ export async function GET(request: NextRequest) {
         home_score_regular: apiMatch.score.regularTime?.home ?? null,
         away_score_regular: apiMatch.score.regularTime?.away ?? null,
         current_minute: apiStatus === 'IN_PROGRESS' ? (apiMatch.minute ?? null) : null,
-        current_period: derivePeriod(apiMatch.status, apiMatch.minute),
+        current_period: derivePeriod(apiMatch.status, apiMatch.minute, match.current_period),
         ...(isFinished && {
           home_score_quiniela: quiniela!.home,
           away_score_quiniela: quiniela!.away,
@@ -153,12 +153,18 @@ export async function GET(request: NextRequest) {
 
 // Periodo del partido a partir del status raw de la API + minuto
 // Valores: 1T, MT, 2T, ET1, MTE, ET2, PEN — null cuando no está en juego
-function derivePeriod(rawStatus: string, minute: number | null | undefined): string | null {
+function derivePeriod(rawStatus: string, minute: number | null | undefined, currentPeriod: string | null): string | null {
   if (rawStatus === 'PAUSED') return (minute != null && minute > 90) ? 'MTE' : 'MT'
   if (rawStatus !== 'IN_PLAY') return null
-  if (minute == null) return '1T'
+  if (minute == null) return currentPeriod ?? '1T'
   if (minute <= 45) return '1T'
-  if (minute <= 90) return '2T'
+  if (minute <= 90) {
+    // Use DB context to distinguish 1T stoppage from 2T kick-off
+    if (currentPeriod === 'MT' || currentPeriod === '2T') return '2T'
+    if (currentPeriod === '1T') return '1T'
+    // Fallback: minutes 46-48 likely still 1T stoppage, 49+ likely 2T
+    return minute <= 48 ? '1T' : '2T'
+  }
   if (minute <= 105) return 'ET1'
   if (minute <= 120) return 'ET2'
   return 'PEN'

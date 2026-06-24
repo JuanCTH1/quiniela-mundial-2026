@@ -178,9 +178,15 @@ export function formatLivePeriod(period: string | null | undefined, minute: numb
   if (period === 'MT') return 'MT'
   if (period === 'MTE') return 'MTE'
   if (period === 'PEN') return 'PEN'
-  if (minute != null) return `${minute}'`
-  if (period === 'ET1' || period === 'ET2') return 'ET'
-  return null
+  if (minute == null) {
+    if (period === 'ET1' || period === 'ET2') return 'ET'
+    return null
+  }
+  if (period === '1T' && minute > 45) return `45+${minute - 45}'`
+  if (period === '2T' && minute > 90) return `90+${minute - 90}'`
+  if (period === 'ET1' && minute > 105) return `105+${minute - 105}'`
+  if (period === 'ET2' && minute > 120) return `120+${minute - 120}'`
+  return `${minute}'`
 }
 
 export type ResultType = 'EXACTO' | 'DIFERENCIA' | 'TENDENCIA' | 'FALLO'
