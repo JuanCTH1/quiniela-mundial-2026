@@ -172,6 +172,7 @@ export type Database = {
           away_score_regular: number | null
           away_team: string
           created_at: string
+          current_minute: number | null
           early_unlock_at: string | null
           external_id: number | null
           group_name: string | null
@@ -198,6 +199,7 @@ export type Database = {
           away_score_regular?: number | null
           away_team: string
           created_at?: string
+          current_minute?: number | null
           early_unlock_at?: string | null
           external_id?: number | null
           group_name?: string | null
@@ -224,6 +226,7 @@ export type Database = {
           away_score_regular?: number | null
           away_team?: string
           created_at?: string
+          current_minute?: number | null
           early_unlock_at?: string | null
           external_id?: number | null
           group_name?: string | null
