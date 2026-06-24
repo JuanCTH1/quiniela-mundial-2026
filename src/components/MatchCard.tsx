@@ -52,7 +52,6 @@ export function MatchCard({
   const isFinished = match.status === 'FINISHED' && finalHome != null
   const isLive = match.status === 'IN_PROGRESS'
   const hasLiveScore = isLive && match.home_score_fulltime != null
-  const SHOW_LIVE_MINUTE = false
   const isOpen = !isLocked && match.status === 'SCHEDULED'
 
   const lockTime = getLockTime(match.scheduled_time, bloqueoMinutos)
@@ -123,16 +122,9 @@ export function MatchCard({
                 {finalHome} – {finalAway}
               </span>
             ) : hasLiveScore ? (
-              <>
-                <span style={{ fontSize: 28, fontWeight: 800, letterSpacing: 2, color: 'var(--warning)' }}>
-                  {match.home_score_fulltime} – {match.away_score_fulltime}
-                </span>
-                {SHOW_LIVE_MINUTE && match.current_minute != null && (
-                  <div style={{ fontSize: 10, color: 'var(--warning)', fontWeight: 600 }}>
-                    {match.current_minute}&apos;
-                  </div>
-                )}
-              </>
+              <span style={{ fontSize: 28, fontWeight: 800, letterSpacing: 2, color: 'var(--warning)' }}>
+                {match.home_score_fulltime} – {match.away_score_fulltime}
+              </span>
             ) : isLive ? (
               // En vivo pero sin score aún (0-0 o aún sin datos del API)
               <span style={{ fontSize: 24, fontWeight: 800, letterSpacing: 2, color: 'var(--warning)' }}>
