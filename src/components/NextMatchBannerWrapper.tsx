@@ -11,6 +11,9 @@ type LiveMatchSlim = MatchSlim & {
   away_score_fulltime: number | null
   current_minute: number | null
   current_period: string | null
+  actual_start_time: string | null
+  second_half_start_time: string | null
+  extra_time_start_time: string | null
 }
 
 type Pred = { home_score: number | null; away_score: number | null }

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
-import { formatLivePeriod } from '@/lib/utils'
+import { LiveTimeLabel } from '@/components/LiveTimeLabel'
 import type { Database } from '@/types/database.types'
 
 interface Prediction {
@@ -19,16 +19,27 @@ interface Props {
   initialAwayScore: number | null | undefined
   initialMinute?: number | null
   initialPeriod?: string | null
+  initialActualStartTime?: string | null
+  initialSecondHalfStartTime?: string | null
+  initialExtraTimeStartTime?: string | null
   isLive: boolean
   isFinished: boolean
   predictions: Prediction[]
 }
 
-export function LiveMatchClient({ matchId, initialHomeScore, initialAwayScore, initialMinute, initialPeriod, isLive, isFinished, predictions }: Props) {
+export function LiveMatchClient({
+  matchId, initialHomeScore, initialAwayScore,
+  initialMinute, initialPeriod,
+  initialActualStartTime, initialSecondHalfStartTime, initialExtraTimeStartTime,
+  isLive, isFinished, predictions,
+}: Props) {
   const [home, setHome] = useState(initialHomeScore ?? null)
   const [away, setAway] = useState(initialAwayScore ?? null)
   const [minute, setMinute] = useState(initialMinute ?? null)
   const [period, setPeriod] = useState(initialPeriod ?? null)
+  const [actualStart, setActualStart] = useState(initialActualStartTime ?? null)
+  const [secondHalfStart, setSecondHalfStart] = useState(initialSecondHalfStartTime ?? null)
+  const [extraTimeStart, setExtraTimeStart] = useState(initialExtraTimeStartTime ?? null)
   const supabaseRef = useRef<ReturnType<typeof createBrowserClient<Database>> | null>(null)
   const finishedRef = useRef(false)
   const router = useRouter()
@@ -60,6 +71,9 @@ export function LiveMatchClient({ matchId, initialHomeScore, initialAwayScore, i
         setAway(row.away_score_fulltime)
         setMinute(row.current_minute ?? null)
         setPeriod(row.current_period ?? null)
+        if (row.actual_start_time) setActualStart(row.actual_start_time)
+        if (row.second_half_start_time) setSecondHalfStart(row.second_half_start_time)
+        if (row.extra_time_start_time) setExtraTimeStart(row.extra_time_start_time)
         maybeRefreshOnFinish(row.status)
       })
       .subscribe()
@@ -67,7 +81,7 @@ export function LiveMatchClient({ matchId, initialHomeScore, initialAwayScore, i
     const poll = setInterval(async () => {
       const { data } = await sb
         .from('matches')
-        .select('home_score_fulltime, away_score_fulltime, current_minute, current_period, status')
+        .select('home_score_fulltime, away_score_fulltime, current_minute, current_period, status, actual_start_time, second_half_start_time, extra_time_start_time')
         .eq('id', matchId)
         .single()
       if (data) {
@@ -75,6 +89,9 @@ export function LiveMatchClient({ matchId, initialHomeScore, initialAwayScore, i
         setAway(data.away_score_fulltime)
         setMinute(data.current_minute ?? null)
         setPeriod(data.current_period ?? null)
+        if (data.actual_start_time) setActualStart(data.actual_start_time)
+        if (data.second_half_start_time) setSecondHalfStart(data.second_half_start_time)
+        if (data.extra_time_start_time) setExtraTimeStart(data.extra_time_start_time)
         maybeRefreshOnFinish(data.status)
       }
     }, 10_000)
@@ -83,20 +100,15 @@ export function LiveMatchClient({ matchId, initialHomeScore, initialAwayScore, i
       sb.removeChannel(channel)
       clearInterval(poll)
     }
-    // maybeRefreshOnFinish es estable (solo usa refs + router)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [matchId, isLive])
 
-  // Cuando el partido pasa a FINISHED, refresca una sola vez para que el
-  // server component recargue el marcador de quiniela, puntos y ranking final.
   function maybeRefreshOnFinish(status: string | null) {
     if (status === 'FINISHED' && !finishedRef.current) {
       finishedRef.current = true
       router.refresh()
     }
   }
-
-  const timeLabel = isLive ? formatLivePeriod(period, minute) : null
 
   return (
     <div>
@@ -110,7 +122,14 @@ export function LiveMatchClient({ matchId, initialHomeScore, initialAwayScore, i
 
       {isLive && (
         <div style={{ fontSize: 11, color: 'var(--warning)', marginTop: 2, fontWeight: 600 }}>
-          {timeLabel ? `● ${timeLabel}` : '● En juego'}
+          ●{' '}
+          <LiveTimeLabel
+            period={period}
+            minute={minute}
+            actualStartTime={actualStart}
+            secondHalfStartTime={secondHalfStart}
+            extraTimeStartTime={extraTimeStart}
+          />
         </div>
       )}
     </div>

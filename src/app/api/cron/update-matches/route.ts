@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
   // home_score_fulltime/away_score_fulltime incluidos para detectar cambios de marcador
   const { data: candidates, error: fetchErr } = await supabase
     .from('matches')
-    .select('id, external_id, status, stage, scheduled_time, actual_start_time, home_score_fulltime, away_score_fulltime, current_minute, current_period, second_half_start_time')
+    .select('id, external_id, status, stage, scheduled_time, actual_start_time, home_score_fulltime, away_score_fulltime, current_minute, current_period, second_half_start_time, extra_time_start_time')
     .in('status', ['SCHEDULED', 'IN_PROGRESS'])
     .lte('scheduled_time', new Date(Date.now() + 30 * 60 * 1000).toISOString())
 
@@ -67,6 +67,7 @@ export async function GET(request: NextRequest) {
       const newPeriod = derivePeriod(apiMatch.status, apiMatch.minute, match.current_period)
       // Detectar inicio del 2T: transición MT → 2T, solo se escribe una vez
       const isSecondHalfStart = newPeriod === '2T' && match.current_period === 'MT' && !match.second_half_start_time
+      const isExtraTimeStart = newPeriod === 'ET1' && match.current_period === 'MTE' && !match.extra_time_start_time
 
       const payload: Partial<TablesInsert<'matches'>> = {
         status: apiStatus,
@@ -86,6 +87,9 @@ export async function GET(request: NextRequest) {
         }),
         ...(isSecondHalfStart && {
           second_half_start_time: detectedAt.toISOString(),
+        }),
+        ...(isExtraTimeStart && {
+          extra_time_start_time: detectedAt.toISOString(),
         }),
       }
 
@@ -162,10 +166,16 @@ export async function GET(request: NextRequest) {
 // Valores: 1T, MT, 2T, ET1, MTE, ET2, PEN — null cuando no está en juego
 function derivePeriod(rawStatus: string, minute: number | null | undefined, currentPeriod: string | null): string | null {
   if (rawStatus === 'PAUSED') {
-    // Descanso: medio tiempo normal (1T→2T) vs. el de la prórroga (2T→ET / ET1→ET2).
-    // Sin minuto, nos apoyamos en el periodo previo de la DB.
-    const inExtra = (minute != null && minute >= 90) || currentPeriod === '2T' || currentPeriod === 'ET1'
-    return inExtra ? 'MTE' : 'MT'
+    // Si ya estamos en MT o MTE, quedarse ahí (re-poll estable)
+    if (currentPeriod === 'MT') return 'MT'
+    if (currentPeriod === 'MTE') return 'MTE'
+    // Transición a descanso de prórroga
+    if (currentPeriod === '2T' || currentPeriod === 'ET1') return 'MTE'
+    if (minute != null && minute >= 90) return 'MTE'
+    // Transición a medio tiempo normal: solo si el minuto indica final del 1T
+    if (minute != null && minute >= 43) return 'MT'
+    // Pausa temprana (water/cooling break dentro del 1T): quedarse en periodo actual
+    return currentPeriod ?? 'MT'
   }
   if (rawStatus !== 'IN_PLAY') return null
 

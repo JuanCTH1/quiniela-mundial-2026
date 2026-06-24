@@ -5,8 +5,9 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Countdown } from './Countdown'
-import { getTeamFlag, getTeamAbbr, getLockTime, formatLivePeriod } from '@/lib/utils'
+import { getTeamFlag, getTeamAbbr, getLockTime } from '@/lib/utils'
 import { getTheme, type Theme } from '@/lib/themes'
+import { LiveTimeLabel } from './LiveTimeLabel'
 import type { Tables } from '@/types/database.types'
 
 type MatchSlim = Pick<Tables<'matches'>,
@@ -17,17 +18,25 @@ type LiveMatchSlim = MatchSlim & {
   away_score_fulltime: number | null
   current_minute: number | null
   current_period: string | null
+  actual_start_time: string | null
+  second_half_start_time: string | null
+  extra_time_start_time: string | null
 }
 
 type Pred = { home_score: number | null; away_score: number | null } | null
 
 // Marcador/tiempo mutable de un partido en vivo (se actualiza en tiempo real)
-type LiveScore = { home: number | null; away: number | null; minute: number | null; period: string | null }
+type LiveScore = {
+  home: number | null; away: number | null
+  minute: number | null; period: string | null
+  actualStart: string | null; secondHalfStart: string | null; extraTimeStart: string | null
+}
 
 function initScores(matches: LiveMatchSlim[]): Record<string, LiveScore> {
   return Object.fromEntries(matches.map(m => [m.id, {
     home: m.home_score_fulltime, away: m.away_score_fulltime,
     minute: m.current_minute, period: m.current_period,
+    actualStart: m.actual_start_time, secondHalfStart: m.second_half_start_time, extraTimeStart: m.extra_time_start_time,
   }]))
 }
 
@@ -71,13 +80,14 @@ export function NextMatchBanner({ liveMatches, liveMatch, nextMatch, prediction,
         setLiveScores(prev => ({ ...prev, [row.id]: {
           home: row.home_score_fulltime, away: row.away_score_fulltime,
           minute: row.current_minute, period: row.current_period,
+          actualStart: row.actual_start_time, secondHalfStart: row.second_half_start_time, extraTimeStart: row.extra_time_start_time,
         } }))
       })
       .subscribe()
 
     const poll = setInterval(async () => {
       const { data } = await sb.from('matches')
-        .select('id, home_score_fulltime, away_score_fulltime, current_minute, current_period, status')
+        .select('id, home_score_fulltime, away_score_fulltime, current_minute, current_period, status, actual_start_time, second_half_start_time, extra_time_start_time')
         .in('id', ids)
       if (!data) return
       if (data.some(m => m.status !== 'IN_PROGRESS')) { router.refresh(); return }
@@ -86,6 +96,7 @@ export function NextMatchBanner({ liveMatches, liveMatch, nextMatch, prediction,
         for (const m of data) next[m.id] = {
           home: m.home_score_fulltime, away: m.away_score_fulltime,
           minute: m.current_minute, period: m.current_period,
+          actualStart: m.actual_start_time, secondHalfStart: m.second_half_start_time, extraTimeStart: m.extra_time_start_time,
         }
         return next
       })
@@ -99,6 +110,7 @@ export function NextMatchBanner({ liveMatches, liveMatch, nextMatch, prediction,
   const scoreFor = (m: LiveMatchSlim): LiveScore => liveScores[m.id] ?? {
     home: m.home_score_fulltime, away: m.away_score_fulltime,
     minute: m.current_minute, period: m.current_period,
+    actualStart: m.actual_start_time, secondHalfStart: m.second_half_start_time, extraTimeStart: m.extra_time_start_time,
   }
 
   if (pathname.startsWith('/partido/')) return null
@@ -132,7 +144,6 @@ export function NextMatchBanner({ liveMatches, liveMatch, nextMatch, prediction,
           const sc = scoreFor(m)
           const h = sc.home ?? '–'
           const a = sc.away ?? '–'
-          const timeLabel = formatLivePeriod(sc.period, sc.minute)
 
           return (
             <Link key={m.id} href={`/partido/${m.id}`} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6, marginTop: i > 0 ? 4 : 0 }}>
@@ -143,9 +154,11 @@ export function NextMatchBanner({ liveMatches, liveMatch, nextMatch, prediction,
                 <span style={{ fontWeight: 800, color: 'var(--warning)', margin: '0 5px' }}>{h}–{a}</span>
                 <span style={{ fontWeight: 600 }}>{awayAbbr}</span>
                 {awayFlag}
-                {timeLabel && (
-                  <span style={{ fontSize: 10, color: 'var(--warning)', marginLeft: 5, opacity: 0.85 }}>{timeLabel}</span>
-                )}
+                <LiveTimeLabel
+                  period={sc.period} minute={sc.minute}
+                  actualStartTime={sc.actualStart} secondHalfStartTime={sc.secondHalfStart} extraTimeStartTime={sc.extraTimeStart}
+                  style={{ fontSize: 10, color: 'var(--warning)', marginLeft: 5, opacity: 0.85 }}
+                />
               </span>
 
               {/* Prediction side */}
@@ -167,7 +180,6 @@ export function NextMatchBanner({ liveMatches, liveMatch, nextMatch, prediction,
   if (liveMatch) {
     const hasPred = prediction?.home_score != null
     const sc = scoreFor(liveMatch)
-    const liveLabel = formatLivePeriod(sc.period, sc.minute)
     return (
       <div>
         <Link href={`/partido/${liveMatch.id}`} style={{ textDecoration: 'none', display: 'block' }}>
@@ -188,11 +200,11 @@ export function NextMatchBanner({ liveMatches, liveMatch, nextMatch, prediction,
               <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--warning)', letterSpacing: 2 }}>
                 {sc.home ?? '–'} – {sc.away ?? '–'}
               </div>
-              {liveLabel && (
-                <div style={{ fontSize: 10, color: 'var(--warning)', opacity: 0.85 }}>
-                  {liveLabel}
-                </div>
-              )}
+              <LiveTimeLabel
+                period={sc.period} minute={sc.minute}
+                actualStartTime={sc.actualStart} secondHalfStartTime={sc.secondHalfStart} extraTimeStartTime={sc.extraTimeStart}
+                style={{ fontSize: 10, color: 'var(--warning)', opacity: 0.85 }}
+              />
               {hasPred && (
                 <div style={{ fontSize: 10, color: 'var(--text-dim)' }}>
                   {t.texts.you.toLowerCase()}: {prediction!.home_score}–{prediction!.away_score}

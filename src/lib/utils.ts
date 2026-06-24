@@ -177,6 +177,7 @@ export function approxLiveMinute(
   actualStartTime: string | null | undefined,
   period: string | null | undefined,
   secondHalfStartTime?: string | null,
+  extraTimeStartTime?: string | null,
 ): number | null {
   if (!actualStartTime || !period) return null
   if (period === 'MT' || period === 'MTE' || period === 'PEN') return null
@@ -189,8 +190,20 @@ export function approxLiveMinute(
     }
     return Math.min(Math.max(elapsed - 15, 46), 97)
   }
-  if (period === 'ET1') return Math.min(Math.max(elapsed - 32, 91), 108)
-  if (period === 'ET2') return Math.min(Math.max(elapsed - 47, 106), 122)
+  if (period === 'ET1') {
+    if (extraTimeStartTime) {
+      const eET = Math.floor((Date.now() - new Date(extraTimeStartTime).getTime()) / 60000)
+      return Math.min(90 + eET, 108)
+    }
+    return Math.min(Math.max(elapsed - 32, 91), 108)
+  }
+  if (period === 'ET2') {
+    if (extraTimeStartTime) {
+      const eET = Math.floor((Date.now() - new Date(extraTimeStartTime).getTime()) / 60000)
+      return Math.min(105 + (eET - 20), 122)
+    }
+    return Math.min(Math.max(elapsed - 47, 106), 122)
+  }
   return null
 }
 

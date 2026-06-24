@@ -21,7 +21,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     getSettings(),
     // Partidos en vivo (hasta 4 simultáneos; el banner los lista todos)
     supabase.from('matches')
-      .select('id, home_team, away_team, scheduled_time, early_unlock_at, stage, group_name, home_score_fulltime, away_score_fulltime, current_minute, current_period')
+      .select('id, home_team, away_team, scheduled_time, early_unlock_at, stage, group_name, home_score_fulltime, away_score_fulltime, current_minute, current_period, actual_start_time, second_half_start_time, extra_time_start_time')
       .eq('status', 'IN_PROGRESS')
       .order('scheduled_time').limit(4),
     // Siguiente programado

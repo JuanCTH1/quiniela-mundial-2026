@@ -127,6 +127,9 @@ export default async function PartidoPage({ params }: { params: Promise<{ id: st
                 initialAwayScore={isFinished ? match.away_score_quiniela : match.away_score_fulltime}
                 initialMinute={isLive ? match.current_minute : null}
                 initialPeriod={isLive ? match.current_period : null}
+                initialActualStartTime={isLive ? match.actual_start_time : null}
+                initialSecondHalfStartTime={isLive ? match.second_half_start_time : null}
+                initialExtraTimeStartTime={isLive ? match.extra_time_start_time : null}
                 isLive={isLive}
                 isFinished={isFinished}
                 predictions={predictions}

@@ -2,7 +2,8 @@ import Link from 'next/link'
 import { PredictionForm } from './PredictionForm'
 import { Countdown } from './Countdown'
 import { RankingPreview } from './RankingPreview'
-import { calcResult, getLockTime, STAGE_LABELS, formatLivePeriod, approxLiveMinute } from '@/lib/utils'
+import { calcResult, getLockTime, STAGE_LABELS } from '@/lib/utils'
+import { LiveTimeLabel } from './LiveTimeLabel'
 import { TeamFlag } from './TeamFlag'
 import { getTheme, type Theme } from '@/lib/themes'
 import type { Tables } from '@/types/database.types'
@@ -52,17 +53,6 @@ export function MatchCard({
   const isFinished = match.status === 'FINISHED' && finalHome != null
   const isLive = match.status === 'IN_PROGRESS'
   const hasLiveScore = isLive && match.home_score_fulltime != null
-  // Cuando la API no envía el minuto exacto, calculamos uno aproximado desde actual_start_time
-  const approxMin = isLive && match.current_minute == null
-    ? approxLiveMinute(match.actual_start_time, match.current_period, match.second_half_start_time)
-    : null
-  const liveTimeLabel = isLive
-    ? (match.current_minute != null
-        ? formatLivePeriod(match.current_period, match.current_minute)
-        : approxMin != null
-          ? `~${approxMin}' · ${match.current_period}`
-          : formatLivePeriod(match.current_period, null))
-    : null
   const isOpen = !isLocked && match.status === 'SCHEDULED'
 
   const lockTime = getLockTime(match.scheduled_time, bloqueoMinutos)
@@ -137,17 +127,29 @@ export function MatchCard({
                 <span style={{ fontSize: 28, fontWeight: 800, letterSpacing: 2, color: 'var(--warning)' }}>
                   {match.home_score_fulltime} – {match.away_score_fulltime}
                 </span>
-                {liveTimeLabel && (
-                  <div style={{ fontSize: 10, color: 'var(--warning)', fontWeight: 600, marginTop: 2 }}>
-                    {liveTimeLabel}
-                  </div>
-                )}
+                <LiveTimeLabel
+                  period={match.current_period}
+                  minute={match.current_minute}
+                  actualStartTime={match.actual_start_time}
+                  secondHalfStartTime={match.second_half_start_time}
+                  extraTimeStartTime={match.extra_time_start_time}
+                  style={{ display: 'block', fontSize: 10, color: 'var(--warning)', fontWeight: 600, marginTop: 2 }}
+                />
               </>
             ) : isLive ? (
-              // En vivo pero sin score aún (0-0 o aún sin datos del API)
-              <span style={{ fontSize: 24, fontWeight: 800, letterSpacing: 2, color: 'var(--warning)' }}>
-                – – –
-              </span>
+              <>
+                <span style={{ fontSize: 24, fontWeight: 800, letterSpacing: 2, color: 'var(--warning)' }}>
+                  – – –
+                </span>
+                <LiveTimeLabel
+                  period={match.current_period}
+                  minute={match.current_minute}
+                  actualStartTime={match.actual_start_time}
+                  secondHalfStartTime={match.second_half_start_time}
+                  extraTimeStartTime={match.extra_time_start_time}
+                  style={{ display: 'block', fontSize: 10, color: 'var(--warning)', fontWeight: 600, marginTop: 2 }}
+                />
+              </>
             ) : (
               <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>vs</span>
             )}
