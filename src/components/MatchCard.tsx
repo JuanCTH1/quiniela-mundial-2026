@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { PredictionForm } from './PredictionForm'
 import { Countdown } from './Countdown'
 import { RankingPreview } from './RankingPreview'
-import { calcResult, getLockTime, STAGE_LABELS, formatLivePeriod } from '@/lib/utils'
+import { calcResult, getLockTime, STAGE_LABELS, formatLivePeriod, approxLiveMinute } from '@/lib/utils'
 import { TeamFlag } from './TeamFlag'
 import { getTheme, type Theme } from '@/lib/themes'
 import type { Tables } from '@/types/database.types'
@@ -52,7 +52,17 @@ export function MatchCard({
   const isFinished = match.status === 'FINISHED' && finalHome != null
   const isLive = match.status === 'IN_PROGRESS'
   const hasLiveScore = isLive && match.home_score_fulltime != null
-  const liveTimeLabel = isLive ? formatLivePeriod(match.current_period, match.current_minute) : null
+  // Cuando la API no envía el minuto exacto, calculamos uno aproximado desde actual_start_time
+  const approxMin = isLive && match.current_minute == null
+    ? approxLiveMinute(match.actual_start_time, match.current_period)
+    : null
+  const liveTimeLabel = isLive
+    ? (match.current_minute != null
+        ? formatLivePeriod(match.current_period, match.current_minute)
+        : approxMin != null
+          ? `${match.current_period} ~${approxMin}'`
+          : formatLivePeriod(match.current_period, null))
+    : null
   const isOpen = !isLocked && match.status === 'SCHEDULED'
 
   const lockTime = getLockTime(match.scheduled_time, bloqueoMinutos)
@@ -141,7 +151,7 @@ export function MatchCard({
             ) : (
               <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>vs</span>
             )}
-            <div style={{ fontSize: 9, color: 'var(--text-muted)', marginTop: 2 }}>{matchTime}</div>
+            {!isLive && <div style={{ fontSize: 9, color: 'var(--text-muted)', marginTop: 2 }}>{matchTime}</div>}
             {venueName && <div style={{ fontSize: 9, color: 'var(--text-muted)', marginTop: 1 }}>{venueName}</div>}
           </div>
 

@@ -171,6 +171,19 @@ export function getTeamAbbr(name: string): string {
   return ABBR[name] ?? name.slice(0, 3).toUpperCase()
 }
 
+// Minuto aproximado calculado desde actual_start_time cuando la API no lo envía.
+// Resta ~15 min de MT y ~5 min de MTE. Precisión ±5 min.
+export function approxLiveMinute(actualStartTime: string | null | undefined, period: string | null | undefined): number | null {
+  if (!actualStartTime || !period) return null
+  if (period === 'MT' || period === 'MTE' || period === 'PEN') return null
+  const elapsed = Math.floor((Date.now() - new Date(actualStartTime).getTime()) / 60000)
+  if (period === '1T') return Math.min(elapsed, 48)
+  if (period === '2T') return Math.min(Math.max(elapsed - 15, 46), 97)
+  if (period === 'ET1') return Math.min(Math.max(elapsed - 32, 91), 108)
+  if (period === 'ET2') return Math.min(Math.max(elapsed - 47, 106), 122)
+  return null
+}
+
 // Etiqueta de tiempo para partidos en vivo.
 // 1T/2T/ET1/ET2 → muestra el minuto; MT/MTE/PEN → etiqueta fija.
 export function formatLivePeriod(period: string | null | undefined, minute: number | null | undefined): string | null {
