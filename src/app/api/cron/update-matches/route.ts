@@ -83,10 +83,11 @@ export async function GET(request: NextRequest) {
         }),
       }
 
-      // Log para verificar que el API devuelve el campo minute
-      if (apiStatus === 'IN_PROGRESS' && apiMatch.minute != null) {
+      // Log para verificar que el API devuelve el campo minute.
+      // Solo cuando cambia el minuto, para no inundar system_logs en cada tick.
+      if (apiStatus === 'IN_PROGRESS' && apiMatch.minute != null && apiMatch.minute !== match.current_minute) {
         await logEntry(supabase, 'MINUTE_CHECK',
-          `⏱ ${match.external_id}: minuto ${apiMatch.minute}`,
+          `⏱ ${match.external_id}: minuto ${apiMatch.minute} (${derivePeriod(apiMatch.status, apiMatch.minute, match.current_period)})`,
           false, match.id, { minute: apiMatch.minute }
         )
       }
@@ -154,7 +155,7 @@ export async function GET(request: NextRequest) {
 // Periodo del partido a partir del status raw de la API + minuto
 // Valores: 1T, MT, 2T, ET1, MTE, ET2, PEN — null cuando no está en juego
 function derivePeriod(rawStatus: string, minute: number | null | undefined, currentPeriod: string | null): string | null {
-  if (rawStatus === 'PAUSED') return (minute != null && minute > 90) ? 'MTE' : 'MT'
+  if (rawStatus === 'PAUSED') return (minute != null && minute >= 90) ? 'MTE' : 'MT'
   if (rawStatus !== 'IN_PLAY') return null
   if (minute == null) return currentPeriod ?? '1T'
   if (minute <= 45) return '1T'
