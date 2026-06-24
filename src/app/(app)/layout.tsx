@@ -19,7 +19,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const [profile, settings, liveMatchRes, nextMatchRes, alertRes] = await Promise.all([
     getProfile(user.id),
     getSettings(),
-    // Partidos en vivo (hasta 2 simultáneos)
+    // Partidos en vivo (hasta 4 simultáneos; el banner los lista todos)
     supabase.from('matches')
       .select('id, home_team, away_team, scheduled_time, early_unlock_at, stage, group_name, home_score_fulltime, away_score_fulltime, current_minute, current_period')
       .eq('status', 'IN_PROGRESS')

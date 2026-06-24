@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
 import { formatLivePeriod } from '@/lib/utils'
 import type { Database } from '@/types/database.types'
@@ -44,6 +45,8 @@ export function LiveMatchClient({ matchId, initialHomeScore, initialAwayScore, i
   const [period, setPeriod] = useState(initialPeriod ?? null)
   const [lastUpdated, setLastUpdated] = useState<Date | null>(isLive ? new Date() : null)
   const supabaseRef = useRef<ReturnType<typeof createBrowserClient<Database>> | null>(null)
+  const finishedRef = useRef(false)
+  const router = useRouter()
 
   function getClient() {
     if (!supabaseRef.current) {
@@ -73,6 +76,7 @@ export function LiveMatchClient({ matchId, initialHomeScore, initialAwayScore, i
         setMinute(row.current_minute ?? null)
         setPeriod(row.current_period ?? null)
         setLastUpdated(new Date())
+        maybeRefreshOnFinish(row.status)
       })
       .subscribe()
 
@@ -88,6 +92,7 @@ export function LiveMatchClient({ matchId, initialHomeScore, initialAwayScore, i
         setMinute(data.current_minute ?? null)
         setPeriod(data.current_period ?? null)
         setLastUpdated(new Date())
+        maybeRefreshOnFinish(data.status)
       }
     }, 10_000)
 
@@ -95,7 +100,18 @@ export function LiveMatchClient({ matchId, initialHomeScore, initialAwayScore, i
       sb.removeChannel(channel)
       clearInterval(poll)
     }
+    // maybeRefreshOnFinish es estable (solo usa refs + router)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [matchId, isLive])
+
+  // Cuando el partido pasa a FINISHED, refresca una sola vez para que el
+  // server component recargue el marcador de quiniela, puntos y ranking final.
+  function maybeRefreshOnFinish(status: string | null) {
+    if (status === 'FINISHED' && !finishedRef.current) {
+      finishedRef.current = true
+      router.refresh()
+    }
+  }
 
   const elapsed = useElapsed(lastUpdated)
   const timeLabel = isLive ? formatLivePeriod(period, minute) : null
