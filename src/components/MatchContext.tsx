@@ -84,7 +84,7 @@ export function MatchContext({ data, defaultOpen = false }: { data: MatchContext
 
   // Si no hay absolutamente nada que mostrar, no renderizar el toggle
   const hasAnything =
-    data.stakes || data.form || data.h2h || data.odds || data.referee ||
+    data.form || data.h2h || data.odds || data.referee ||
     data.coaches || data.physical || data.keyPlayers || data.venue ||
     (data.facts && data.facts.length > 0)
   if (!hasAnything) return null
@@ -109,18 +109,6 @@ export function MatchContext({ data, defaultOpen = false }: { data: MatchContext
 
       {open && (
         <div style={{ padding: '4px 16px 16px', borderTop: '1px solid rgba(255,255,255,0.07)' }}>
-
-          {/* Lo que está en juego */}
-          {data.stakes && (
-            <div style={{ marginTop: 12, marginBottom: 4 }}>
-              <div style={{ background: 'color-mix(in srgb, var(--primary) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--primary) 25%, transparent)', borderRadius: 10, padding: '10px 12px' }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--primary)', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 5 }}>
-                  🏆 Lo que está en juego
-                </div>
-                <div style={{ fontSize: 12.5, color: 'var(--text-main)', lineHeight: 1.45 }}>{data.stakes}</div>
-              </div>
-            </div>
-          )}
 
           {/* Momios */}
           {data.odds && (
