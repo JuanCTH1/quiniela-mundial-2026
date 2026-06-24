@@ -19,11 +19,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const [profile, settings, liveMatchRes, nextMatchRes, alertRes] = await Promise.all([
     getProfile(user.id),
     getSettings(),
-    // Partido en vivo primero
+    // Partidos en vivo (hasta 2 simultáneos)
     supabase.from('matches')
       .select('id, home_team, away_team, scheduled_time, early_unlock_at, stage, group_name, home_score_fulltime, away_score_fulltime')
       .eq('status', 'IN_PROGRESS')
-      .order('scheduled_time').limit(1).maybeSingle(),
+      .order('scheduled_time').limit(2),
     // Siguiente programado
     supabase.from('matches')
       .select('id, home_team, away_team, scheduled_time, early_unlock_at, stage, group_name')
@@ -40,10 +40,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const timezone = profile?.timezone ?? 'America/Mexico_City'
 
   const theme = (profile?.theme as Theme) ?? 'mexico'
-  const liveMatch = liveMatchRes.data ?? null
+  const liveMatches = liveMatchRes.data ?? []
   const nextMatch = nextMatchRes.data ?? null
 
-  const bannerSkeleton = (liveMatch || nextMatch) ? (
+  const bannerSkeleton = (liveMatches.length > 0 || nextMatch) ? (
     <div style={{ height: 52, background: 'var(--glass-bg)' }} />
   ) : null
 
@@ -64,7 +64,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         )}
         <Suspense fallback={bannerSkeleton}>
           <NextMatchBannerWrapper
-            liveMatch={liveMatch}
+            liveMatches={liveMatches}
             nextMatch={nextMatch}
             userId={user.id}
             bloqueoMinutos={bloqueoMinutos}
