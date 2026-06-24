@@ -55,6 +55,39 @@ export type Database = {
           },
         ]
       }
+      h2h_history: {
+        Row: {
+          id: string
+          stage: string | null
+          team_a: string
+          team_a_goals: number
+          team_b: string
+          team_b_goals: number
+          tournament: string
+          year: number
+        }
+        Insert: {
+          id?: string
+          stage?: string | null
+          team_a: string
+          team_a_goals: number
+          team_b: string
+          team_b_goals: number
+          tournament?: string
+          year: number
+        }
+        Update: {
+          id?: string
+          stage?: string | null
+          team_a?: string
+          team_a_goals?: number
+          team_b?: string
+          team_b_goals?: number
+          tournament?: string
+          year?: number
+        }
+        Relationships: []
+      }
       match_facts: {
         Row: {
           body: string
@@ -436,7 +469,7 @@ export type Database = {
         }
         Insert: {
           probability?: number
-          team_name: string
+          team_name?: string
           updated_at?: string
         }
         Update: {
