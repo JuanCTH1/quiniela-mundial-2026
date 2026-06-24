@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { getUser, getProfile, getBloqueoMinutos } from '@/lib/data'
 import { MatchCard } from '@/components/MatchCard'
-import { isMatchLocked } from '@/lib/utils'
+import { isMatchLocked, localTodayStr, dayBoundsUTC } from '@/lib/utils'
 import { DateNav } from './DateNav'
 import { SwipeNav } from './SwipeNav'
 import { getTheme, type Theme } from '@/lib/themes'
@@ -36,9 +36,11 @@ export default async function PartidosPage({
     const end = new Date(fecha + 'T23:59:59')
     query = query.gte('scheduled_time', start.toISOString()).lte('scheduled_time', end.toISOString())
   } else {
-    const now = new Date()
-    const start = new Date(now); start.setHours(0, 0, 0, 0)
-    const end = new Date(now); end.setDate(end.getDate() + 1); end.setHours(23, 59, 59, 999)
+    const todayInTz = localTodayStr(timezone)
+    const { start } = dayBoundsUTC(todayInTz, timezone)
+    // También incluye mañana para mostrar partidos cercanos
+    const tomorrowInTz = new Intl.DateTimeFormat('sv', { timeZone: timezone }).format(new Date(Date.now() + 86400000))
+    const { end } = dayBoundsUTC(tomorrowInTz, timezone)
     query = query.gte('scheduled_time', start.toISOString()).lte('scheduled_time', end.toISOString())
   }
 
@@ -92,14 +94,21 @@ export default async function PartidosPage({
       profiles: { display_name: profileMap.get(p.user_id)!.display_name, avatar_url: profileMap.get(p.user_id)!.avatar_url },
     }))
 
+  // Venues para mostrar estadio en cada tarjeta
+  const venueIds = [...new Set((matches ?? []).map(m => m.venue_id).filter(Boolean))] as string[]
+  const venuesRes = venueIds.length
+    ? await supabase.from('venues').select('id, name').in('id', venueIds)
+    : { data: [] as { id: string; name: string }[] }
+  const venueMap = new Map((venuesRes.data ?? []).map(v => [v.id, v.name]))
+
   const myPredMap = new Map(myPredsRes.data?.map(p => [p.match_id, p]) ?? [])
   const allPredMap = new Map<string, PredWithProfile[]>()
   for (const p of allPreds) {
     const arr = allPredMap.get(p.match_id) ?? []; arr.push(p); allPredMap.set(p.match_id, arr)
   }
 
-  const activeFecha = fecha ?? new Date().toISOString().slice(0, 10)
-  const todayStr = new Date().toISOString().slice(0, 10)
+  const todayStr = localTodayStr(timezone)
+  const activeFecha = fecha ?? todayStr
   const isToday = !etapa && activeFecha === todayStr
 
   const now = new Date()
@@ -136,6 +145,7 @@ export default async function PartidosPage({
                   timezone={timezone}
                   currentUserId={user!.id}
                   theme={theme}
+                  venueName={match.venue_id ? venueMap.get(match.venue_id) : undefined}
                 />
               </div>
             )

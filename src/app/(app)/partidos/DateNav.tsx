@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
+import { localTodayStr } from '@/lib/utils'
 
 const STAGES = [
   { value: 'GROUP', label: 'Grupos' },
@@ -14,20 +15,22 @@ const STAGES = [
 ]
 
 function formatDateLabel(fecha: string, timezone: string) {
-  const today = new Date().toISOString().slice(0, 10)
-  const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10)
+  const now = new Date()
+  const today = localTodayStr(timezone)
+  const tomorrow = new Intl.DateTimeFormat('sv', { timeZone: timezone }).format(new Date(now.getTime() + 86400000))
   if (fecha === today) return 'Hoy'
   if (fecha === tomorrow) return 'Mañana'
-  const d = new Date(fecha + 'T12:00:00')
+  const d = new Date(fecha + 'T12:00:00Z')
   return new Intl.DateTimeFormat('es-MX', { weekday: 'short', day: 'numeric', month: 'short', timeZone: timezone }).format(d)
 }
 
-function getDefaultDays() {
+function getDefaultDays(timezone: string) {
+  const today = localTodayStr(timezone)
+  const todayMs = new Date(today + 'T12:00:00Z').getTime()
   const days: string[] = []
   for (let i = -1; i <= 5; i++) {
-    const d = new Date()
-    d.setDate(d.getDate() + i)
-    days.push(d.toISOString().slice(0, 10))
+    const d = new Date(todayMs + i * 86400000)
+    days.push(new Intl.DateTimeFormat('sv', { timeZone: timezone }).format(d))
   }
   return days
 }
@@ -40,7 +43,7 @@ interface Props {
 }
 
 export function DateNav({ currentFecha, currentEtapa, timezone, availableDates }: Props) {
-  const todayStr = new Date().toISOString().slice(0, 10)
+  const todayStr = localTodayStr(timezone)
   const activeFecha = currentFecha ?? todayStr
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -57,7 +60,7 @@ export function DateNav({ currentFecha, currentEtapa, timezone, availableDates }
 
   const datesToShow = currentEtapa && availableDates?.length
     ? availableDates
-    : getDefaultDays()
+    : getDefaultDays(timezone)
 
   const glassChip = (active: boolean): React.CSSProperties => ({
     padding: '5px 13px',

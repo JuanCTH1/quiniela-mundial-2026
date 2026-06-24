@@ -2,11 +2,13 @@ import { createServerClient } from '@supabase/ssr'
 import { NextRequest, NextResponse } from 'next/server'
 
 const PUBLIC_PATHS = ['/login']
+// Rutas de desarrollo (previews sin auth) — accesibles SOLO fuera de producción.
+const DEV_PUBLIC_PATHS = process.env.NODE_ENV !== 'production' ? ['/dev'] : []
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  const isPublic = PUBLIC_PATHS.some(p => pathname.startsWith(p))
+  const isPublic = [...PUBLIC_PATHS, ...DEV_PUBLIC_PATHS].some(p => pathname.startsWith(p))
   const isAsset = pathname.startsWith('/_next') || pathname.startsWith('/api') || pathname.includes('.')
 
   if (isAsset) return NextResponse.next()
@@ -35,7 +37,8 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  if (user && isPublic) {
+  const isDevPath = DEV_PUBLIC_PATHS.some(p => pathname.startsWith(p))
+  if (user && isPublic && !isDevPath) {
     return NextResponse.redirect(new URL('/partidos', request.url))
   }
 

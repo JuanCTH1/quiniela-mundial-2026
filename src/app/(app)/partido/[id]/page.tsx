@@ -8,6 +8,8 @@ import { isMatchLocked, STAGE_LABELS } from '@/lib/utils'
 import { TeamFlag } from '@/components/TeamFlag'
 import { getTheme, type Theme } from '@/lib/themes'
 import { LiveMatchClient } from './LiveMatchClient'
+import { MatchContext } from '@/components/MatchContext'
+import { getMatchContext } from '@/lib/match-context'
 import Link from 'next/link'
 
 export default async function PartidoPage({ params }: { params: Promise<{ id: string }> }) {
@@ -77,6 +79,10 @@ export default async function PartidoPage({ params }: { params: Promise<{ id: st
     minute: '2-digit',
   }).format(new Date(match.scheduled_time))
 
+  // Contexto del partido (sede, momios, forma, H2H, DTs, facts…). Resiliente:
+  // cada bloque faltante se omite; si no hay nada, el componente no renderiza.
+  const matchContext = await getMatchContext(id, match.home_team, match.away_team)
+
   return (
     <div style={{ padding: '16px 16px 0' }}>
       <Link href="/partidos" style={{ fontSize: 13, color: 'var(--text-muted)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4, marginBottom: 14 }}>
@@ -127,6 +133,9 @@ export default async function PartidoPage({ params }: { params: Promise<{ id: st
               <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>vs</div>
             )}
             <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 6 }}>{matchTime}</div>
+            {matchContext?.venue?.name && (
+              <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 3 }}>{matchContext.venue.name}</div>
+            )}
           </div>
 
           <div style={{ flex: 1, textAlign: 'center' }}>
@@ -135,6 +144,9 @@ export default async function PartidoPage({ params }: { params: Promise<{ id: st
           </div>
         </div>
       </div>
+
+      {/* Contexto del partido */}
+      <MatchContext data={matchContext} />
 
       {/* Quiénes faltan */}
       {missingProfiles.length > 0 && (

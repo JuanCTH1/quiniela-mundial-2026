@@ -1,26 +1,81 @@
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { AdminActions } from './AdminActions'
+import { ContextHealthPanel, type MatchHealth } from './ContextHealthPanel'
 
 export default async function AdminPage() {
   const supabase = await createClient()
+  const admin = createAdminClient()
 
-  const [settingsRes, logsRes, usersRes, matchesRes] = await Promise.all([
+  const [
+    settingsRes, logsRes, usersRes,
+    allMatchesRes, scheduledRes, oddsRes, teamMetaRes, factsRes,
+  ] = await Promise.all([
     supabase.from('settings').select('key, value'),
     supabase.from('system_logs').select('*').order('created_at', { ascending: false }).limit(50),
     (() => {
       const q = supabase.from('profiles').select('id, display_name, is_admin').order('display_name')
       return process.env.NEXT_PUBLIC_APP_ENV === 'production' ? q.eq('is_test', false) : q
     })(),
-    supabase.from('matches').select('id, home_team, away_team, scheduled_time').order('scheduled_time').limit(80),
+    // Todos los partidos (selector del panel de borrado)
+    supabase.from('matches')
+      .select('id, home_team, away_team, scheduled_time')
+      .order('scheduled_time').limit(80),
+    // SCHEDULED con equipos definidos (panel de salud)
+    supabase.from('matches')
+      .select('id, home_team, away_team, scheduled_time, stage, group_name, venue_id, referee')
+      .eq('status', 'SCHEDULED')
+      .not('home_team', 'like', 'TBD%')
+      .not('away_team', 'is', null)
+      .not('away_team', 'like', 'TBD%')
+      .order('scheduled_time'),
+    supabase.from('match_odds').select('match_id'),
+    supabase.from('team_metadata').select('team_name, coach, avg_age'),
+    // Admin client para ver facts no-revisados (RLS los filtra al user normal)
+    admin.from('match_facts')
+      .select('id, match_id, category, body, position, reviewed')
+      .order('position', { ascending: true }),
   ])
 
-  const settings = settingsRes.data ?? []
-  const logs = logsRes.data ?? []
-  const users = usersRes.data ?? []
-  const matches = matchesRes.data ?? []
+  const settings      = settingsRes.data ?? []
+  const logs          = logsRes.data ?? []
+  const users         = usersRes.data ?? []
+  const allMatches    = allMatchesRes.data ?? []
+  const scheduled     = scheduledRes.data ?? []
 
-  const appMode = settings.find(s => s.key === 'app_mode')?.value ?? 'test'
+  const appMode       = settings.find(s => s.key === 'app_mode')?.value ?? 'test'
   const bloqueoMinutos = settings.find(s => s.key === 'bloqueo_minutos')?.value ?? '15'
+
+  // Índices para cruce rápido
+  const oddsSet = new Set((oddsRes.data ?? []).map(o => o.match_id))
+  const teamMeta = new Map((teamMetaRes.data ?? []).map(t => [t.team_name, t]))
+
+  const factsByMatch = new Map<string, NonNullable<typeof factsRes.data>>()
+  for (const f of factsRes.data ?? []) {
+    if (!factsByMatch.has(f.match_id)) factsByMatch.set(f.match_id, [])
+    factsByMatch.get(f.match_id)!.push(f)
+  }
+
+  const healthMatches: MatchHealth[] = scheduled.map(m => {
+    const hm = teamMeta.get(m.home_team)
+    const am = teamMeta.get(m.away_team)
+    return {
+      id:             m.id,
+      home_team:      m.home_team,
+      away_team:      m.away_team,
+      scheduled_time: m.scheduled_time,
+      stage:          m.stage,
+      group_name:     m.group_name,
+      has_venue:      m.venue_id != null,
+      has_odds:       oddsSet.has(m.id),
+      has_referee:    m.referee != null,
+      has_home_coach: hm?.coach != null,
+      has_away_coach: am?.coach != null,
+      has_home_age:   hm?.avg_age != null,
+      has_away_age:   am?.avg_age != null,
+      facts:          factsByMatch.get(m.id) ?? [],
+    }
+  })
 
   return (
     <div style={{ padding: '16px 16px 0' }}>
@@ -31,13 +86,17 @@ export default async function AdminPage() {
         Con gran poder viene gran irresponsabilidad
       </p>
 
-      <AdminActions
-        appMode={appMode}
-        bloqueoMinutos={bloqueoMinutos}
-        users={users}
-        logs={logs}
-        matches={matches}
-      />
+      <ContextHealthPanel matches={healthMatches} />
+
+      <div style={{ marginTop: 16 }}>
+        <AdminActions
+          appMode={appMode}
+          bloqueoMinutos={bloqueoMinutos}
+          users={users}
+          logs={logs}
+          matches={allMatches}
+        />
+      </div>
     </div>
   )
 }
