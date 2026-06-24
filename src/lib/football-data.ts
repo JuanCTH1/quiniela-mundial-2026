@@ -15,6 +15,7 @@ export interface ApiMatch {
   // SCHEDULED/TIMED (por jugar), IN_PLAY (en juego), PAUSED (medio tiempo),
   // FINISHED, POSTPONED, SUSPENDED, CANCELLED
   status: 'SCHEDULED' | 'TIMED' | 'IN_PLAY' | 'PAUSED' | 'FINISHED' | 'POSTPONED' | 'CANCELLED' | 'SUSPENDED'
+  minute?: number | null  // minuto actual en IN_PLAY/PAUSED — null si no está en juego
   stage: string
   group: string | null
   matchday: number | null

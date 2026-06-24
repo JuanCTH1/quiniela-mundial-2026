@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
   // home_score_fulltime/away_score_fulltime incluidos para detectar cambios de marcador
   const { data: candidates, error: fetchErr } = await supabase
     .from('matches')
-    .select('id, external_id, status, stage, scheduled_time, actual_start_time, home_score_fulltime, away_score_fulltime')
+    .select('id, external_id, status, stage, scheduled_time, actual_start_time, home_score_fulltime, away_score_fulltime, current_minute')
     .in('status', ['SCHEDULED', 'IN_PROGRESS'])
     .lte('scheduled_time', new Date(Date.now() + 30 * 60 * 1000).toISOString())
 
@@ -71,6 +71,7 @@ export async function GET(request: NextRequest) {
         away_score_fulltime: apiMatch.score.fullTime.away,
         home_score_regular: apiMatch.score.regularTime?.home ?? null,
         away_score_regular: apiMatch.score.regularTime?.away ?? null,
+        current_minute: apiStatus === 'IN_PROGRESS' ? (apiMatch.minute ?? null) : null,
         ...(isFinished && {
           home_score_quiniela: quiniela!.home,
           away_score_quiniela: quiniela!.away,
@@ -79,6 +80,14 @@ export async function GET(request: NextRequest) {
         ...(isFirstLive && {
           actual_start_time: detectedAt.toISOString(),
         }),
+      }
+
+      // Log para verificar que el API devuelve el campo minute
+      if (apiStatus === 'IN_PROGRESS' && apiMatch.minute != null) {
+        await logEntry(supabase, 'MINUTE_CHECK',
+          `⏱ ${match.external_id}: minuto ${apiMatch.minute}`,
+          false, match.id, { minute: apiMatch.minute }
+        )
       }
 
       const { error: updateErr } = await supabase
