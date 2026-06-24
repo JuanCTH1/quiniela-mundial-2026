@@ -155,15 +155,28 @@ export async function GET(request: NextRequest) {
 // Periodo del partido a partir del status raw de la API + minuto
 // Valores: 1T, MT, 2T, ET1, MTE, ET2, PEN — null cuando no está en juego
 function derivePeriod(rawStatus: string, minute: number | null | undefined, currentPeriod: string | null): string | null {
-  if (rawStatus === 'PAUSED') return (minute != null && minute >= 90) ? 'MTE' : 'MT'
+  if (rawStatus === 'PAUSED') {
+    // Descanso: medio tiempo normal (1T→2T) vs. el de la prórroga (2T→ET / ET1→ET2).
+    // Sin minuto, nos apoyamos en el periodo previo de la DB.
+    const inExtra = (minute != null && minute >= 90) || currentPeriod === '2T' || currentPeriod === 'ET1'
+    return inExtra ? 'MTE' : 'MT'
+  }
   if (rawStatus !== 'IN_PLAY') return null
-  if (minute == null) return currentPeriod ?? '1T'
+
+  // football-data.org no siempre envía 'minute'. Si falta, avanzamos el periodo
+  // usando las transiciones de PAUSED ya guardadas (1T→MT→2T, etc.).
+  if (minute == null) {
+    if (currentPeriod === 'MT') return '2T'
+    if (currentPeriod === 'MTE') return 'ET1'
+    return currentPeriod ?? '1T'
+  }
+
   if (minute <= 45) return '1T'
   if (minute <= 90) {
-    // Use DB context to distinguish 1T stoppage from 2T kick-off
+    // Distinguir descuento del 1T (45+) del arranque del 2T usando el periodo previo
     if (currentPeriod === 'MT' || currentPeriod === '2T') return '2T'
     if (currentPeriod === '1T') return '1T'
-    // Fallback: minutes 46-48 likely still 1T stoppage, 49+ likely 2T
+    // Fallback: 46-48 probablemente sigue siendo descuento del 1T, 49+ ya es 2T
     return minute <= 48 ? '1T' : '2T'
   }
   if (minute <= 105) return 'ET1'

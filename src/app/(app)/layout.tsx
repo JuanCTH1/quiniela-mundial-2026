@@ -30,7 +30,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       .eq('status', 'SCHEDULED')
       .gte('scheduled_time', new Date().toISOString())
       .order('scheduled_time').limit(1).maybeSingle(),
-    supabase.from('system_logs').select('message, created_at').eq('is_error', true)
+    // Solo alertas que el jugador debe ver (partido atascado sin actualizar).
+    // Los errores transitorios del cron (fetch failed, etc.) viven en el panel
+    // de salud del admin, no en una banda roja para los 6 jugadores.
+    supabase.from('system_logs').select('message, created_at').eq('log_type', 'FAILSAFE_ALERT')
       .gte('created_at', new Date(Date.now() - 2 * 3_600_000).toISOString())
       .order('created_at', { ascending: false }).limit(1).maybeSingle(),
   ])

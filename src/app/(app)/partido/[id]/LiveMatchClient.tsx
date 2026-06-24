@@ -24,26 +24,11 @@ interface Props {
   predictions: Prediction[]
 }
 
-function useElapsed(ts: Date | null) {
-  const [, tick] = useState(0)
-  useEffect(() => {
-    if (!ts) return
-    const id = setInterval(() => tick(n => n + 1), 5000)
-    return () => clearInterval(id)
-  }, [ts])
-  if (!ts) return null
-  const s = Math.round((Date.now() - ts.getTime()) / 1000)
-  if (s < 10) return 'ahora'
-  if (s < 60) return `hace ${s}s`
-  return `hace ${Math.round(s / 60)}min`
-}
-
 export function LiveMatchClient({ matchId, initialHomeScore, initialAwayScore, initialMinute, initialPeriod, isLive, isFinished, predictions }: Props) {
   const [home, setHome] = useState(initialHomeScore ?? null)
   const [away, setAway] = useState(initialAwayScore ?? null)
   const [minute, setMinute] = useState(initialMinute ?? null)
   const [period, setPeriod] = useState(initialPeriod ?? null)
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(isLive ? new Date() : null)
   const supabaseRef = useRef<ReturnType<typeof createBrowserClient<Database>> | null>(null)
   const finishedRef = useRef(false)
   const router = useRouter()
@@ -75,7 +60,6 @@ export function LiveMatchClient({ matchId, initialHomeScore, initialAwayScore, i
         setAway(row.away_score_fulltime)
         setMinute(row.current_minute ?? null)
         setPeriod(row.current_period ?? null)
-        setLastUpdated(new Date())
         maybeRefreshOnFinish(row.status)
       })
       .subscribe()
@@ -91,7 +75,6 @@ export function LiveMatchClient({ matchId, initialHomeScore, initialAwayScore, i
         setAway(data.away_score_fulltime)
         setMinute(data.current_minute ?? null)
         setPeriod(data.current_period ?? null)
-        setLastUpdated(new Date())
         maybeRefreshOnFinish(data.status)
       }
     }, 10_000)
@@ -113,7 +96,6 @@ export function LiveMatchClient({ matchId, initialHomeScore, initialAwayScore, i
     }
   }
 
-  const elapsed = useElapsed(lastUpdated)
   const timeLabel = isLive ? formatLivePeriod(period, minute) : null
 
   return (
@@ -129,12 +111,6 @@ export function LiveMatchClient({ matchId, initialHomeScore, initialAwayScore, i
       {isLive && (
         <div style={{ fontSize: 11, color: 'var(--warning)', marginTop: 2, fontWeight: 600 }}>
           {timeLabel ? `● ${timeLabel}` : '● En juego'}
-        </div>
-      )}
-
-      {isLive && elapsed && (
-        <div style={{ fontSize: 10, color: 'var(--text-dim)', marginTop: 3 }}>
-          Actualizado {elapsed}
         </div>
       )}
     </div>

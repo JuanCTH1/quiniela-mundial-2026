@@ -179,7 +179,9 @@ export function formatLivePeriod(period: string | null | undefined, minute: numb
   if (period === 'MTE') return 'MTE'
   if (period === 'PEN') return 'PEN'
   if (minute == null) {
+    // Sin minuto (la API no lo envía): al menos mostramos el periodo.
     if (period === 'ET1' || period === 'ET2') return 'ET'
+    if (period === '1T' || period === '2T') return period
     return null
   }
   if (period === '1T' && minute > 45) return `45+${minute - 45}'`
