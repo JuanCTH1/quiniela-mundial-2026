@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { PredictionForm } from './PredictionForm'
 import { Countdown } from './Countdown'
 import { RankingPreview } from './RankingPreview'
-import { calcResult, getLockTime, STAGE_LABELS } from '@/lib/utils'
+import { calcResult, getLockTime, STAGE_LABELS, formatLivePeriod } from '@/lib/utils'
 import { TeamFlag } from './TeamFlag'
 import { getTheme, type Theme } from '@/lib/themes'
 import type { Tables } from '@/types/database.types'
@@ -52,7 +52,7 @@ export function MatchCard({
   const isFinished = match.status === 'FINISHED' && finalHome != null
   const isLive = match.status === 'IN_PROGRESS'
   const hasLiveScore = isLive && match.home_score_fulltime != null
-  const SHOW_LIVE_MINUTE = false
+  const liveTimeLabel = isLive ? formatLivePeriod(match.current_period, match.current_minute) : null
   const isOpen = !isLocked && match.status === 'SCHEDULED'
 
   const lockTime = getLockTime(match.scheduled_time, bloqueoMinutos)
@@ -127,9 +127,9 @@ export function MatchCard({
                 <span style={{ fontSize: 28, fontWeight: 800, letterSpacing: 2, color: 'var(--warning)' }}>
                   {match.home_score_fulltime} – {match.away_score_fulltime}
                 </span>
-                {SHOW_LIVE_MINUTE && match.current_minute != null && (
-                  <div style={{ fontSize: 10, color: 'var(--warning)', fontWeight: 600 }}>
-                    {match.current_minute}&apos;
+                {liveTimeLabel && (
+                  <div style={{ fontSize: 10, color: 'var(--warning)', fontWeight: 600, marginTop: 2 }}>
+                    {liveTimeLabel}
                   </div>
                 )}
               </>

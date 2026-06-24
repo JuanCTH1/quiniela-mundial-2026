@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
+import { formatLivePeriod } from '@/lib/utils'
 import type { Database } from '@/types/database.types'
-
 
 interface Prediction {
   user_id: string
@@ -16,6 +16,8 @@ interface Props {
   matchId: string
   initialHomeScore: number | null | undefined
   initialAwayScore: number | null | undefined
+  initialMinute?: number | null
+  initialPeriod?: string | null
   isLive: boolean
   isFinished: boolean
   predictions: Prediction[]
@@ -35,9 +37,11 @@ function useElapsed(ts: Date | null) {
   return `hace ${Math.round(s / 60)}min`
 }
 
-export function LiveMatchClient({ matchId, initialHomeScore, initialAwayScore, isLive, isFinished, predictions }: Props) {
+export function LiveMatchClient({ matchId, initialHomeScore, initialAwayScore, initialMinute, initialPeriod, isLive, isFinished, predictions }: Props) {
   const [home, setHome] = useState(initialHomeScore ?? null)
   const [away, setAway] = useState(initialAwayScore ?? null)
+  const [minute, setMinute] = useState(initialMinute ?? null)
+  const [period, setPeriod] = useState(initialPeriod ?? null)
   const [lastUpdated, setLastUpdated] = useState<Date | null>(isLive ? new Date() : null)
   const supabaseRef = useRef<ReturnType<typeof createBrowserClient<Database>> | null>(null)
 
@@ -55,7 +59,6 @@ export function LiveMatchClient({ matchId, initialHomeScore, initialAwayScore, i
     if (!isLive) return
     const sb = getClient()
 
-    // Realtime: actualización inmediata por cambios en DB
     const channel = sb
       .channel(`match-${matchId}`)
       .on('postgres_changes', {
@@ -67,20 +70,23 @@ export function LiveMatchClient({ matchId, initialHomeScore, initialAwayScore, i
         const row = payload.new as Database['public']['Tables']['matches']['Row']
         setHome(row.home_score_fulltime)
         setAway(row.away_score_fulltime)
+        setMinute(row.current_minute ?? null)
+        setPeriod(row.current_period ?? null)
         setLastUpdated(new Date())
       })
       .subscribe()
 
-    // Polling cada 10s como respaldo (el API tiene delay, Realtime lo refleja igual)
     const poll = setInterval(async () => {
       const { data } = await sb
         .from('matches')
-        .select('home_score_fulltime, away_score_fulltime, status')
+        .select('home_score_fulltime, away_score_fulltime, current_minute, current_period, status')
         .eq('id', matchId)
         .single()
       if (data) {
         setHome(data.home_score_fulltime)
         setAway(data.away_score_fulltime)
+        setMinute(data.current_minute ?? null)
+        setPeriod(data.current_period ?? null)
         setLastUpdated(new Date())
       }
     }, 10_000)
@@ -92,6 +98,7 @@ export function LiveMatchClient({ matchId, initialHomeScore, initialAwayScore, i
   }, [matchId, isLive])
 
   const elapsed = useElapsed(lastUpdated)
+  const timeLabel = isLive ? formatLivePeriod(period, minute) : null
 
   return (
     <div>
@@ -104,7 +111,9 @@ export function LiveMatchClient({ matchId, initialHomeScore, initialAwayScore, i
       </div>
 
       {isLive && (
-        <div style={{ fontSize: 11, color: 'var(--warning)', marginTop: 2 }}>● En juego</div>
+        <div style={{ fontSize: 11, color: 'var(--warning)', marginTop: 2, fontWeight: 600 }}>
+          {timeLabel ? `● ${timeLabel}` : '● En juego'}
+        </div>
       )}
 
       {isLive && elapsed && (

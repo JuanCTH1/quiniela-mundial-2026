@@ -171,6 +171,18 @@ export function getTeamAbbr(name: string): string {
   return ABBR[name] ?? name.slice(0, 3).toUpperCase()
 }
 
+// Etiqueta de tiempo para partidos en vivo.
+// 1T/2T/ET1/ET2 → muestra el minuto; MT/MTE/PEN → etiqueta fija.
+export function formatLivePeriod(period: string | null | undefined, minute: number | null | undefined): string | null {
+  if (!period) return null
+  if (period === 'MT') return 'MT'
+  if (period === 'MTE') return 'MTE'
+  if (period === 'PEN') return 'PEN'
+  if (minute != null) return `${minute}'`
+  if (period === 'ET1' || period === 'ET2') return 'ET'
+  return null
+}
+
 export type ResultType = 'EXACTO' | 'DIFERENCIA' | 'TENDENCIA' | 'FALLO'
 
 export function calcResult(

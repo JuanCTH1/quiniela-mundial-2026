@@ -23,7 +23,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     supabase.from('matches')
       .select('id, home_team, away_team, scheduled_time, early_unlock_at, stage, group_name, home_score_fulltime, away_score_fulltime, current_minute, current_period')
       .eq('status', 'IN_PROGRESS')
-      .order('scheduled_time').limit(2),
+      .order('scheduled_time').limit(4),
     // Siguiente programado
     supabase.from('matches')
       .select('id, home_team, away_team, scheduled_time, early_unlock_at, stage, group_name')
