@@ -162,7 +162,7 @@ export function MatchContext({ data, defaultOpen = false }: { data: MatchContext
           {/* H2H */}
           {data.h2h && (
             <>
-              <Label>Historial entre ambos</Label>
+              <Label>Historial en Mundiales</Label>
               <div style={{ display: 'flex', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, overflow: 'hidden' }}>
                 {([
                   { n: data.h2h.homeWins, label: homeTeam, color: 'var(--primary)' },
