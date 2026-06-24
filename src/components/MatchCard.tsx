@@ -24,6 +24,7 @@ interface Props {
   timezone: string
   currentUserId?: string
   theme?: Theme
+  venueName?: string
 }
 
 const RESULT_COLORS = {
@@ -34,7 +35,7 @@ const RESULT_COLORS = {
 }
 
 export function MatchCard({
-  match, myPrediction, allPredictions, isLocked, bloqueoMinutos, timezone, currentUserId, theme = 'mexico',
+  match, myPrediction, allPredictions, isLocked, bloqueoMinutos, timezone, currentUserId, theme = 'mexico', venueName,
 }: Props) {
   const t = getTheme(theme)
 
@@ -133,6 +134,7 @@ export function MatchCard({
               <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>vs</span>
             )}
             <div style={{ fontSize: 9, color: 'var(--text-muted)', marginTop: 2 }}>{matchTime}</div>
+            {venueName && <div style={{ fontSize: 9, color: 'var(--text-muted)', marginTop: 1 }}>{venueName}</div>}
           </div>
 
           {/* Away */}

@@ -127,6 +127,29 @@ export function getLockTime(scheduledTime: string, bloqueoMinutos: number): Date
   return new Date(new Date(scheduledTime).getTime() - bloqueoMinutos * 60_000)
 }
 
+/** Fecha de hoy en la zona horaria del usuario, formato YYYY-MM-DD */
+export function localTodayStr(timezone: string): string {
+  return new Intl.DateTimeFormat('sv', { timeZone: timezone }).format(new Date())
+}
+
+/** Rango UTC para el inicio y fin del día 'dateStr' (YYYY-MM-DD) en la zona horaria dada */
+export function dayBoundsUTC(dateStr: string, timezone: string): { start: Date; end: Date } {
+  const noonUTC = new Date(dateStr + 'T12:00:00Z')
+  const parts = new Intl.DateTimeFormat('en', {
+    timeZone: timezone,
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(noonUTC)
+  const localH = parseInt(parts.find(p => p.type === 'hour')?.value ?? '12') % 24
+  const localM = parseInt(parts.find(p => p.type === 'minute')?.value ?? '00')
+  const offsetMs = (12 * 60 - (localH * 60 + localM)) * 60_000
+  return {
+    start: new Date(new Date(dateStr + 'T00:00:00Z').getTime() + offsetMs),
+    end:   new Date(new Date(dateStr + 'T23:59:59Z').getTime() + offsetMs),
+  }
+}
+
 export const TIMEZONES = [
   { label: 'Ciudad de México / Monterrey (CST/CDT)', value: 'America/Mexico_City' },
   { label: 'Mazatlán / Chihuahua (MST/MDT)', value: 'America/Mazatlan' },

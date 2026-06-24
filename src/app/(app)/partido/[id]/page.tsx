@@ -133,6 +133,9 @@ export default async function PartidoPage({ params }: { params: Promise<{ id: st
               <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>vs</div>
             )}
             <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 6 }}>{matchTime}</div>
+            {matchContext?.venue?.name && (
+              <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 3 }}>{matchContext.venue.name}</div>
+            )}
           </div>
 
           <div style={{ flex: 1, textAlign: 'center' }}>
