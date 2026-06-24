@@ -1,7 +1,9 @@
 'use client'
 
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 import { Countdown } from './Countdown'
 import { getTeamFlag, getTeamAbbr, getLockTime, formatLivePeriod } from '@/lib/utils'
 import { getTheme, type Theme } from '@/lib/themes'
@@ -19,6 +21,16 @@ type LiveMatchSlim = MatchSlim & {
 
 type Pred = { home_score: number | null; away_score: number | null } | null
 
+// Marcador/tiempo mutable de un partido en vivo (se actualiza en tiempo real)
+type LiveScore = { home: number | null; away: number | null; minute: number | null; period: string | null }
+
+function initScores(matches: LiveMatchSlim[]): Record<string, LiveScore> {
+  return Object.fromEntries(matches.map(m => [m.id, {
+    home: m.home_score_fulltime, away: m.away_score_fulltime,
+    minute: m.current_minute, period: m.current_period,
+  }]))
+}
+
 interface Props {
   liveMatches: LiveMatchSlim[]
   liveMatch: LiveMatchSlim | null
@@ -32,7 +44,62 @@ interface Props {
 
 export function NextMatchBanner({ liveMatches, liveMatch, nextMatch, prediction, livePredictions = [], bloqueoMinutos, timezone, theme = 'mexico' }: Props) {
   const pathname = usePathname()
+  const router = useRouter()
   const t = getTheme(theme)
+
+  // El banner es server-rendered: sin esto el marcador quedaría congelado.
+  // Mantenemos los marcadores en vivo al día por realtime + polling.
+  const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null)
+  const [liveScores, setLiveScores] = useState<Record<string, LiveScore>>(() => initScores(liveMatches))
+  const idsKey = liveMatches.map(m => m.id).join(',')
+
+  useEffect(() => {
+    setLiveScores(initScores(liveMatches))
+    if (pathname.startsWith('/partido/')) return
+    const ids = liveMatches.map(m => m.id)
+    if (ids.length === 0) return
+
+    if (!supabaseRef.current) supabaseRef.current = createClient()
+    const sb = supabaseRef.current
+
+    const channel = sb.channel('live-banner')
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'matches' }, payload => {
+        const row = payload.new as Tables<'matches'>
+        if (!ids.includes(row.id)) return
+        // Si el partido dejó de estar en vivo, recargamos la lista del servidor
+        if (row.status !== 'IN_PROGRESS') { router.refresh(); return }
+        setLiveScores(prev => ({ ...prev, [row.id]: {
+          home: row.home_score_fulltime, away: row.away_score_fulltime,
+          minute: row.current_minute, period: row.current_period,
+        } }))
+      })
+      .subscribe()
+
+    const poll = setInterval(async () => {
+      const { data } = await sb.from('matches')
+        .select('id, home_score_fulltime, away_score_fulltime, current_minute, current_period, status')
+        .in('id', ids)
+      if (!data) return
+      if (data.some(m => m.status !== 'IN_PROGRESS')) { router.refresh(); return }
+      setLiveScores(prev => {
+        const next = { ...prev }
+        for (const m of data) next[m.id] = {
+          home: m.home_score_fulltime, away: m.away_score_fulltime,
+          minute: m.current_minute, period: m.current_period,
+        }
+        return next
+      })
+    }, 12_000)
+
+    return () => { sb.removeChannel(channel); clearInterval(poll) }
+    // liveMatches/router son estables para un mismo idsKey
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [idsKey, pathname])
+
+  const scoreFor = (m: LiveMatchSlim): LiveScore => liveScores[m.id] ?? {
+    home: m.home_score_fulltime, away: m.away_score_fulltime,
+    minute: m.current_minute, period: m.current_period,
+  }
 
   if (pathname.startsWith('/partido/')) return null
   if (liveMatches.length === 0 && !nextMatch) return null
@@ -62,9 +129,10 @@ export function NextMatchBanner({ liveMatches, liveMatch, nextMatch, prediction,
           const awayAbbr = getTeamAbbr(m.away_team)
           const homeFlag = getTeamFlag(m.home_team)
           const awayFlag = getTeamFlag(m.away_team)
-          const h = m.home_score_fulltime ?? '–'
-          const a = m.away_score_fulltime ?? '–'
-          const timeLabel = formatLivePeriod(m.current_period, m.current_minute)
+          const sc = scoreFor(m)
+          const h = sc.home ?? '–'
+          const a = sc.away ?? '–'
+          const timeLabel = formatLivePeriod(sc.period, sc.minute)
 
           return (
             <Link key={m.id} href={`/partido/${m.id}`} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6, marginTop: i > 0 ? 4 : 0 }}>
@@ -98,6 +166,8 @@ export function NextMatchBanner({ liveMatches, liveMatch, nextMatch, prediction,
   // ── Single live match banner ────────────────────────────────────────────────
   if (liveMatch) {
     const hasPred = prediction?.home_score != null
+    const sc = scoreFor(liveMatch)
+    const liveLabel = formatLivePeriod(sc.period, sc.minute)
     return (
       <div>
         <Link href={`/partido/${liveMatch.id}`} style={{ textDecoration: 'none', display: 'block' }}>
@@ -116,11 +186,11 @@ export function NextMatchBanner({ liveMatches, liveMatch, nextMatch, prediction,
             </div>
             <div style={{ textAlign: 'right', flexShrink: 0 }}>
               <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--warning)', letterSpacing: 2 }}>
-                {liveMatch.home_score_fulltime ?? '–'} – {liveMatch.away_score_fulltime ?? '–'}
+                {sc.home ?? '–'} – {sc.away ?? '–'}
               </div>
-              {formatLivePeriod(liveMatch.current_period, liveMatch.current_minute) && (
+              {liveLabel && (
                 <div style={{ fontSize: 10, color: 'var(--warning)', opacity: 0.85 }}>
-                  {formatLivePeriod(liveMatch.current_period, liveMatch.current_minute)}
+                  {liveLabel}
                 </div>
               )}
               {hasPred && (
