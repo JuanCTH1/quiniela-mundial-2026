@@ -188,6 +188,7 @@ export type Database = {
           referee_country: string | null
           result_source: string | null
           scheduled_time: string
+          second_half_start_time: string | null
           stage: string
           status: string
           updated_at: string
@@ -216,6 +217,7 @@ export type Database = {
           referee_country?: string | null
           result_source?: string | null
           scheduled_time: string
+          second_half_start_time?: string | null
           stage: string
           status?: string
           updated_at?: string
@@ -244,6 +246,7 @@ export type Database = {
           referee_country?: string | null
           result_source?: string | null
           scheduled_time?: string
+          second_half_start_time?: string | null
           stage?: string
           status?: string
           updated_at?: string
@@ -475,7 +478,7 @@ export type Database = {
         }
         Insert: {
           probability?: number
-          team_name?: string
+          team_name: string
           updated_at?: string
         }
         Update: {

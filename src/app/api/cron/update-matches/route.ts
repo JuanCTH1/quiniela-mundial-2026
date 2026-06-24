@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
   // home_score_fulltime/away_score_fulltime incluidos para detectar cambios de marcador
   const { data: candidates, error: fetchErr } = await supabase
     .from('matches')
-    .select('id, external_id, status, stage, scheduled_time, actual_start_time, home_score_fulltime, away_score_fulltime, current_minute, current_period')
+    .select('id, external_id, status, stage, scheduled_time, actual_start_time, home_score_fulltime, away_score_fulltime, current_minute, current_period, second_half_start_time')
     .in('status', ['SCHEDULED', 'IN_PROGRESS'])
     .lte('scheduled_time', new Date(Date.now() + 30 * 60 * 1000).toISOString())
 
@@ -64,6 +64,9 @@ export async function GET(request: NextRequest) {
       const isFinished = apiStatus === 'FINISHED' && quiniela !== null
       const isFirstLive = apiStatus === 'IN_PROGRESS' && !match.actual_start_time
       const detectedAt = new Date()
+      const newPeriod = derivePeriod(apiMatch.status, apiMatch.minute, match.current_period)
+      // Detectar inicio del 2T: transición MT → 2T, solo se escribe una vez
+      const isSecondHalfStart = newPeriod === '2T' && match.current_period === 'MT' && !match.second_half_start_time
 
       const payload: Partial<TablesInsert<'matches'>> = {
         status: apiStatus,
@@ -72,7 +75,7 @@ export async function GET(request: NextRequest) {
         home_score_regular: apiMatch.score.regularTime?.home ?? null,
         away_score_regular: apiMatch.score.regularTime?.away ?? null,
         current_minute: apiStatus === 'IN_PROGRESS' ? (apiMatch.minute ?? null) : null,
-        current_period: derivePeriod(apiMatch.status, apiMatch.minute, match.current_period),
+        current_period: newPeriod,
         ...(isFinished && {
           home_score_quiniela: quiniela!.home,
           away_score_quiniela: quiniela!.away,
@@ -81,13 +84,16 @@ export async function GET(request: NextRequest) {
         ...(isFirstLive && {
           actual_start_time: detectedAt.toISOString(),
         }),
+        ...(isSecondHalfStart && {
+          second_half_start_time: detectedAt.toISOString(),
+        }),
       }
 
       // Log para verificar que el API devuelve el campo minute.
       // Solo cuando cambia el minuto, para no inundar system_logs en cada tick.
       if (apiStatus === 'IN_PROGRESS' && apiMatch.minute != null && apiMatch.minute !== match.current_minute) {
         await logEntry(supabase, 'MINUTE_CHECK',
-          `⏱ ${match.external_id}: minuto ${apiMatch.minute} (${derivePeriod(apiMatch.status, apiMatch.minute, match.current_period)})`,
+          `⏱ ${match.external_id}: minuto ${apiMatch.minute} (${newPeriod})`,
           false, match.id, { minute: apiMatch.minute }
         )
       }

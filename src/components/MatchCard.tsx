@@ -54,13 +54,13 @@ export function MatchCard({
   const hasLiveScore = isLive && match.home_score_fulltime != null
   // Cuando la API no envía el minuto exacto, calculamos uno aproximado desde actual_start_time
   const approxMin = isLive && match.current_minute == null
-    ? approxLiveMinute(match.actual_start_time, match.current_period)
+    ? approxLiveMinute(match.actual_start_time, match.current_period, match.second_half_start_time)
     : null
   const liveTimeLabel = isLive
     ? (match.current_minute != null
         ? formatLivePeriod(match.current_period, match.current_minute)
         : approxMin != null
-          ? `${match.current_period} ~${approxMin}'`
+          ? `~${approxMin}' · ${match.current_period}`
           : formatLivePeriod(match.current_period, null))
     : null
   const isOpen = !isLocked && match.status === 'SCHEDULED'
