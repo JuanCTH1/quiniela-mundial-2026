@@ -21,6 +21,7 @@ const env = Object.fromEntries(
 )
 
 const DRY_RUN  = process.argv.includes('--dry-run')
+const FORCE    = process.argv.includes('--force')   // borra facts existentes y regenera
 const limitArg = process.argv.indexOf('--limit')
 const LIMIT    = limitArg !== -1 ? parseInt(process.argv[limitArg + 1]) : Infinity
 const matchArg = process.argv.indexOf('--match-id')
@@ -51,7 +52,7 @@ const { data: existingFacts } = await supabase.from('match_facts').select('match
 const withFacts = new Set((existingFacts ?? []).map(f => f.match_id))
 
 const matches = allMatches
-  .filter(m => !withFacts.has(m.id)
+  .filter(m => (FORCE || !withFacts.has(m.id))
     && m.away_team && !m.away_team.startsWith('TBD')
     && m.status === 'SCHEDULED')   // solo partidos que aún no se jugaron
   .slice(0, LIMIT)
@@ -139,18 +140,21 @@ ${groupContext ? `- ${groupContext}` : ''}
 ${tenseInstruction}
 
 INSTRUCCIONES:
-1. Usa la herramienta web_search para buscar información actual y específica sobre este partido antes de escribir. Busca al menos:
+1. Usa web_search para buscar información específica sobre este partido. Busca al menos:
    - Historial de enfrentamientos entre ${match.home_team} y ${match.away_team} en Mundiales
-   - Jugador clave o momento destacado relacionado con este partido específico en el Mundial 2026
-   Úsala tantas veces como necesites.
-2. Escribe exactamente 3 datos curiosos basados en lo que encuentres. No inventes nada que no hayas podido verificar.
-3. Si no encuentras información confiable sobre algo, escribe sobre lo que sí encontraste — no rellenes con datos vagos.
+   - Jugador clave o momento destacado de este partido en el Mundial 2026
+2. Escribe exactamente 3 datos curiosos basados en lo que encuentres. No inventes nada.
+3. Si no encuentras algo confiable, escribe sobre lo que sí encontraste.
+
+FORMATO — CRÍTICO: cada "body" debe tener máximo 130 caracteres (1-2 oraciones cortas y directas).
+- BIEN: "España no ha perdido un partido de grupo en los últimos 4 Mundiales."
+- MAL: "España, una de las selecciones más dominantes del fútbol europeo, ha demostrado consistentemente su capacidad para no perder en fase de grupos durante las últimas 4 ediciones del Mundial."
 
 Devuelve ÚNICAMENTE un JSON array válido (sin markdown, sin backticks, sin texto extra):
 [
-  {"category": "historico", "body": "Hecho verificado sobre el historial entre estos dos equipos en Mundiales anteriores o su historia en el torneo."},
-  {"category": "jugador", "body": "Hecho específico sobre un jugador clave: algo concreto que ocurrió o puede ocurrir."},
-  {"category": "narrativo", "body": "Contexto del partido: qué estaba en juego, la situación en el grupo, o el significado del resultado."}
+  {"category": "historico", "body": "Hecho sobre el historial entre estos equipos. Máx 130 chars."},
+  {"category": "jugador", "body": "Jugador clave concreto: nombre + stat o hecho verificado. Máx 130 chars."},
+  {"category": "narrativo", "body": "Contexto del partido o lo que estaba en juego. Máx 130 chars."}
 ]`
 }
 
@@ -218,6 +222,11 @@ for (const m of matches) {
   process.stdout.write(`${label}… `)
 
   try {
+    // En modo --force, borrar facts existentes antes de regenerar
+    if (FORCE && withFacts.has(m.id)) {
+      await supabase.from('match_facts').delete().eq('match_id', m.id)
+    }
+
     const [groupContext, teamMeta] = await Promise.all([
       loadGroupContext(m),
       loadTeamMeta(m.home_team, m.away_team),

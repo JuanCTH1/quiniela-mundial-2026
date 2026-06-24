@@ -55,95 +55,6 @@ export type Database = {
           },
         ]
       }
-      matches: {
-        Row: {
-          actual_start_time: string | null
-          away_score_fulltime: number | null
-          away_score_quiniela: number | null
-          away_score_regular: number | null
-          away_team: string
-          created_at: string
-          early_unlock_at: string | null
-          external_id: number | null
-          group_name: string | null
-          home_score_fulltime: number | null
-          home_score_quiniela: number | null
-          home_score_regular: number | null
-          home_team: string
-          id: string
-          is_placeholder: boolean
-          matchday: number | null
-          result_source: string | null
-          scheduled_time: string
-          stage: string
-          referee: string | null
-          referee_country: string | null
-          status: string
-          updated_at: string
-          venue_id: string | null
-        }
-        Insert: {
-          actual_start_time?: string | null
-          away_score_fulltime?: number | null
-          away_score_quiniela?: number | null
-          away_score_regular?: number | null
-          away_team: string
-          created_at?: string
-          early_unlock_at?: string | null
-          external_id?: number | null
-          group_name?: string | null
-          home_score_fulltime?: number | null
-          home_score_quiniela?: number | null
-          home_score_regular?: number | null
-          home_team: string
-          id?: string
-          is_placeholder?: boolean
-          matchday?: number | null
-          referee?: string | null
-          referee_country?: string | null
-          result_source?: string | null
-          scheduled_time: string
-          stage: string
-          status?: string
-          updated_at?: string
-          venue_id?: string | null
-        }
-        Update: {
-          actual_start_time?: string | null
-          away_score_fulltime?: number | null
-          away_score_quiniela?: number | null
-          away_score_regular?: number | null
-          away_team?: string
-          created_at?: string
-          early_unlock_at?: string | null
-          external_id?: number | null
-          group_name?: string | null
-          home_score_fulltime?: number | null
-          home_score_quiniela?: number | null
-          home_score_regular?: number | null
-          home_team?: string
-          id?: string
-          is_placeholder?: boolean
-          matchday?: number | null
-          referee?: string | null
-          referee_country?: string | null
-          result_source?: string | null
-          scheduled_time?: string
-          stage?: string
-          status?: string
-          updated_at?: string
-          venue_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "matches_venue_id_fkey"
-            columns: ["venue_id"]
-            isOneToOne: false
-            referencedRelation: "venues"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       match_facts: {
         Row: {
           body: string
@@ -220,6 +131,122 @@ export type Database = {
           },
         ]
       }
+      matches: {
+        Row: {
+          actual_start_time: string | null
+          away_score_fulltime: number | null
+          away_score_quiniela: number | null
+          away_score_regular: number | null
+          away_team: string
+          created_at: string
+          early_unlock_at: string | null
+          external_id: number | null
+          group_name: string | null
+          home_score_fulltime: number | null
+          home_score_quiniela: number | null
+          home_score_regular: number | null
+          home_team: string
+          id: string
+          is_placeholder: boolean
+          matchday: number | null
+          referee: string | null
+          referee_country: string | null
+          result_source: string | null
+          scheduled_time: string
+          stage: string
+          status: string
+          updated_at: string
+          venue_id: string | null
+        }
+        Insert: {
+          actual_start_time?: string | null
+          away_score_fulltime?: number | null
+          away_score_quiniela?: number | null
+          away_score_regular?: number | null
+          away_team: string
+          created_at?: string
+          early_unlock_at?: string | null
+          external_id?: number | null
+          group_name?: string | null
+          home_score_fulltime?: number | null
+          home_score_quiniela?: number | null
+          home_score_regular?: number | null
+          home_team: string
+          id?: string
+          is_placeholder?: boolean
+          matchday?: number | null
+          referee?: string | null
+          referee_country?: string | null
+          result_source?: string | null
+          scheduled_time: string
+          stage: string
+          status?: string
+          updated_at?: string
+          venue_id?: string | null
+        }
+        Update: {
+          actual_start_time?: string | null
+          away_score_fulltime?: number | null
+          away_score_quiniela?: number | null
+          away_score_regular?: number | null
+          away_team?: string
+          created_at?: string
+          early_unlock_at?: string | null
+          external_id?: number | null
+          group_name?: string | null
+          home_score_fulltime?: number | null
+          home_score_quiniela?: number | null
+          home_score_regular?: number | null
+          home_team?: string
+          id?: string
+          is_placeholder?: boolean
+          matchday?: number | null
+          referee?: string | null
+          referee_country?: string | null
+          result_source?: string | null
+          scheduled_time?: string
+          stage?: string
+          status?: string
+          updated_at?: string
+          venue_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "matches_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      player_stats: {
+        Row: {
+          assists: number
+          goals: number
+          id: string
+          player_name: string
+          team_name: string
+          updated_at: string
+        }
+        Insert: {
+          assists?: number
+          goals?: number
+          id?: string
+          player_name: string
+          team_name: string
+          updated_at?: string
+        }
+        Update: {
+          assists?: number
+          goals?: number
+          id?: string
+          player_name?: string
+          team_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       predictions: {
         Row: {
           away_score: number
@@ -254,72 +281,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      team_metadata: {
-        Row: {
-          avg_age: number | null
-          avg_height: number | null
-          coach: string | null
-          team_name: string
-          updated_at: string
-        }
-        Insert: {
-          avg_age?: number | null
-          avg_height?: number | null
-          coach?: string | null
-          team_name: string
-          updated_at?: string
-        }
-        Update: {
-          avg_age?: number | null
-          avg_height?: number | null
-          coach?: string | null
-          team_name?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      venues: {
-        Row: {
-          capacity: number | null
-          city: string
-          country: string
-          created_at: string
-          id: string
-          image_url: string | null
-          latitude: number
-          longitude: number
-          name: string
-          opened_year: number | null
-          surface: string | null
-        }
-        Insert: {
-          capacity?: number | null
-          city: string
-          country: string
-          created_at?: string
-          id?: string
-          image_url?: string | null
-          latitude: number
-          longitude: number
-          name: string
-          opened_year?: number | null
-          surface?: string | null
-        }
-        Update: {
-          capacity?: number | null
-          city?: string
-          country?: string
-          created_at?: string
-          id?: string
-          image_url?: string | null
-          latitude?: number
-          longitude?: number
-          name?: string
-          opened_year?: number | null
-          surface?: string | null
-        }
-        Relationships: []
       }
       profiles: {
         Row: {
@@ -443,6 +404,30 @@ export type Database = {
           },
         ]
       }
+      team_metadata: {
+        Row: {
+          avg_age: number | null
+          avg_height: number | null
+          coach: string | null
+          team_name: string
+          updated_at: string
+        }
+        Insert: {
+          avg_age?: number | null
+          avg_height?: number | null
+          coach?: string | null
+          team_name: string
+          updated_at?: string
+        }
+        Update: {
+          avg_age?: number | null
+          avg_height?: number | null
+          coach?: string | null
+          team_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       team_odds: {
         Row: {
           probability: number
@@ -458,6 +443,48 @@ export type Database = {
           probability?: number
           team_name?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      venues: {
+        Row: {
+          capacity: number | null
+          city: string
+          country: string
+          created_at: string
+          id: string
+          image_url: string | null
+          latitude: number
+          longitude: number
+          name: string
+          opened_year: number | null
+          surface: string | null
+        }
+        Insert: {
+          capacity?: number | null
+          city: string
+          country: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          latitude: number
+          longitude: number
+          name: string
+          opened_year?: number | null
+          surface?: string | null
+        }
+        Update: {
+          capacity?: number | null
+          city?: string
+          country?: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          latitude?: number
+          longitude?: number
+          name?: string
+          opened_year?: number | null
+          surface?: string | null
         }
         Relationships: []
       }
@@ -545,13 +572,13 @@ export type Tables<
     : never
   : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
         DefaultSchema["Views"])
-  ? (DefaultSchema["Tables"] &
-      DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
-      Row: infer R
-    }
-    ? R
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
     : never
-  : never
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
@@ -571,12 +598,12 @@ export type TablesInsert<
     ? I
     : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-      Insert: infer I
-    }
-    ? I
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
     : never
-  : never
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
@@ -596,12 +623,12 @@ export type TablesUpdate<
     ? U
     : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-      Update: infer U
-    }
-    ? U
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
     : never
-  : never
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
@@ -617,8 +644,8 @@ export type Enums<
 }
   ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
-  ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
-  : never
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
@@ -634,8 +661,8 @@ export type CompositeTypes<
 }
   ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-  ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-  : never
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
 
 export const Constants = {
   public: {

@@ -54,7 +54,7 @@ export async function getMatchContext(
     .eq('id', matchId)
     .single()
 
-  const [venue, metadata, odds, facts, form, h2h, stakes] = await Promise.all([
+  const [venue, metadata, odds, facts, form, h2h, stakes, keyPlayers] = await Promise.all([
     // ── Sede ──
     safe(async () => {
       if (!matchRow?.venue_id) return null
@@ -111,6 +111,9 @@ export async function getMatchContext(
 
     // ── Stakes: qué se juega cada equipo ──
     safe(() => computeStakes(supabase, matchId, homeTeam, awayTeam)),
+
+    // ── Key players: goleador/asistente top por equipo ──
+    safe(() => computeKeyPlayers(supabase, homeTeam, awayTeam)),
   ])
 
   const coaches = metadata && (metadata.home?.coach || metadata.away?.coach)
@@ -135,7 +138,7 @@ export async function getMatchContext(
   return {
     homeTeam, awayTeam,
     stakes, odds, form, h2h, venue, coaches, physical, facts, referee,
-    keyPlayers: null,
+    keyPlayers,
   }
 }
 
@@ -189,14 +192,15 @@ async function computeH2H(
 
 // ── Stakes: qué se juega cada equipo ──────────────────────────────────────────
 // WC 2026: 12 grupos de 4, top 2 clasifican directo + 8 mejores 3ros pasan.
-// Calculamos la posición actual y describimos qué necesita cada equipo.
+// BUG anterior: isLastGroupGame usaba conteo de partidos finalizados, lo que
+// fallaba para la jornada final (2 partidos simultáneos, ninguno terminado aún).
+// Fix: si ambos equipos ya jugaron 2 partidos previos → es la última jornada.
 async function computeStakes(
   supabase: Awaited<ReturnType<typeof createClient>>,
   matchId: string,
   homeTeam: string,
   awayTeam: string,
 ): Promise<string | null> {
-  // Obtener info del partido actual (stage y group)
   const { data: matchInfo } = await supabase
     .from('matches')
     .select('stage, group_name, status')
@@ -204,7 +208,6 @@ async function computeStakes(
     .single()
   if (!matchInfo) return null
 
-  // Solo aplica para grupo; en eliminatorias el stake es siempre "clasificar o quedar fuera"
   if (matchInfo.stage !== 'GROUP' && matchInfo.stage !== 'GROUP_STAGE') {
     const stageLabel: Record<string, string> = {
       LAST_32: 'Ronda de 32', ROUND_OF_16: 'Octavos de final', LAST_16: 'Octavos de final',
@@ -218,24 +221,23 @@ async function computeStakes(
   if (!matchInfo.group_name) return null
   const groupLetter = matchInfo.group_name.replace(/^GROUP_?/, '')
 
-  // Todos los partidos del grupo
   const { data: allGroupMatches } = await supabase
     .from('matches')
-    .select('id, home_team, away_team, home_score_quiniela, away_score_quiniela, status')
+    .select('id, home_team, away_team, home_score_fulltime, away_score_fulltime, home_score_quiniela, away_score_quiniela, status')
     .eq('group_name', matchInfo.group_name)
 
   if (!allGroupMatches) return null
 
-  // Equipo → stats { pts, gf, gc, gamesPlayed }
   const stats: Record<string, { pts: number; gf: number; gc: number; played: number }> = {}
   const initTeam = (t: string) => { stats[t] ??= { pts: 0, gf: 0, gc: 0, played: 0 } }
 
-  // Partidos ya jugados en el grupo (excluye el actual)
   for (const m of allGroupMatches) {
     if (m.id === matchId) continue
-    if (m.status !== 'FINISHED' || m.home_score_quiniela == null) continue
+    if (m.status !== 'FINISHED') continue
+    const hg = m.home_score_fulltime ?? m.home_score_quiniela
+    const ag = m.away_score_fulltime ?? m.away_score_quiniela
+    if (hg == null || ag == null) continue
     initTeam(m.home_team); initTeam(m.away_team)
-    const hg = m.home_score_quiniela, ag = m.away_score_quiniela!
     stats[m.home_team].gf += hg; stats[m.home_team].gc += ag; stats[m.home_team].played++
     stats[m.away_team].gf += ag; stats[m.away_team].gc += hg; stats[m.away_team].played++
     if (hg > ag) stats[m.home_team].pts += 3
@@ -244,9 +246,10 @@ async function computeStakes(
   }
   initTeam(homeTeam); initTeam(awayTeam)
 
-  const totalMatchesInGroup = allGroupMatches.length  // 6 para grupos de 4
-  const gamesPlayedInGroup = allGroupMatches.filter(m => m.status === 'FINISHED').length
-  const isLastGroupGame = gamesPlayedInGroup === totalMatchesInGroup - 1
+  // Ambos equipos ya jugaron sus 2 partidos anteriores → es la última jornada.
+  // (La lógica anterior contaba partidos terminados del grupo, lo que fallaba
+  // cuando los 2 juegos de la última ronda se juegan en simultáneo.)
+  const isLastGroupGame = stats[homeTeam].played === 2 && stats[awayTeam].played === 2
 
   const sorted = Object.entries(stats).sort((a, b) =>
     b[1].pts - a[1].pts || (b[1].gf - b[1].gc) - (a[1].gf - a[1].gc) || b[1].gf - a[1].gf
@@ -260,28 +263,27 @@ async function computeStakes(
   const awayPts = ptOf(awayTeam)
 
   if (isLastGroupGame) {
-    // Última jornada: calcular si cada equipo ya está clasificado, eliminado o depende
-    const otherMatch = allGroupMatches.find(
-      m => m.id !== matchId && m.status !== 'FINISHED'
-    )
-    const lines: string[] = []
+    const otherMatch = allGroupMatches.find(m => m.id !== matchId && m.status !== 'FINISHED')
     const describeNeed = (team: string, pos: number, pts: number) => {
-      if (pos <= 2) return `${team} está en zona de clasificación directa (${pos}º, ${pts} pts)`
-      if (pos === 3) return `${team} pelea por el 3er lugar (${pts} pts) — los mejores 8 terceros avanzan`
-      return `${team} necesita ganar y esperar resultados (${pts} pts)`
+      if (pts >= 6) return `${team} ya está clasificado (${pos}º, ${pts} pts)`
+      if (pos <= 2) return `${team} clasifica si no pierde (${pos}º, ${pts} pts)`
+      if (pos === 3) return `${team} pelea por 3er lugar (${pts} pts) — los mejores 8 terceros avanzan`
+      return `${team} necesita ganar y esperar resultados (${pos}º, ${pts} pts)`
     }
-    lines.push(describeNeed(homeTeam, homePos, homePts))
-    lines.push(describeNeed(awayTeam, awayPos, awayPts))
+    const lines = [
+      describeNeed(homeTeam, homePos, homePts),
+      describeNeed(awayTeam, awayPos, awayPts),
+    ]
     if (otherMatch) lines.push(`El otro partido del Grupo ${groupLetter} se juega simultáneamente.`)
     return lines.join(' · ')
   }
 
-  // Jornadas anteriores: describir situación actual y qué puede lograrse
   const lines: string[] = []
   const describe = (team: string, pos: number, pts: number, played: number) => {
-    const remaining = 3 - played
+    const remaining = 3 - played  // incluye este partido
     if (pts >= 6) return `${team} ya está clasificado con ${pts} pts`
-    if (pos <= 2 && remaining >= 1) return `${team} lleva ${pts} pts (${pos}º en Grupo ${groupLetter}), con ${remaining} partido${remaining > 1 ? 's' : ''} por jugar`
+    if (played === 0) return `${team} debuta en el Grupo ${groupLetter}`
+    if (pos <= 2) return `${team} lleva ${pts} pts (${pos}º en Grupo ${groupLetter}), ${remaining} partido${remaining !== 1 ? 's' : ''} por jugar`
     if (pos >= 3 && pts === 0 && played >= 2) return `${team} está eliminado (0 pts en 2 partidos)`
     return `${team} suma ${pts} pts (${pos}º en Grupo ${groupLetter})`
   }
@@ -293,4 +295,37 @@ async function computeStakes(
     lines.push('El ganador se consolida en el top 2 del grupo.')
   }
   return lines.join(' · ')
+}
+
+// ── Key players: top goleador/asistente por equipo ────────────────────────────
+// Lee de player_stats (poblada por scripts/sync-scorers.mjs).
+// Elige el jugador con más goles+asistencias de cada equipo.
+async function computeKeyPlayers(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  homeTeam: string,
+  awayTeam: string,
+): Promise<MatchContextData['keyPlayers']> {
+  const { data } = await supabase
+    .from('player_stats')
+    .select('team_name, player_name, goals, assists')
+    .in('team_name', [homeTeam, awayTeam])
+
+  if (!data || data.length === 0) return null
+
+  const topFor = (team: string) => {
+    const players = data
+      .filter(p => p.team_name === team)
+      .sort((a, b) => (b.goals + b.assists) - (a.goals + a.assists))
+    const p = players[0]
+    if (!p || (p.goals === 0 && p.assists === 0)) return null
+    const parts: string[] = []
+    if (p.goals > 0) parts.push(`${p.goals} gol${p.goals !== 1 ? 'es' : ''}`)
+    if (p.assists > 0) parts.push(`${p.assists} asist.`)
+    return { name: p.player_name, stat: parts.join(' · ') }
+  }
+
+  const home = topFor(homeTeam)
+  const away = topFor(awayTeam)
+  if (!home && !away) return null
+  return { home, away }
 }
