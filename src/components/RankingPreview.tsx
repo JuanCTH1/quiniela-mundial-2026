@@ -63,8 +63,8 @@ export function RankingPreview({ matchId, match, allPredictions, currentUserId, 
         filter: `id=eq.${matchId}`,
       }, payload => {
         const row = payload.new as Tables<'matches'>
-        setLiveHome(v => row.home_score_fulltime ?? v)
-        setLiveAway(v => row.away_score_fulltime ?? v)
+        setLiveHome(row.home_score_fulltime)
+        setLiveAway(row.away_score_fulltime)
       })
       .subscribe()
 
@@ -83,10 +83,8 @@ export function RankingPreview({ matchId, match, allPredictions, currentUserId, 
 
   useEffect(() => {
     async function calculateRanking() {
-      // liveHome puede arrancar null si el cron aún no corrió al cargar la página;
-      // fallback al prop para no mostrar ranking sin orden mientras llega el primer poll.
-      const scoreH = isFinished ? match.home_score_quiniela : (liveHome ?? match.home_score_fulltime ?? null)
-      const scoreA = isFinished ? match.away_score_quiniela : (liveAway ?? match.away_score_fulltime ?? null)
+      const scoreH = isFinished ? match.home_score_quiniela : liveHome
+      const scoreA = isFinished ? match.away_score_quiniela : liveAway
       const hasScore = scoreH != null && scoreA != null
 
       const withLocalPts = allPredictions
