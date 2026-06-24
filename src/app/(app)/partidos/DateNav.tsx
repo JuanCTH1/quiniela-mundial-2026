@@ -48,10 +48,10 @@ export function DateNav({ currentFecha, currentEtapa, timezone, availableDates }
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
-  // Solo scrollea si ya estamos en "Hoy" — si venimos de otra URL,
-  // el useEffect de SwipeNav lo maneja para evitar animación doble.
+  // Solo scrollea si ya estamos en /partidos sin params (Hoy puro).
+  // Si venimos de ?fecha=X o ?etapa=Y, SwipeNav lo maneja y evita el doble scroll.
   function handleTodayClick() {
-    const alreadyOnToday = pathname === '/partidos' && !searchParams.has('etapa')
+    const alreadyOnToday = pathname === '/partidos' && !searchParams.has('etapa') && !searchParams.has('fecha')
     if (!alreadyOnToday) return
     setTimeout(() => {
       document.getElementById('next-match')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -134,7 +134,7 @@ export function DateNav({ currentFecha, currentEtapa, timezone, availableDates }
               key={fecha}
               href={currentEtapa ? `/partidos?etapa=${currentEtapa}&fecha=${fecha}` : `/partidos?fecha=${fecha}`}
               style={glassDateChip(active)}
-              onClick={fecha === todayStr ? handleTodayClick : undefined}
+              onClick={undefined}
             >
               {formatDateLabel(fecha, timezone)}
             </Link>
