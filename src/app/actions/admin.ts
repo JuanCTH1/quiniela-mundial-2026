@@ -160,6 +160,38 @@ export async function adminActivateRealMode() {
   revalidatePath('/')
 }
 
+// ── Revisión de facts ─────────────────────────────────────────────────────────
+export async function adminApproveFact(factId: string) {
+  const { adminClient } = await requireAdmin()
+  const { error } = await adminClient
+    .from('match_facts')
+    .update({ reviewed: true })
+    .eq('id', factId)
+  if (error) throw new Error(error.message)
+  revalidatePath('/admin')
+}
+
+export async function adminRejectFact(factId: string) {
+  const { adminClient } = await requireAdmin()
+  const { error } = await adminClient
+    .from('match_facts')
+    .delete()
+    .eq('id', factId)
+  if (error) throw new Error(error.message)
+  revalidatePath('/admin')
+}
+
+export async function adminApproveAllFacts(matchId: string) {
+  const { adminClient } = await requireAdmin()
+  const { error } = await adminClient
+    .from('match_facts')
+    .update({ reviewed: true })
+    .eq('match_id', matchId)
+    .eq('reviewed', false)
+  if (error) throw new Error(error.message)
+  revalidatePath('/admin')
+}
+
 // ── Borrar pronósticos anteriores a un partido (limpieza de inicio) ───────────
 export async function adminDeletePredictionsBefore(matchId: string) {
   const { userId, adminClient } = await requireAdmin()

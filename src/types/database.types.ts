@@ -76,8 +76,11 @@ export type Database = {
           result_source: string | null
           scheduled_time: string
           stage: string
+          referee: string | null
+          referee_country: string | null
           status: string
           updated_at: string
+          venue_id: string | null
         }
         Insert: {
           actual_start_time?: string | null
@@ -96,11 +99,14 @@ export type Database = {
           id?: string
           is_placeholder?: boolean
           matchday?: number | null
+          referee?: string | null
+          referee_country?: string | null
           result_source?: string | null
           scheduled_time: string
           stage: string
           status?: string
           updated_at?: string
+          venue_id?: string | null
         }
         Update: {
           actual_start_time?: string | null
@@ -119,13 +125,100 @@ export type Database = {
           id?: string
           is_placeholder?: boolean
           matchday?: number | null
+          referee?: string | null
+          referee_country?: string | null
           result_source?: string | null
           scheduled_time?: string
           stage?: string
           status?: string
           updated_at?: string
+          venue_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "matches_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      match_facts: {
+        Row: {
+          body: string
+          category: string
+          created_at: string
+          id: string
+          match_id: string
+          position: number
+          reviewed: boolean
+          updated_at: string
+        }
+        Insert: {
+          body: string
+          category: string
+          created_at?: string
+          id?: string
+          match_id: string
+          position?: number
+          reviewed?: boolean
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          category?: string
+          created_at?: string
+          id?: string
+          match_id?: string
+          position?: number
+          reviewed?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_facts_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      match_odds: {
+        Row: {
+          bookmakers: number | null
+          match_id: string
+          prob_away: number | null
+          prob_draw: number | null
+          prob_home: number | null
+          updated_at: string
+        }
+        Insert: {
+          bookmakers?: number | null
+          match_id: string
+          prob_away?: number | null
+          prob_draw?: number | null
+          prob_home?: number | null
+          updated_at?: string
+        }
+        Update: {
+          bookmakers?: number | null
+          match_id?: string
+          prob_away?: number | null
+          prob_draw?: number | null
+          prob_home?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_odds_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: true
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       predictions: {
         Row: {
@@ -161,6 +254,72 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      team_metadata: {
+        Row: {
+          avg_age: number | null
+          avg_height: number | null
+          coach: string | null
+          team_name: string
+          updated_at: string
+        }
+        Insert: {
+          avg_age?: number | null
+          avg_height?: number | null
+          coach?: string | null
+          team_name: string
+          updated_at?: string
+        }
+        Update: {
+          avg_age?: number | null
+          avg_height?: number | null
+          coach?: string | null
+          team_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      venues: {
+        Row: {
+          capacity: number | null
+          city: string
+          country: string
+          created_at: string
+          id: string
+          image_url: string | null
+          latitude: number
+          longitude: number
+          name: string
+          opened_year: number | null
+          surface: string | null
+        }
+        Insert: {
+          capacity?: number | null
+          city: string
+          country: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          latitude: number
+          longitude: number
+          name: string
+          opened_year?: number | null
+          surface?: string | null
+        }
+        Update: {
+          capacity?: number | null
+          city?: string
+          country?: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          latitude?: number
+          longitude?: number
+          name?: string
+          opened_year?: number | null
+          surface?: string | null
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
