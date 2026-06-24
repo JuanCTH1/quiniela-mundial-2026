@@ -13,6 +13,8 @@ type MatchSlim = Pick<Tables<'matches'>,
 type LiveMatchSlim = MatchSlim & {
   home_score_fulltime: number | null
   away_score_fulltime: number | null
+  current_minute: number | null
+  current_period: string | null
 }
 
 type Pred = { home_score: number | null; away_score: number | null } | null
@@ -26,6 +28,18 @@ interface Props {
   bloqueoMinutos: number
   timezone: string
   theme?: Theme
+}
+
+// Etiqueta de tiempo para mostrar en el banner
+// 1T/2T/ET1/ET2 → muestra el minuto; MT/MTE/PEN → etiqueta fija
+function formatMatchTime(period: string | null, minute: number | null): string | null {
+  if (!period) return null
+  if (period === 'MT') return 'MT'
+  if (period === 'MTE') return 'MTE'
+  if (period === 'PEN') return 'PEN'
+  if (minute != null) return `${minute}'`
+  if (period === 'ET1' || period === 'ET2') return 'ET'
+  return null
 }
 
 export function NextMatchBanner({ liveMatches, liveMatch, nextMatch, prediction, livePredictions = [], bloqueoMinutos, timezone, theme = 'mexico' }: Props) {
@@ -62,6 +76,7 @@ export function NextMatchBanner({ liveMatches, liveMatch, nextMatch, prediction,
           const awayFlag = getTeamFlag(m.away_team)
           const h = m.home_score_fulltime ?? '–'
           const a = m.away_score_fulltime ?? '–'
+          const timeLabel = formatMatchTime(m.current_period, m.current_minute)
 
           return (
             <Link key={m.id} href={`/partido/${m.id}`} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6, marginTop: i > 0 ? 4 : 0 }}>
@@ -72,6 +87,9 @@ export function NextMatchBanner({ liveMatches, liveMatch, nextMatch, prediction,
                 <span style={{ fontWeight: 800, color: 'var(--warning)', margin: '0 5px' }}>{h}–{a}</span>
                 <span style={{ fontWeight: 600 }}>{awayAbbr}</span>
                 {awayFlag}
+                {timeLabel && (
+                  <span style={{ fontSize: 10, color: 'var(--warning)', marginLeft: 5, opacity: 0.85 }}>{timeLabel}</span>
+                )}
               </span>
 
               {/* Prediction side */}
@@ -112,6 +130,11 @@ export function NextMatchBanner({ liveMatches, liveMatch, nextMatch, prediction,
               <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--warning)', letterSpacing: 2 }}>
                 {liveMatch.home_score_fulltime ?? '–'} – {liveMatch.away_score_fulltime ?? '–'}
               </div>
+              {formatMatchTime(liveMatch.current_period, liveMatch.current_minute) && (
+                <div style={{ fontSize: 10, color: 'var(--warning)', opacity: 0.85 }}>
+                  {formatMatchTime(liveMatch.current_period, liveMatch.current_minute)}
+                </div>
+              )}
               {hasPred && (
                 <div style={{ fontSize: 10, color: 'var(--text-dim)' }}>
                   {t.texts.you.toLowerCase()}: {prediction!.home_score}–{prediction!.away_score}

@@ -173,6 +173,7 @@ export type Database = {
           away_team: string
           created_at: string
           current_minute: number | null
+          current_period: string | null
           early_unlock_at: string | null
           external_id: number | null
           group_name: string | null
@@ -200,6 +201,7 @@ export type Database = {
           away_team: string
           created_at?: string
           current_minute?: number | null
+          current_period?: string | null
           early_unlock_at?: string | null
           external_id?: number | null
           group_name?: string | null
@@ -227,6 +229,7 @@ export type Database = {
           away_team?: string
           created_at?: string
           current_minute?: number | null
+          current_period?: string | null
           early_unlock_at?: string | null
           external_id?: number | null
           group_name?: string | null

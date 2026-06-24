@@ -72,6 +72,7 @@ export async function GET(request: NextRequest) {
         home_score_regular: apiMatch.score.regularTime?.home ?? null,
         away_score_regular: apiMatch.score.regularTime?.away ?? null,
         current_minute: apiStatus === 'IN_PROGRESS' ? (apiMatch.minute ?? null) : null,
+        current_period: derivePeriod(apiMatch.status, apiMatch.minute),
         ...(isFinished && {
           home_score_quiniela: quiniela!.home,
           away_score_quiniela: quiniela!.away,
@@ -148,6 +149,19 @@ export async function GET(request: NextRequest) {
   )
 
   return NextResponse.json({ ok: true, ...results })
+}
+
+// Periodo del partido a partir del status raw de la API + minuto
+// Valores: 1T, MT, 2T, ET1, MTE, ET2, PEN — null cuando no está en juego
+function derivePeriod(rawStatus: string, minute: number | null | undefined): string | null {
+  if (rawStatus === 'PAUSED') return (minute != null && minute > 90) ? 'MTE' : 'MT'
+  if (rawStatus !== 'IN_PLAY') return null
+  if (minute == null) return '1T'
+  if (minute <= 45) return '1T'
+  if (minute <= 90) return '2T'
+  if (minute <= 105) return 'ET1'
+  if (minute <= 120) return 'ET2'
+  return 'PEN'
 }
 
 async function logEntry(

@@ -9,6 +9,8 @@ type MatchSlim = Pick<Tables<'matches'>,
 type LiveMatchSlim = MatchSlim & {
   home_score_fulltime: number | null
   away_score_fulltime: number | null
+  current_minute: number | null
+  current_period: string | null
 }
 
 type Pred = { home_score: number | null; away_score: number | null }
