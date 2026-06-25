@@ -1,5 +1,35 @@
 # Changelog — Quiniela Overrated 2026
 
+## [Live + Knockout Sync] — 2026-06-25
+
+### Features
+- **`LiveTimeLabel` (client component)**: muestra el minuto aproximado del partido (`~47' · 1T`) ticking cada 30s cuando la API no envía `minute`. Cuando sí lo envía, muestra el valor exacto. Periodos fijos (MT, MTE, PEN) no tican.
+- **`GoalList` (server component)**: muestra `⚽ 23' Vinícius Jr. (og/p)` debajo de cada bandera en tarjetas de partido y detalle. Aparece en partidos en vivo y finalizados.
+- **`LiveRefresher` (client component)**: llama `router.refresh()` cada 20s cuando hay partidos en vivo, actualizando los datos server-rendered de la lista de partidos sin recargar la página.
+- **Goals JSONB en la DB**: columna `goals` en `matches` almacena array de `GoalEntry` (`minute, injuryTime, scorer, side, type`). El cron la rellena vía `extractGoals()` en cada tick.
+- **`extra_time_start_time`**: timestamp que registra cuándo arranca la prórroga para calcular minuto aproximado en ET1/ET2.
+
+### Fixes
+- **Banner de partido en vivo**: poll reducido de 12s → 5s para que los goles aparezcan más rápido.
+- **Water-break en `derivePeriod`**: PAUSED con minuto <43 ya no devuelve 'MT' — se queda en el periodo actual (cooling/water break dentro del 1T).
+- **`minute` en `ApiMatch`**: campo caído por merge automático; readded manualmente.
+
+### Infraestructura — Knockout sync
+- **Endpoint `/api/cron/sync-fixtures`**: actualiza `home_team`, `away_team`, `is_placeholder`, `scheduled_time` de partidos placeholder cuando la API confirma los equipos reales. Nunca toca scores ni predicciones.
+- **pg_cron `sync-fixtures`**: corre cada hora Jun 27–30 Jun y 1–19 Jul. Primera corrida manual actualizó Sudáfrica vs Canadá (28 Jun 19:00 UTC).
+- **`generate-facts-r32`**: corregido de Jul 2 → **Jun 27** (R32 empieza Jun 28).
+- **`generate-facts-r16`**: **agregado** para Jul 3 (R16 empieza Jul 4 — faltaba completamente).
+- **`generate-facts-qf`**: adelantado de Jul 9 → **Jul 8** (un día antes del primer QF).
+
+### Migraciones
+- `21_second_half_start_time.sql` — columna `second_half_start_time TIMESTAMPTZ`
+- `22_extra_time_start_time.sql` — columna `extra_time_start_time TIMESTAMPTZ`
+- `23_goals_column.sql` — columna `goals JSONB DEFAULT '[]'`
+- `24_sync_fixtures_cron.sql` — crons sync-fixtures (Jun–Jul) + fix generate-facts-r32
+- `25_generate_facts_r16.sql` — generate-facts-r16 (Jul 3) + generate-facts-qf a Jul 8
+
+---
+
 ## [Sorteo] — 2026-06-22
 
 ### Features
