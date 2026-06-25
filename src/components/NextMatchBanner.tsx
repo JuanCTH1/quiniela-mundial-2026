@@ -1,10 +1,13 @@
 'use client'
 
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 import { Countdown } from './Countdown'
-import { getTeamFlag, getLockTime } from '@/lib/utils'
+import { getTeamFlag, getTeamAbbr, getLockTime } from '@/lib/utils'
 import { getTheme, type Theme } from '@/lib/themes'
+import { LiveTimeLabel } from './LiveTimeLabel'
 import type { Tables } from '@/types/database.types'
 
 type MatchSlim = Pick<Tables<'matches'>,
@@ -13,26 +16,170 @@ type MatchSlim = Pick<Tables<'matches'>,
 type LiveMatchSlim = MatchSlim & {
   home_score_fulltime: number | null
   away_score_fulltime: number | null
+  current_minute: number | null
+  current_period: string | null
+  actual_start_time: string | null
+  second_half_start_time: string | null
+  extra_time_start_time: string | null
+}
+
+type Pred = { home_score: number | null; away_score: number | null } | null
+
+// Marcador/tiempo mutable de un partido en vivo (se actualiza en tiempo real)
+type LiveScore = {
+  home: number | null; away: number | null
+  minute: number | null; period: string | null
+  actualStart: string | null; secondHalfStart: string | null; extraTimeStart: string | null
+}
+
+function initScores(matches: LiveMatchSlim[]): Record<string, LiveScore> {
+  return Object.fromEntries(matches.map(m => [m.id, {
+    home: m.home_score_fulltime, away: m.away_score_fulltime,
+    minute: m.current_minute, period: m.current_period,
+    actualStart: m.actual_start_time, secondHalfStart: m.second_half_start_time, extraTimeStart: m.extra_time_start_time,
+  }]))
 }
 
 interface Props {
+  liveMatches: LiveMatchSlim[]
   liveMatch: LiveMatchSlim | null
   nextMatch: MatchSlim | null
-  prediction?: { home_score: number | null; away_score: number | null } | null
+  prediction?: Pred
+  livePredictions?: Pred[]
   bloqueoMinutos: number
   timezone: string
   theme?: Theme
 }
 
-export function NextMatchBanner({ liveMatch, nextMatch, prediction, bloqueoMinutos, timezone, theme = 'mexico' }: Props) {
+export function NextMatchBanner({ liveMatches, liveMatch, nextMatch, prediction, livePredictions = [], bloqueoMinutos, timezone, theme = 'mexico' }: Props) {
   const pathname = usePathname()
+  const router = useRouter()
   const t = getTheme(theme)
 
-  if (pathname.startsWith('/partido/')) return null
-  if (!liveMatch && !nextMatch) return null
+  // El banner es server-rendered: sin esto el marcador quedaría congelado.
+  // Mantenemos los marcadores en vivo al día por realtime + polling.
+  const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null)
+  const [liveScores, setLiveScores] = useState<Record<string, LiveScore>>(() => initScores(liveMatches))
+  const idsKey = liveMatches.map(m => m.id).join(',')
 
+  useEffect(() => {
+    setLiveScores(initScores(liveMatches))
+    if (pathname.startsWith('/partido/')) return
+    const ids = liveMatches.map(m => m.id)
+    if (ids.length === 0) return
+
+    if (!supabaseRef.current) supabaseRef.current = createClient()
+    const sb = supabaseRef.current
+
+    const channel = sb.channel('live-banner')
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'matches' }, payload => {
+        const row = payload.new as Tables<'matches'>
+        if (!ids.includes(row.id)) return
+        // Si el partido dejó de estar en vivo, recargamos la lista del servidor
+        if (row.status !== 'IN_PROGRESS') { router.refresh(); return }
+        setLiveScores(prev => ({ ...prev, [row.id]: {
+          home: row.home_score_fulltime, away: row.away_score_fulltime,
+          minute: row.current_minute, period: row.current_period,
+          actualStart: row.actual_start_time, secondHalfStart: row.second_half_start_time, extraTimeStart: row.extra_time_start_time,
+        } }))
+      })
+      .subscribe()
+
+    const poll = setInterval(async () => {
+      const { data } = await sb.from('matches')
+        .select('id, home_score_fulltime, away_score_fulltime, current_minute, current_period, status, actual_start_time, second_half_start_time, extra_time_start_time')
+        .in('id', ids)
+      if (!data) return
+      if (data.some(m => m.status !== 'IN_PROGRESS')) { router.refresh(); return }
+      setLiveScores(prev => {
+        const next = { ...prev }
+        for (const m of data) next[m.id] = {
+          home: m.home_score_fulltime, away: m.away_score_fulltime,
+          minute: m.current_minute, period: m.current_period,
+          actualStart: m.actual_start_time, secondHalfStart: m.second_half_start_time, extraTimeStart: m.extra_time_start_time,
+        }
+        return next
+      })
+    }, 5_000)
+
+    return () => { sb.removeChannel(channel); clearInterval(poll) }
+    // liveMatches/router son estables para un mismo idsKey
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [idsKey, pathname])
+
+  const scoreFor = (m: LiveMatchSlim): LiveScore => liveScores[m.id] ?? {
+    home: m.home_score_fulltime, away: m.away_score_fulltime,
+    minute: m.current_minute, period: m.current_period,
+    actualStart: m.actual_start_time, secondHalfStart: m.second_half_start_time, extraTimeStart: m.extra_time_start_time,
+  }
+
+  if (pathname.startsWith('/partido/')) return null
+  if (liveMatches.length === 0 && !nextMatch) return null
+
+  // ── Dual live match banner (Option 1) ──────────────────────────────────────
+  if (liveMatches.length >= 2) {
+    return (
+      <div style={{
+        background: 'color-mix(in srgb, var(--warning) 10%, transparent)',
+        padding: '6px 14px 8px',
+      }}>
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
+          <div style={{ fontSize: 10, color: 'var(--warning)', fontWeight: 700, animation: 'dot-pulse 1.5s ease-in-out infinite' }}>
+            ● {liveMatches.length} {t.texts.liveNow.replace(/^●\s*/, '')}
+          </div>
+          <Link href="/partidos" style={{ fontSize: 10, color: 'var(--text-dim)', textDecoration: 'none' }}>
+            ver Hoy →
+          </Link>
+        </div>
+
+        {/* Rows */}
+        {liveMatches.map((m, i) => {
+          const pred = livePredictions[i]
+          const hasPred = pred?.home_score != null
+          const homeAbbr = getTeamAbbr(m.home_team)
+          const awayAbbr = getTeamAbbr(m.away_team)
+          const homeFlag = getTeamFlag(m.home_team)
+          const awayFlag = getTeamFlag(m.away_team)
+          const sc = scoreFor(m)
+          const h = sc.home ?? '–'
+          const a = sc.away ?? '–'
+
+          return (
+            <Link key={m.id} href={`/partido/${m.id}`} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6, marginTop: i > 0 ? 4 : 0 }}>
+              {/* Score side */}
+              <span style={{ fontSize: 13, color: 'var(--text-main)', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>
+                {homeFlag}
+                <span style={{ fontWeight: 600, marginLeft: 3 }}>{homeAbbr}</span>
+                <span style={{ fontWeight: 800, color: 'var(--warning)', margin: '0 5px' }}>{h}–{a}</span>
+                <span style={{ fontWeight: 600 }}>{awayAbbr}</span>
+                {awayFlag}
+                <LiveTimeLabel
+                  period={sc.period} minute={sc.minute}
+                  actualStartTime={sc.actualStart} secondHalfStartTime={sc.secondHalfStart} extraTimeStartTime={sc.extraTimeStart}
+                  style={{ fontSize: 10, color: 'var(--warning)', marginLeft: 5, opacity: 0.85 }}
+                />
+              </span>
+
+              {/* Prediction side */}
+              {hasPred ? (
+                <span style={{ fontSize: 11, color: 'var(--text-dim)', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                  {t.texts.you.toLowerCase()} <span style={{ fontWeight: 700, color: 'var(--text-muted)' }}>{pred!.home_score}–{pred!.away_score}</span>
+                </span>
+              ) : (
+                <span style={{ fontSize: 11, color: 'var(--text-dim)', flexShrink: 0 }}>—</span>
+              )}
+            </Link>
+          )
+        })}
+      </div>
+    )
+  }
+
+  // ── Single live match banner ────────────────────────────────────────────────
   if (liveMatch) {
     const hasPred = prediction?.home_score != null
+    const sc = scoreFor(liveMatch)
     return (
       <div>
         <Link href={`/partido/${liveMatch.id}`} style={{ textDecoration: 'none', display: 'block' }}>
@@ -51,8 +198,13 @@ export function NextMatchBanner({ liveMatch, nextMatch, prediction, bloqueoMinut
             </div>
             <div style={{ textAlign: 'right', flexShrink: 0 }}>
               <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--warning)', letterSpacing: 2 }}>
-                {liveMatch.home_score_fulltime ?? '–'} – {liveMatch.away_score_fulltime ?? '–'}
+                {sc.home ?? '–'} – {sc.away ?? '–'}
               </div>
+              <LiveTimeLabel
+                period={sc.period} minute={sc.minute}
+                actualStartTime={sc.actualStart} secondHalfStartTime={sc.secondHalfStart} extraTimeStartTime={sc.extraTimeStart}
+                style={{ fontSize: 10, color: 'var(--warning)', opacity: 0.85 }}
+              />
               {hasPred && (
                 <div style={{ fontSize: 10, color: 'var(--text-dim)' }}>
                   {t.texts.you.toLowerCase()}: {prediction!.home_score}–{prediction!.away_score}
@@ -82,6 +234,7 @@ export function NextMatchBanner({ liveMatch, nextMatch, prediction, bloqueoMinut
     )
   }
 
+  // ── Next match banner ───────────────────────────────────────────────────────
   const lockTime = getLockTime(nextMatch!.scheduled_time, bloqueoMinutos)
   const isLocked = Date.now() >= lockTime.getTime()
   const hasPred = prediction?.home_score != null

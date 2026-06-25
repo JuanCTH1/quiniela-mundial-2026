@@ -6,8 +6,10 @@ import { PredictionForm } from '@/components/PredictionForm'
 import { RankingPreview } from '@/components/RankingPreview'
 import { isMatchLocked, STAGE_LABELS } from '@/lib/utils'
 import { TeamFlag } from '@/components/TeamFlag'
+import { GoalList } from '@/components/GoalList'
 import { getTheme, type Theme } from '@/lib/themes'
 import { LiveMatchClient } from './LiveMatchClient'
+import type { GoalEntry } from '@/lib/football-data'
 import { MatchContext } from '@/components/MatchContext'
 import { getMatchContext } from '@/lib/match-context'
 import Link from 'next/link'
@@ -117,6 +119,9 @@ export default async function PartidoPage({ params }: { params: Promise<{ id: st
           <div style={{ flex: 1, textAlign: 'center' }}>
             <TeamFlag name={match.home_team} size={36} />
             <div style={{ fontSize: 15, fontWeight: 700, marginTop: 4 }}>{match.home_team}</div>
+            {(isLive || isFinished) && (
+              <GoalList goals={(match.goals as GoalEntry[] | null) ?? []} side="home" align="right" />
+            )}
           </div>
 
           <div style={{ minWidth: 80, textAlign: 'center' }}>
@@ -125,6 +130,11 @@ export default async function PartidoPage({ params }: { params: Promise<{ id: st
                 matchId={id}
                 initialHomeScore={isFinished ? match.home_score_quiniela : match.home_score_fulltime}
                 initialAwayScore={isFinished ? match.away_score_quiniela : match.away_score_fulltime}
+                initialMinute={isLive ? match.current_minute : null}
+                initialPeriod={isLive ? match.current_period : null}
+                initialActualStartTime={isLive ? match.actual_start_time : null}
+                initialSecondHalfStartTime={isLive ? match.second_half_start_time : null}
+                initialExtraTimeStartTime={isLive ? match.extra_time_start_time : null}
                 isLive={isLive}
                 isFinished={isFinished}
                 predictions={predictions}
@@ -141,6 +151,9 @@ export default async function PartidoPage({ params }: { params: Promise<{ id: st
           <div style={{ flex: 1, textAlign: 'center' }}>
             <TeamFlag name={match.away_team} size={36} />
             <div style={{ fontSize: 15, fontWeight: 700, marginTop: 4 }}>{match.away_team}</div>
+            {(isLive || isFinished) && (
+              <GoalList goals={(match.goals as GoalEntry[] | null) ?? []} side="away" align="left" />
+            )}
           </div>
         </div>
       </div>

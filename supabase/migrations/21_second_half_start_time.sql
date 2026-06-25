@@ -1,0 +1,1 @@
+ALTER TABLE matches ADD COLUMN IF NOT EXISTS second_half_start_time TIMESTAMPTZ;

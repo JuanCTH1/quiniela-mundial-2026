@@ -19,18 +19,21 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const [profile, settings, liveMatchRes, nextMatchRes, alertRes] = await Promise.all([
     getProfile(user.id),
     getSettings(),
-    // Partido en vivo primero
+    // Partidos en vivo (hasta 4 simultáneos; el banner los lista todos)
     supabase.from('matches')
-      .select('id, home_team, away_team, scheduled_time, early_unlock_at, stage, group_name, home_score_fulltime, away_score_fulltime')
+      .select('id, home_team, away_team, scheduled_time, early_unlock_at, stage, group_name, home_score_fulltime, away_score_fulltime, current_minute, current_period, actual_start_time, second_half_start_time, extra_time_start_time')
       .eq('status', 'IN_PROGRESS')
-      .order('scheduled_time').limit(1).maybeSingle(),
+      .order('scheduled_time').limit(4),
     // Siguiente programado
     supabase.from('matches')
       .select('id, home_team, away_team, scheduled_time, early_unlock_at, stage, group_name')
       .eq('status', 'SCHEDULED')
       .gte('scheduled_time', new Date().toISOString())
       .order('scheduled_time').limit(1).maybeSingle(),
-    supabase.from('system_logs').select('message, created_at').eq('is_error', true)
+    // Solo alertas que el jugador debe ver (partido atascado sin actualizar).
+    // Los errores transitorios del cron (fetch failed, etc.) viven en el panel
+    // de salud del admin, no en una banda roja para los 6 jugadores.
+    supabase.from('system_logs').select('message, created_at').eq('log_type', 'FAILSAFE_ALERT')
       .gte('created_at', new Date(Date.now() - 2 * 3_600_000).toISOString())
       .order('created_at', { ascending: false }).limit(1).maybeSingle(),
   ])
@@ -40,10 +43,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const timezone = profile?.timezone ?? 'America/Mexico_City'
 
   const theme = (profile?.theme as Theme) ?? 'mexico'
-  const liveMatch = liveMatchRes.data ?? null
+  const liveMatches = liveMatchRes.data ?? []
   const nextMatch = nextMatchRes.data ?? null
 
-  const bannerSkeleton = (liveMatch || nextMatch) ? (
+  const bannerSkeleton = (liveMatches.length > 0 || nextMatch) ? (
     <div style={{ height: 52, background: 'var(--glass-bg)' }} />
   ) : null
 
@@ -64,7 +67,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         )}
         <Suspense fallback={bannerSkeleton}>
           <NextMatchBannerWrapper
-            liveMatch={liveMatch}
+            liveMatches={liveMatches}
             nextMatch={nextMatch}
             userId={user.id}
             bloqueoMinutos={bloqueoMinutos}

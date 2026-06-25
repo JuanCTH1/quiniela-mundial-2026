@@ -172,8 +172,12 @@ export type Database = {
           away_score_regular: number | null
           away_team: string
           created_at: string
+          current_minute: number | null
+          current_period: string | null
           early_unlock_at: string | null
           external_id: number | null
+          extra_time_start_time: string | null
+          goals: Json | null
           group_name: string | null
           home_score_fulltime: number | null
           home_score_quiniela: number | null
@@ -186,6 +190,7 @@ export type Database = {
           referee_country: string | null
           result_source: string | null
           scheduled_time: string
+          second_half_start_time: string | null
           stage: string
           status: string
           updated_at: string
@@ -198,8 +203,12 @@ export type Database = {
           away_score_regular?: number | null
           away_team: string
           created_at?: string
+          current_minute?: number | null
+          current_period?: string | null
           early_unlock_at?: string | null
           external_id?: number | null
+          extra_time_start_time?: string | null
+          goals?: Json | null
           group_name?: string | null
           home_score_fulltime?: number | null
           home_score_quiniela?: number | null
@@ -212,6 +221,7 @@ export type Database = {
           referee_country?: string | null
           result_source?: string | null
           scheduled_time: string
+          second_half_start_time?: string | null
           stage: string
           status?: string
           updated_at?: string
@@ -224,8 +234,12 @@ export type Database = {
           away_score_regular?: number | null
           away_team?: string
           created_at?: string
+          current_minute?: number | null
+          current_period?: string | null
           early_unlock_at?: string | null
           external_id?: number | null
+          extra_time_start_time?: string | null
+          goals?: Json | null
           group_name?: string | null
           home_score_fulltime?: number | null
           home_score_quiniela?: number | null
@@ -238,6 +252,7 @@ export type Database = {
           referee_country?: string | null
           result_source?: string | null
           scheduled_time?: string
+          second_half_start_time?: string | null
           stage?: string
           status?: string
           updated_at?: string
@@ -469,7 +484,7 @@ export type Database = {
         }
         Insert: {
           probability?: number
-          team_name?: string
+          team_name: string
           updated_at?: string
         }
         Update: {
