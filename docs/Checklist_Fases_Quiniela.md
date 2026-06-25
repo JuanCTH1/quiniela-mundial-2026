@@ -114,11 +114,14 @@ Estos puntos son gates específicos de la implementación real, complementarios 
 - [ ] Si el partido ya está bloqueado, el form muestra "🔒 Cerrado para pronósticos" y no tiene inputs activos.
 
 #### Vista de partido en vivo
-- [ ] En partidos IN_PROGRESS, el marcador actual se actualiza via Supabase Realtime (postgres_changes en la tabla `matches`).
-- [ ] Se muestran los pronósticos de todos + puntos tentativos con el marcador actual.
-- [ ] Pequeño ranking tentativo visible (quién va ganando ahora mismo con este marcador).
-- [ ] Indicador visual "● En juego" claramente distinguible.
-- [ ] Aclarado con el grupo: el tier gratuito de football-data.org da actualizaciones IN_PROGRESS con ~5-15 min de delay — esto es aceptable para la quiniela.
+- [x] En partidos IN_PROGRESS, el marcador actual se actualiza via Supabase Realtime (postgres_changes en la tabla `matches`). ✅
+- [x] Se muestran los pronósticos de todos + puntos tentativos con el marcador actual. ✅
+- [x] Pequeño ranking tentativo visible (quién va ganando ahora mismo con este marcador). ✅ (RankingPreview en MatchCard)
+- [x] Indicador visual "● En juego" claramente distinguible. ✅ (borde naranja, animación live-pulse, label "EN JUEGO")
+- [x] Aclarado con el grupo: el tier gratuito de football-data.org da actualizaciones IN_PROGRESS con ~5-15 min de delay — esto es aceptable para la quiniela. ✅
+- [x] **Goles en vivo**: `⚽ 23' Scorer (og/p)` debajo de cada bandera en tarjetas y detalle. ✅ (GoalList + goals JSONB, Jun 25)
+- [x] **Minuto en vivo**: `~47' · 2T` estimado cada 30s o exacto cuando la API lo envía. ✅ (LiveTimeLabel, Jun 25)
+- [x] **Auto-refresh lista**: LiveRefresher llama `router.refresh()` cada 20s cuando hay partidos en vivo. ✅ (Jun 25)
 
 #### Navegación de partidos
 - [ ] Tabs de etapa: Grupos → 32avos → Octavos → Cuartos → Semis → 3er lugar → Final.
@@ -152,8 +155,8 @@ Estos puntos son gates específicos de la implementación real, complementarios 
 
 #### Equipos placeholder
 - [ ] Los partidos de eliminatoria con equipos "por definir" muestran texto descriptivo (e.g. "Ganador Grupo A").
-- [ ] El cron de actualización detecta automáticamente cuando la API ya devuelve el nombre real y actualiza `matches`.
-- [ ] Una vez actualizado, el banner y las tarjetas reflejan el nombre real sin intervención manual.
+- [x] El cron de actualización detecta automáticamente cuando la API ya devuelve el nombre real y actualiza `matches`. ✅ `/api/cron/sync-fixtures` hourly Jun 27–Jul 19; primera corrida manual actualizó Sudáfrica vs Canadá (Jun 25).
+- [x] Una vez actualizado, el banner y las tarjetas reflejan el nombre real sin intervención manual. ✅
 
 #### Flags
 - [ ] Cada equipo muestra su bandera emoji en tarjetas, banner y detalle del partido.
