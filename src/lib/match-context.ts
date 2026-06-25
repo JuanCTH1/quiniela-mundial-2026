@@ -175,18 +175,39 @@ async function computeH2H(
   supabase: Awaited<ReturnType<typeof createClient>>,
   homeTeam: string, awayTeam: string,
 ): Promise<MatchContextData['h2h']> {
-  const { data } = await supabase
-    .from('matches')
-    .select('home_team, away_team, home_score_fulltime, away_score_fulltime')
-    .eq('status', 'FINISHED')
-    .or(`and(home_team.eq.${homeTeam},away_team.eq.${awayTeam}),and(home_team.eq.${awayTeam},away_team.eq.${homeTeam})`)
-  const games = (data ?? []).filter(m => m.home_score_fulltime != null && m.away_score_fulltime != null)
-  if (games.length === 0) return null
+  const teamA = homeTeam < awayTeam ? homeTeam : awayTeam
+  const teamB = homeTeam < awayTeam ? awayTeam : homeTeam
+
+  const [currentRes, historicalRes] = await Promise.all([
+    supabase
+      .from('matches')
+      .select('home_team, away_team, home_score_fulltime, away_score_fulltime')
+      .eq('status', 'FINISHED')
+      .or(`and(home_team.eq.${homeTeam},away_team.eq.${awayTeam}),and(home_team.eq.${awayTeam},away_team.eq.${homeTeam})`),
+    supabase
+      .from('h2h_history')
+      .select('team_a, team_b, team_a_goals, team_b_goals')
+      .eq('team_a', teamA)
+      .eq('team_b', teamB),
+  ])
+
   let homeWins = 0, draws = 0, awayWins = 0
-  for (const m of games) {
+
+  for (const m of (currentRes.data ?? []).filter(m => m.home_score_fulltime != null && m.away_score_fulltime != null)) {
     const r = resultFor(homeTeam, m.home_team, m.away_team, m.home_score_fulltime!, m.away_score_fulltime!)
     if (r === 'W') homeWins++; else if (r === 'L') awayWins++; else draws++
   }
+
+  for (const h of (historicalRes.data ?? [])) {
+    const homeIsA = homeTeam === h.team_a
+    const aGoals = h.team_a_goals, bGoals = h.team_b_goals
+    if (aGoals > bGoals) { homeIsA ? homeWins++ : awayWins++ }
+    else if (aGoals < bGoals) { homeIsA ? awayWins++ : homeWins++ }
+    else draws++
+  }
+
+  const total = homeWins + draws + awayWins
+  if (total === 0) return null
   return { homeWins, draws, awayWins }
 }
 
