@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { fetchMatch, resolveQuinielaScore, normalizeStage, normalizeStatus } from '@/lib/football-data'
+import { fetchMatch, resolveQuinielaScore, normalizeStage, normalizeStatus, extractGoals } from '@/lib/football-data'
 import type { TablesInsert } from '@/types/database.types'
 
 const FAILSAFE_HOURS = 3
@@ -77,6 +77,7 @@ export async function GET(request: NextRequest) {
         away_score_regular: apiMatch.score.regularTime?.away ?? null,
         current_minute: apiStatus === 'IN_PROGRESS' ? (apiMatch.minute ?? null) : null,
         current_period: newPeriod,
+        goals: extractGoals(apiMatch) as unknown as import('@/types/database.types').Json,
         ...(isFinished && {
           home_score_quiniela: quiniela!.home,
           away_score_quiniela: quiniela!.away,

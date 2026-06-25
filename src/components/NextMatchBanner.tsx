@@ -100,7 +100,7 @@ export function NextMatchBanner({ liveMatches, liveMatch, nextMatch, prediction,
         }
         return next
       })
-    }, 12_000)
+    }, 5_000)
 
     return () => { sb.removeChannel(channel); clearInterval(poll) }
     // liveMatches/router son estables para un mismo idsKey

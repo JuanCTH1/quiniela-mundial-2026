@@ -6,8 +6,10 @@ import { PredictionForm } from '@/components/PredictionForm'
 import { RankingPreview } from '@/components/RankingPreview'
 import { isMatchLocked, STAGE_LABELS } from '@/lib/utils'
 import { TeamFlag } from '@/components/TeamFlag'
+import { GoalList } from '@/components/GoalList'
 import { getTheme, type Theme } from '@/lib/themes'
 import { LiveMatchClient } from './LiveMatchClient'
+import type { GoalEntry } from '@/lib/football-data'
 import { MatchContext } from '@/components/MatchContext'
 import { getMatchContext } from '@/lib/match-context'
 import Link from 'next/link'
@@ -117,6 +119,9 @@ export default async function PartidoPage({ params }: { params: Promise<{ id: st
           <div style={{ flex: 1, textAlign: 'center' }}>
             <TeamFlag name={match.home_team} size={36} />
             <div style={{ fontSize: 15, fontWeight: 700, marginTop: 4 }}>{match.home_team}</div>
+            {(isLive || isFinished) && (
+              <GoalList goals={(match.goals as GoalEntry[] | null) ?? []} side="home" align="right" />
+            )}
           </div>
 
           <div style={{ minWidth: 80, textAlign: 'center' }}>
@@ -146,6 +151,9 @@ export default async function PartidoPage({ params }: { params: Promise<{ id: st
           <div style={{ flex: 1, textAlign: 'center' }}>
             <TeamFlag name={match.away_team} size={36} />
             <div style={{ fontSize: 15, fontWeight: 700, marginTop: 4 }}>{match.away_team}</div>
+            {(isLive || isFinished) && (
+              <GoalList goals={(match.goals as GoalEntry[] | null) ?? []} side="away" align="left" />
+            )}
           </div>
         </div>
       </div>

@@ -177,6 +177,7 @@ export type Database = {
           early_unlock_at: string | null
           external_id: number | null
           extra_time_start_time: string | null
+          goals: Json | null
           group_name: string | null
           home_score_fulltime: number | null
           home_score_quiniela: number | null
@@ -207,6 +208,7 @@ export type Database = {
           early_unlock_at?: string | null
           external_id?: number | null
           extra_time_start_time?: string | null
+          goals?: Json | null
           group_name?: string | null
           home_score_fulltime?: number | null
           home_score_quiniela?: number | null
@@ -237,6 +239,7 @@ export type Database = {
           early_unlock_at?: string | null
           external_id?: number | null
           extra_time_start_time?: string | null
+          goals?: Json | null
           group_name?: string | null
           home_score_fulltime?: number | null
           home_score_quiniela?: number | null

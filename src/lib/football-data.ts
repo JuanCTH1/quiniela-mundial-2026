@@ -8,6 +8,14 @@ interface ApiScore {
   duration: 'REGULAR' | 'EXTRA_TIME' | 'PENALTY_SHOOTOUT'
 }
 
+export interface ApiGoal {
+  minute: number | null
+  injuryTime: number | null
+  type: 'REGULAR' | 'OWN_GOAL' | 'PENALTY'
+  team: { id: number; name: string }
+  scorer: { id: number; name: string; shortName?: string | null }
+}
+
 export interface ApiMatch {
   id: number
   utcDate: string
@@ -19,10 +27,35 @@ export interface ApiMatch {
   stage: string
   group: string | null
   matchday: number | null
-  homeTeam: { name: string; shortName?: string }
-  awayTeam: { name: string; shortName?: string }
+  homeTeam: { id: number; name: string; shortName?: string }
+  awayTeam: { id: number; name: string; shortName?: string }
   score: ApiScore
+  goals?: ApiGoal[]
   lastUpdated: string
+}
+
+// Formato simplificado que guardamos en la DB (JSONB)
+export interface GoalEntry {
+  minute: number
+  injuryTime?: number | null
+  scorer: string
+  side: 'home' | 'away'
+  type: 'REGULAR' | 'OWN_GOAL' | 'PENALTY'
+}
+
+export function extractGoals(apiMatch: ApiMatch): GoalEntry[] {
+  if (!apiMatch.goals?.length) return []
+  const homeId = apiMatch.homeTeam.id
+  return apiMatch.goals
+    .filter(g => g.minute != null)
+    .map(g => ({
+      minute: g.minute!,
+      injuryTime: g.injuryTime ?? null,
+      scorer: g.scorer.shortName || g.scorer.name,
+      side: (g.team.id === homeId ? 'home' : 'away') as 'home' | 'away',
+      type: g.type,
+    }))
+    .sort((a, b) => a.minute - b.minute || (a.injuryTime ?? 0) - (b.injuryTime ?? 0))
 }
 
 async function apiFetch<T>(path: string): Promise<T> {
