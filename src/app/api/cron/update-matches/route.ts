@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { fetchMatch, resolveQuinielaScore, normalizeStage, normalizeStatus } from '@/lib/football-data'
+import { fetchMatch, resolveQuinielaScore, normalizeStage, normalizeStatus, extractGoals } from '@/lib/football-data'
 import type { TablesInsert } from '@/types/database.types'
 
 const FAILSAFE_HOURS = 3
@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
   // home_score_fulltime/away_score_fulltime incluidos para detectar cambios de marcador
   const { data: candidates, error: fetchErr } = await supabase
     .from('matches')
-    .select('id, external_id, status, stage, scheduled_time, actual_start_time, home_score_fulltime, away_score_fulltime')
+    .select('id, external_id, status, stage, scheduled_time, actual_start_time, home_score_fulltime, away_score_fulltime, current_minute, current_period, second_half_start_time, extra_time_start_time')
     .in('status', ['SCHEDULED', 'IN_PROGRESS'])
     .lte('scheduled_time', new Date(Date.now() + 30 * 60 * 1000).toISOString())
 
@@ -64,6 +64,10 @@ export async function GET(request: NextRequest) {
       const isFinished = apiStatus === 'FINISHED' && quiniela !== null
       const isFirstLive = apiStatus === 'IN_PROGRESS' && !match.actual_start_time
       const detectedAt = new Date()
+      const newPeriod = derivePeriod(apiMatch.status, apiMatch.minute, match.current_period)
+      // Detectar inicio del 2T: transición MT → 2T, solo se escribe una vez
+      const isSecondHalfStart = newPeriod === '2T' && match.current_period === 'MT' && !match.second_half_start_time
+      const isExtraTimeStart = newPeriod === 'ET1' && match.current_period === 'MTE' && !match.extra_time_start_time
 
       const payload: Partial<TablesInsert<'matches'>> = {
         status: apiStatus,
@@ -71,6 +75,9 @@ export async function GET(request: NextRequest) {
         away_score_fulltime: apiMatch.score.fullTime.away,
         home_score_regular: apiMatch.score.regularTime?.home ?? null,
         away_score_regular: apiMatch.score.regularTime?.away ?? null,
+        current_minute: apiStatus === 'IN_PROGRESS' ? (apiMatch.minute ?? null) : null,
+        current_period: newPeriod,
+        goals: extractGoals(apiMatch) as unknown as import('@/types/database.types').Json,
         ...(isFinished && {
           home_score_quiniela: quiniela!.home,
           away_score_quiniela: quiniela!.away,
@@ -79,6 +86,21 @@ export async function GET(request: NextRequest) {
         ...(isFirstLive && {
           actual_start_time: detectedAt.toISOString(),
         }),
+        ...(isSecondHalfStart && {
+          second_half_start_time: detectedAt.toISOString(),
+        }),
+        ...(isExtraTimeStart && {
+          extra_time_start_time: detectedAt.toISOString(),
+        }),
+      }
+
+      // Log para verificar que el API devuelve el campo minute.
+      // Solo cuando cambia el minuto, para no inundar system_logs en cada tick.
+      if (apiStatus === 'IN_PROGRESS' && apiMatch.minute != null && apiMatch.minute !== match.current_minute) {
+        await logEntry(supabase, 'MINUTE_CHECK',
+          `⏱ ${match.external_id}: minuto ${apiMatch.minute} (${newPeriod})`,
+          false, match.id, { minute: apiMatch.minute }
+        )
       }
 
       const { error: updateErr } = await supabase
@@ -139,6 +161,44 @@ export async function GET(request: NextRequest) {
   )
 
   return NextResponse.json({ ok: true, ...results })
+}
+
+// Periodo del partido a partir del status raw de la API + minuto
+// Valores: 1T, MT, 2T, ET1, MTE, ET2, PEN — null cuando no está en juego
+function derivePeriod(rawStatus: string, minute: number | null | undefined, currentPeriod: string | null): string | null {
+  if (rawStatus === 'PAUSED') {
+    // Si ya estamos en MT o MTE, quedarse ahí (re-poll estable)
+    if (currentPeriod === 'MT') return 'MT'
+    if (currentPeriod === 'MTE') return 'MTE'
+    // Transición a descanso de prórroga
+    if (currentPeriod === '2T' || currentPeriod === 'ET1') return 'MTE'
+    if (minute != null && minute >= 90) return 'MTE'
+    // Transición a medio tiempo normal: solo si el minuto indica final del 1T
+    if (minute != null && minute >= 43) return 'MT'
+    // Pausa temprana (water/cooling break dentro del 1T): quedarse en periodo actual
+    return currentPeriod ?? 'MT'
+  }
+  if (rawStatus !== 'IN_PLAY') return null
+
+  // football-data.org no siempre envía 'minute'. Si falta, avanzamos el periodo
+  // usando las transiciones de PAUSED ya guardadas (1T→MT→2T, etc.).
+  if (minute == null) {
+    if (currentPeriod === 'MT') return '2T'
+    if (currentPeriod === 'MTE') return 'ET1'
+    return currentPeriod ?? '1T'
+  }
+
+  if (minute <= 45) return '1T'
+  if (minute <= 90) {
+    // Distinguir descuento del 1T (45+) del arranque del 2T usando el periodo previo
+    if (currentPeriod === 'MT' || currentPeriod === '2T') return '2T'
+    if (currentPeriod === '1T') return '1T'
+    // Fallback: 46-48 probablemente sigue siendo descuento del 1T, 49+ ya es 2T
+    return minute <= 48 ? '1T' : '2T'
+  }
+  if (minute <= 105) return 'ET1'
+  if (minute <= 120) return 'ET2'
+  return 'PEN'
 }
 
 async function logEntry(

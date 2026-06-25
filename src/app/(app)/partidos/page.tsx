@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { getUser, getProfile, getBloqueoMinutos } from '@/lib/data'
 import { MatchCard } from '@/components/MatchCard'
+import { LiveRefresher } from '@/components/LiveRefresher'
 import { isMatchLocked, localTodayStr, dayBoundsUTC } from '@/lib/utils'
 import { DateNav } from './DateNav'
 import { SwipeNav } from './SwipeNav'
@@ -117,8 +118,11 @@ export default async function PartidosPage({
     matches?.find(m => new Date(m.scheduled_time) > now)
   ) : null
 
+  const hasLiveMatches = matches?.some(m => m.status === 'IN_PROGRESS') ?? false
+
   return (
     <SwipeNav currentFecha={activeFecha} currentEtapa={etapa} primaryColor={getTheme(theme).colors.primary} scrollToNextMatch={!!nextMatch}>
+      <LiveRefresher hasLiveMatches={hasLiveMatches} />
       <div style={{ paddingTop: 14 }}>
         <h1 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 12px', color: 'var(--text-main)' }}>
           Partidos

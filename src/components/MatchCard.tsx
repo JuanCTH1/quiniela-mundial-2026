@@ -3,8 +3,11 @@ import { PredictionForm } from './PredictionForm'
 import { Countdown } from './Countdown'
 import { RankingPreview } from './RankingPreview'
 import { calcResult, getLockTime, STAGE_LABELS } from '@/lib/utils'
+import { LiveTimeLabel } from './LiveTimeLabel'
+import { GoalList } from './GoalList'
 import { TeamFlag } from './TeamFlag'
 import { getTheme, type Theme } from '@/lib/themes'
+import type { GoalEntry } from '@/lib/football-data'
 import type { Tables } from '@/types/database.types'
 type Match = Tables<'matches'>
 
@@ -108,11 +111,16 @@ export function MatchCard({
         </div>
 
         {/* Teams + score */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
           {/* Home */}
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'flex-end' }}>
-            <span style={{ fontSize: 13, fontWeight: 600 }}>{match.home_team}</span>
-            <TeamFlag name={match.home_team} size={22} />
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontSize: 13, fontWeight: 600 }}>{match.home_team}</span>
+              <TeamFlag name={match.home_team} size={22} />
+            </div>
+            {(isLive || isFinished) && (
+              <GoalList goals={(match.goals as GoalEntry[] | null) ?? []} side="home" align="right" />
+            )}
           </div>
 
           {/* Score / time */}
@@ -122,25 +130,49 @@ export function MatchCard({
                 {finalHome} – {finalAway}
               </span>
             ) : hasLiveScore ? (
-              <span style={{ fontSize: 28, fontWeight: 800, letterSpacing: 2, color: 'var(--warning)' }}>
-                {match.home_score_fulltime} – {match.away_score_fulltime}
-              </span>
+              <>
+                <span style={{ fontSize: 28, fontWeight: 800, letterSpacing: 2, color: 'var(--warning)' }}>
+                  {match.home_score_fulltime} – {match.away_score_fulltime}
+                </span>
+                <LiveTimeLabel
+                  period={match.current_period}
+                  minute={match.current_minute}
+                  actualStartTime={match.actual_start_time}
+                  secondHalfStartTime={match.second_half_start_time}
+                  extraTimeStartTime={match.extra_time_start_time}
+                  style={{ display: 'block', fontSize: 10, color: 'var(--warning)', fontWeight: 600, marginTop: 2 }}
+                />
+              </>
             ) : isLive ? (
-              // En vivo pero sin score aún (0-0 o aún sin datos del API)
-              <span style={{ fontSize: 24, fontWeight: 800, letterSpacing: 2, color: 'var(--warning)' }}>
-                – – –
-              </span>
+              <>
+                <span style={{ fontSize: 24, fontWeight: 800, letterSpacing: 2, color: 'var(--warning)' }}>
+                  – – –
+                </span>
+                <LiveTimeLabel
+                  period={match.current_period}
+                  minute={match.current_minute}
+                  actualStartTime={match.actual_start_time}
+                  secondHalfStartTime={match.second_half_start_time}
+                  extraTimeStartTime={match.extra_time_start_time}
+                  style={{ display: 'block', fontSize: 10, color: 'var(--warning)', fontWeight: 600, marginTop: 2 }}
+                />
+              </>
             ) : (
               <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>vs</span>
             )}
-            <div style={{ fontSize: 9, color: 'var(--text-muted)', marginTop: 2 }}>{matchTime}</div>
+            {!isLive && <div style={{ fontSize: 9, color: 'var(--text-muted)', marginTop: 2 }}>{matchTime}</div>}
             {venueName && <div style={{ fontSize: 9, color: 'var(--text-muted)', marginTop: 1 }}>{venueName}</div>}
           </div>
 
           {/* Away */}
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 6 }}>
-            <TeamFlag name={match.away_team} size={22} />
-            <span style={{ fontSize: 13, fontWeight: 600 }}>{match.away_team}</span>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <TeamFlag name={match.away_team} size={22} />
+              <span style={{ fontSize: 13, fontWeight: 600 }}>{match.away_team}</span>
+            </div>
+            {(isLive || isFinished) && (
+              <GoalList goals={(match.goals as GoalEntry[] | null) ?? []} side="away" align="left" />
+            )}
           </div>
         </div>
 

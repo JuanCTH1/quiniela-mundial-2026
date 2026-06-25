@@ -1,9 +1,10 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
+import { LiveTimeLabel } from '@/components/LiveTimeLabel'
 import type { Database } from '@/types/database.types'
-
 
 interface Prediction {
   user_id: string
@@ -16,30 +17,32 @@ interface Props {
   matchId: string
   initialHomeScore: number | null | undefined
   initialAwayScore: number | null | undefined
+  initialMinute?: number | null
+  initialPeriod?: string | null
+  initialActualStartTime?: string | null
+  initialSecondHalfStartTime?: string | null
+  initialExtraTimeStartTime?: string | null
   isLive: boolean
   isFinished: boolean
   predictions: Prediction[]
 }
 
-function useElapsed(ts: Date | null) {
-  const [, tick] = useState(0)
-  useEffect(() => {
-    if (!ts) return
-    const id = setInterval(() => tick(n => n + 1), 5000)
-    return () => clearInterval(id)
-  }, [ts])
-  if (!ts) return null
-  const s = Math.round((Date.now() - ts.getTime()) / 1000)
-  if (s < 10) return 'ahora'
-  if (s < 60) return `hace ${s}s`
-  return `hace ${Math.round(s / 60)}min`
-}
-
-export function LiveMatchClient({ matchId, initialHomeScore, initialAwayScore, isLive, isFinished, predictions }: Props) {
+export function LiveMatchClient({
+  matchId, initialHomeScore, initialAwayScore,
+  initialMinute, initialPeriod,
+  initialActualStartTime, initialSecondHalfStartTime, initialExtraTimeStartTime,
+  isLive, isFinished, predictions,
+}: Props) {
   const [home, setHome] = useState(initialHomeScore ?? null)
   const [away, setAway] = useState(initialAwayScore ?? null)
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(isLive ? new Date() : null)
+  const [minute, setMinute] = useState(initialMinute ?? null)
+  const [period, setPeriod] = useState(initialPeriod ?? null)
+  const [actualStart, setActualStart] = useState(initialActualStartTime ?? null)
+  const [secondHalfStart, setSecondHalfStart] = useState(initialSecondHalfStartTime ?? null)
+  const [extraTimeStart, setExtraTimeStart] = useState(initialExtraTimeStartTime ?? null)
   const supabaseRef = useRef<ReturnType<typeof createBrowserClient<Database>> | null>(null)
+  const finishedRef = useRef(false)
+  const router = useRouter()
 
   function getClient() {
     if (!supabaseRef.current) {
@@ -55,7 +58,6 @@ export function LiveMatchClient({ matchId, initialHomeScore, initialAwayScore, i
     if (!isLive) return
     const sb = getClient()
 
-    // Realtime: actualización inmediata por cambios en DB
     const channel = sb
       .channel(`match-${matchId}`)
       .on('postgres_changes', {
@@ -67,21 +69,30 @@ export function LiveMatchClient({ matchId, initialHomeScore, initialAwayScore, i
         const row = payload.new as Database['public']['Tables']['matches']['Row']
         setHome(row.home_score_fulltime)
         setAway(row.away_score_fulltime)
-        setLastUpdated(new Date())
+        setMinute(row.current_minute ?? null)
+        setPeriod(row.current_period ?? null)
+        if (row.actual_start_time) setActualStart(row.actual_start_time)
+        if (row.second_half_start_time) setSecondHalfStart(row.second_half_start_time)
+        if (row.extra_time_start_time) setExtraTimeStart(row.extra_time_start_time)
+        maybeRefreshOnFinish(row.status)
       })
       .subscribe()
 
-    // Polling cada 10s como respaldo (el API tiene delay, Realtime lo refleja igual)
     const poll = setInterval(async () => {
       const { data } = await sb
         .from('matches')
-        .select('home_score_fulltime, away_score_fulltime, status')
+        .select('home_score_fulltime, away_score_fulltime, current_minute, current_period, status, actual_start_time, second_half_start_time, extra_time_start_time')
         .eq('id', matchId)
         .single()
       if (data) {
         setHome(data.home_score_fulltime)
         setAway(data.away_score_fulltime)
-        setLastUpdated(new Date())
+        setMinute(data.current_minute ?? null)
+        setPeriod(data.current_period ?? null)
+        if (data.actual_start_time) setActualStart(data.actual_start_time)
+        if (data.second_half_start_time) setSecondHalfStart(data.second_half_start_time)
+        if (data.extra_time_start_time) setExtraTimeStart(data.extra_time_start_time)
+        maybeRefreshOnFinish(data.status)
       }
     }, 10_000)
 
@@ -89,9 +100,15 @@ export function LiveMatchClient({ matchId, initialHomeScore, initialAwayScore, i
       sb.removeChannel(channel)
       clearInterval(poll)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [matchId, isLive])
 
-  const elapsed = useElapsed(lastUpdated)
+  function maybeRefreshOnFinish(status: string | null) {
+    if (status === 'FINISHED' && !finishedRef.current) {
+      finishedRef.current = true
+      router.refresh()
+    }
+  }
 
   return (
     <div>
@@ -104,12 +121,15 @@ export function LiveMatchClient({ matchId, initialHomeScore, initialAwayScore, i
       </div>
 
       {isLive && (
-        <div style={{ fontSize: 11, color: 'var(--warning)', marginTop: 2 }}>● En juego</div>
-      )}
-
-      {isLive && elapsed && (
-        <div style={{ fontSize: 10, color: 'var(--text-dim)', marginTop: 3 }}>
-          Actualizado {elapsed}
+        <div style={{ fontSize: 11, color: 'var(--warning)', marginTop: 2, fontWeight: 600 }}>
+          ●{' '}
+          <LiveTimeLabel
+            period={period}
+            minute={minute}
+            actualStartTime={actualStart}
+            secondHalfStartTime={secondHalfStart}
+            extraTimeStartTime={extraTimeStart}
+          />
         </div>
       )}
     </div>

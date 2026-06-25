@@ -92,6 +92,141 @@ export function getTeamFlag(name: string): string {
   return FLAGS[name] ?? '🏳️'
 }
 
+const ABBR: Record<string, string> = {
+  'Mexico': 'MEX', 'México': 'MEX',
+  'United States': 'USA', 'USA': 'USA',
+  'Canada': 'CAN',
+  'Argentina': 'ARG',
+  'Brazil': 'BRA', 'Brasil': 'BRA',
+  'France': 'FRA',
+  'Germany': 'GER',
+  'Spain': 'ESP',
+  'England': 'ENG',
+  'Portugal': 'POR',
+  'Netherlands': 'NED',
+  'Belgium': 'BEL',
+  'Italy': 'ITA',
+  'Croatia': 'CRO',
+  'Morocco': 'MAR',
+  'Japan': 'JPN',
+  'South Korea': 'KOR', 'Korea Republic': 'KOR',
+  'Australia': 'AUS',
+  'Colombia': 'COL',
+  'Uruguay': 'URU',
+  'Chile': 'CHI',
+  'Ecuador': 'ECU',
+  'Peru': 'PER',
+  'Venezuela': 'VEN',
+  'Paraguay': 'PAR',
+  'Bolivia': 'BOL',
+  'Senegal': 'SEN',
+  'Ghana': 'GHA',
+  'Nigeria': 'NGA',
+  'Cameroon': 'CMR',
+  'Egypt': 'EGY',
+  'Tunisia': 'TUN',
+  'Algeria': 'ALG',
+  "Côte d'Ivoire": 'CIV', 'Ivory Coast': 'CIV',
+  'Mali': 'MLI',
+  'Saudi Arabia': 'KSA',
+  'Iran': 'IRN',
+  'Qatar': 'QAT',
+  'Switzerland': 'SUI',
+  'Denmark': 'DEN',
+  'Poland': 'POL',
+  'Serbia': 'SRB',
+  'Austria': 'AUT',
+  'Scotland': 'SCO',
+  'Wales': 'WAL',
+  'Ukraine': 'UKR',
+  'Turkey': 'TUR', 'Türkiye': 'TUR',
+  'Czech Republic': 'CZE', 'Czechia': 'CZE',
+  'Slovakia': 'SVK',
+  'New Zealand': 'NZL',
+  'Costa Rica': 'CRC',
+  'Panama': 'PAN',
+  'Honduras': 'HON',
+  'Jamaica': 'JAM',
+  'Guatemala': 'GUA',
+  'El Salvador': 'SLV',
+  'Haiti': 'HAI',
+  'Cuba': 'CUB',
+  'South Africa': 'RSA',
+  'China PR': 'CHN', 'China': 'CHN',
+  'Uzbekistan': 'UZB',
+  'Iraq': 'IRQ',
+  'Jordan': 'JOR',
+  'United Arab Emirates': 'UAE',
+  'Norway': 'NOR',
+  'Sweden': 'SWE',
+  'Indonesia': 'IDN',
+  'Thailand': 'THA',
+  'Bosnia-H.': 'BIH', 'Bosnia and Herzegovina': 'BIH',
+  'Congo DR': 'COD',
+  'Cape Verde': 'CPV',
+  'TBD': 'TBD',
+}
+
+export function getTeamAbbr(name: string): string {
+  return ABBR[name] ?? name.slice(0, 3).toUpperCase()
+}
+
+// Minuto aproximado calculado desde timestamps cuando la API no envía 'minute'.
+// Para 2T usa second_half_start_time (exacto) si está disponible; si no, resta ~15 min de MT.
+export function approxLiveMinute(
+  actualStartTime: string | null | undefined,
+  period: string | null | undefined,
+  secondHalfStartTime?: string | null,
+  extraTimeStartTime?: string | null,
+): number | null {
+  if (!actualStartTime || !period) return null
+  if (period === 'MT' || period === 'MTE' || period === 'PEN') return null
+  const elapsed = Math.floor((Date.now() - new Date(actualStartTime).getTime()) / 60000)
+  if (period === '1T') return Math.min(elapsed, 48)
+  if (period === '2T') {
+    if (secondHalfStartTime) {
+      const e2 = Math.floor((Date.now() - new Date(secondHalfStartTime).getTime()) / 60000)
+      return Math.min(45 + e2, 97)
+    }
+    return Math.min(Math.max(elapsed - 15, 46), 97)
+  }
+  if (period === 'ET1') {
+    if (extraTimeStartTime) {
+      const eET = Math.floor((Date.now() - new Date(extraTimeStartTime).getTime()) / 60000)
+      return Math.min(90 + eET, 108)
+    }
+    return Math.min(Math.max(elapsed - 32, 91), 108)
+  }
+  if (period === 'ET2') {
+    if (extraTimeStartTime) {
+      const eET = Math.floor((Date.now() - new Date(extraTimeStartTime).getTime()) / 60000)
+      return Math.min(105 + (eET - 20), 122)
+    }
+    return Math.min(Math.max(elapsed - 47, 106), 122)
+  }
+  return null
+}
+
+// Etiqueta de tiempo para partidos en vivo.
+// 1T/2T/ET1/ET2 → muestra el minuto; MT/MTE/PEN → etiqueta fija.
+export function formatLivePeriod(period: string | null | undefined, minute: number | null | undefined): string | null {
+  if (!period) return null
+  if (period === 'MT') return 'MT'
+  if (period === 'MTE') return 'MTE'
+  if (period === 'PEN') return 'PEN'
+  if (minute == null) {
+    // Sin minuto (la API no lo envía): al menos mostramos el periodo.
+    if (period === 'ET1' || period === 'ET2') return 'ET'
+    if (period === '1T' || period === '2T') return period
+    return null
+  }
+  if (period === '1T' && minute > 45) return `45+${minute - 45}'`
+  if (period === '2T' && minute > 90) return `90+${minute - 90}'`
+  if (period === 'ET1' && minute > 105) return `105+${minute - 105}'`
+  if (period === 'ET2' && minute > 120) return `120+${minute - 120}'`
+  return `${minute}'`
+}
+
 export type ResultType = 'EXACTO' | 'DIFERENCIA' | 'TENDENCIA' | 'FALLO'
 
 export function calcResult(
@@ -159,19 +294,6 @@ export const TIMEZONES = [
   { label: 'Madrid / Barcelona (CET/CEST)', value: 'Europe/Madrid' },
   { label: 'UTC', value: 'UTC' },
 ]
-
-export function getMatchPhase(actualStartTime: string | null, status: string): string {
-  if (status !== 'IN_PROGRESS' || !actualStartTime) return ''
-
-  const elapsed = (Date.now() - new Date(actualStartTime).getTime()) / 60000 // minutos
-
-  if (elapsed < 45) return `Primer Tiempo (${Math.floor(elapsed)}')`
-  if (elapsed < 50) return 'Medio Tiempo ⏸'
-  if (elapsed < 90) return `Segundo Tiempo (${Math.floor(elapsed)}')`
-  if (elapsed < 105) return `Prórroga (${Math.floor(elapsed - 90)}')`
-  if (elapsed < 120) return `Prórroga (${Math.floor(elapsed - 90)}')`
-  return `Penales`
-}
 
 export const STAGE_LABELS: Record<string, string> = {
   GROUP: 'Fase de grupos',
