@@ -148,13 +148,5 @@ Devuelve ÚNICAMENTE un JSON array válido (sin markdown, sin backticks, sin tex
     }
   }
 
-  const isError = generated === 0 && failed > 0
-  await supabase.from('system_logs').insert({
-    log_type: 'GENERATE_FACTS',
-    message: `Facts generados: ${generated} partidos ok, ${failed} fallidos`,
-    is_error: isError,
-    details: { generated, failed, errors: errors.slice(0, 10) } as unknown as Parameters<typeof supabase.from>[0],
-  })
-
   return Response.json({ ok: true, generated, failed, ...(errors.length ? { errors } : {}) })
 })
