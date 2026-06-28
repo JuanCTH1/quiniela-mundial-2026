@@ -279,6 +279,53 @@ function MatchRow({ match }: { match: MatchHealth }) {
 
 export interface HealthAlert { level: 'red' | 'yellow'; message: string }
 
+function SyncRefereesButton() {
+  const [state, setState] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
+  const [result, setResult] = useState<string | null>(null)
+  const router = useRouter()
+
+  async function handleSync() {
+    setState('loading')
+    try {
+      const res = await fetch('/api/admin/sync-referees-web', { method: 'POST' })
+      const data = await res.json() as { ok: boolean; updated?: number; total?: number; message?: string }
+      if (data.ok) {
+        setResult(data.message ?? `${data.updated}/${data.total} árbitros encontrados`)
+        setState('done')
+        router.refresh()
+      } else {
+        setState('error')
+        setResult('Error en la búsqueda')
+      }
+    } catch {
+      setState('error')
+      setResult('Error de red')
+    }
+  }
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+      <button
+        onClick={handleSync}
+        disabled={state === 'loading'}
+        style={{
+          padding: '5px 12px', borderRadius: 6, border: '1px solid rgba(255,193,7,0.35)',
+          background: 'rgba(255,193,7,0.10)', color: 'var(--gold)',
+          fontSize: 11, fontWeight: 700, cursor: state === 'loading' ? 'wait' : 'pointer',
+          opacity: state === 'loading' ? 0.6 : 1,
+        }}
+      >
+        {state === 'loading' ? '🔍 Buscando...' : '🔍 Buscar árbitros'}
+      </button>
+      {result && (
+        <span style={{ fontSize: 11, color: state === 'error' ? 'var(--mx-red)' : '#34A853' }}>
+          {result}
+        </span>
+      )}
+    </div>
+  )
+}
+
 export function ContextHealthPanel({ matches, alerts = [] }: { matches: MatchHealth[]; alerts?: HealthAlert[] }) {
   const withBreaks = matches.filter(m =>
     !m.has_venue || !m.has_odds || !m.has_home_coach || !m.has_away_coach ||
@@ -314,6 +361,9 @@ export function ContextHealthPanel({ matches, alerts = [] }: { matches: MatchHea
               {a.level === 'red' ? '🔴' : '🟡'} {a.message}
             </div>
           ))}
+          {alerts.some(a => a.message.includes('árbitro')) && (
+            <SyncRefereesButton />
+          )}
         </div>
       )}
 
