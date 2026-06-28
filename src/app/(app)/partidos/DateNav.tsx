@@ -71,6 +71,8 @@ export function DateNav({ currentFecha, currentEtapa, timezone, availableDates }
     textDecoration: 'none',
     display: 'inline-block',
     flexShrink: 0,
+    backdropFilter: 'blur(6px) saturate(180%)',
+    WebkitBackdropFilter: 'blur(6px) saturate(180%)',
     background: active
       ? 'var(--primary)'
       : 'rgba(255,255,255,0.07)',
@@ -94,6 +96,8 @@ export function DateNav({ currentFecha, currentEtapa, timezone, availableDates }
     whiteSpace: 'nowrap',
     textDecoration: 'none',
     flexShrink: 0,
+    backdropFilter: 'blur(6px) saturate(180%)',
+    WebkitBackdropFilter: 'blur(6px) saturate(180%)',
     background: active
       ? 'color-mix(in srgb, var(--primary) 22%, transparent)'
       : 'rgba(255,255,255,0.05)',
