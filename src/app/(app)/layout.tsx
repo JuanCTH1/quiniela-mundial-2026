@@ -54,7 +54,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <ThemeProvider theme={theme}>
       <ParallaxBackground />
       <div style={{ paddingBottom: 'calc(72px + env(safe-area-inset-bottom))', maxWidth: 480, margin: '0 auto' }}>
-      <div style={{
+      <div data-sticky-header style={{
         position: 'sticky', top: 0, zIndex: 50,
         backdropFilter: 'blur(20px) saturate(180%)',
         WebkitBackdropFilter: 'blur(20px) saturate(180%)',
