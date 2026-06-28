@@ -60,6 +60,39 @@ export function MatchContextButton({ matchId, homeTeam, awayTeam }: Props) {
     return () => { if (isOpen) document.body.style.overflow = '' }
   }, [isOpen])
 
+  // Touch handlers pasivos para no bloquear el scroll nativo
+  useEffect(() => {
+    const el = sheetRef.current
+    if (!el) return
+
+    function onStart(e: TouchEvent) {
+      touchStartY.current = e.touches[0].clientY
+      dragY.current = 0
+    }
+    function onMove(e: TouchEvent) {
+      const atTop = (el?.scrollTop ?? 0) === 0
+      const delta = e.touches[0].clientY - touchStartY.current
+      if (atTop && delta > 0) {
+        dragY.current = delta
+        setDragOffset(delta)
+      }
+    }
+    function onEnd() {
+      if (dragY.current > 80) close()
+      setDragOffset(0)
+      dragY.current = 0
+    }
+
+    el.addEventListener('touchstart', onStart, { passive: true })
+    el.addEventListener('touchmove', onMove, { passive: true })
+    el.addEventListener('touchend', onEnd, { passive: true })
+    return () => {
+      el.removeEventListener('touchstart', onStart)
+      el.removeEventListener('touchmove', onMove)
+      el.removeEventListener('touchend', onEnd)
+    }
+  }, [isOpen])
+
   const portal = mounted ? createPortal(
     <>
       {/* Overlay transparente — solo captura clicks afuera para cerrar */}
@@ -75,30 +108,9 @@ export function MatchContextButton({ matchId, homeTeam, awayTeam }: Props) {
       {/* Bottom sheet — renderizado en document.body via portal */}
       <div
         ref={sheetRef}
-        onTouchStart={e => {
-          touchStartY.current = e.touches[0].clientY
-          dragY.current = 0
-        }}
-        onTouchMove={e => {
-          const atTop = (sheetRef.current?.scrollTop ?? 0) === 0
-          const delta = e.touches[0].clientY - touchStartY.current
-          // Solo arrastrar hacia abajo cuando el scroll ya llegó al tope
-          if (atTop && delta > 0) {
-            dragY.current = delta
-            setDragOffset(delta)
-          }
-        }}
-        onTouchEnd={() => {
-          if (dragY.current > 80) {
-            close()
-          }
-          setDragOffset(0)
-          dragY.current = 0
-        }}
         style={{
           position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 201,
-          // 64px = sticky header aprox — evita que el sheet tape el nav de arriba
-          maxHeight: 'calc(100dvh - 64px)',
+          maxHeight: '72dvh',
           overflowY: 'auto',
           background: 'rgba(10, 15, 13, 0.97)',
           borderRadius: '20px 20px 0 0',
