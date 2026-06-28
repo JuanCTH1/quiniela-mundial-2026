@@ -3,7 +3,14 @@
 export function NextMatchButton() {
   return (
     <button
-      onClick={() => document.getElementById('next-match')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+      onClick={() => {
+        const header = document.querySelector('[data-sticky-header]')
+        const headerH = header ? header.getBoundingClientRect().height : 80
+        const el = document.getElementById('next-match')
+        if (!el) return
+        const y = el.getBoundingClientRect().top + window.scrollY - headerH - 8
+        window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' })
+      }}
       style={{
         display: 'flex', alignItems: 'center', gap: 4,
         padding: '4px 10px', borderRadius: 16,

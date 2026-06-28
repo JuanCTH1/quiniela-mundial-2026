@@ -1,12 +1,12 @@
 # Estado del Proyecto — Quiniela Overrated 2026
 
-> Actualizado: 2026-06-28 (cierre sesión tarde)
+> Actualizado: 2026-06-28 (cierre sesión noche)
 
 ## Estado general
 
 **Fase activa: Torneo en curso — Ronda de 32 en juego. Modo Real activo.**
 
-App en prod con los 6 jugadores. Fase de grupos terminó Jun 27. R32 inició Jun 28. Timer de partido en vivo arreglado. Drawer de análisis funcionando desde la lista de partidos.
+App en prod con los 6 jugadores. Fase de grupos terminó Jun 27. R32 en curso. Timer en vivo OK. Drawer de análisis OK. Bugs de render intermitente (form pronósticos + header) corregidos — causa raíz: `will-change: transform` permanente por cada portal del drawer. Scroll "Siguiente partido" corregido con offset dinámico.
 
 ## Usuarios en producción
 
