@@ -196,18 +196,29 @@ API-Football tiene 100 req/día en free tier. Con ≤4 partidos/día y polling c
 
 ### MEJ-004 · Easter eggs
 
-Confirmar con el grupo antes de implementar:
-- Animación/confeti al acertar marcador exacto.
-- Confeti en ranking cuando alguien llega al #1 por primera vez.
-- Sonido/vibración en gol en vivo (con permiso del sistema).
-- Referencia oculta al nombre "Overrated".
+Ideas propuestas — no implementar durante el torneo sin probar en QA primero:
 
-No implementar durante el torneo sin probar en QA primero.
+- 🎊 **Confeti al abrir partido con exacto propio** — boom al entrar al detalle, una sola vez por partido
+- 📳 **Vibración sutil en gol en vivo** — el dispositivo tembla cuando el marcador cambia en pantalla
+- 👑 **Corona animada al líder del ranking** — aparece sobre el avatar del #1
+- 😬 **Modo vergüenza al último lugar** — color o emoji especial en el ranking para el último
+- 🎯 **Streak counter** — badge "¡3 exactos seguidos!" cuando encadenas exactos consecutivos
+- 🌶️ **Modo picante** — si alguien tiene 0 pts en una jornada, su tarjeta cambia de color
+- 👁️ **Easter egg oculto** — tocar el título "Overrated" 5 veces activa algo inesperado
+- 🪦 **"Ya valió"** — indicador discreto cuando alguien ya no puede alcanzar el primer lugar matemáticamente
 
 ---
 
 ## ✅ COMPLETADOS
 
+- [x] BUG-002 · Timer cronómetro: derivePeriod transiciona a MT/MTE sin minute, approxLiveMinute muestra 45+N', topes subidos (Jun 28)
+- [x] UX-001 · Botón "↓ Siguiente partido" junto al h1 Partidos, autoscroll eliminado (Jun 28)
+- [x] UX-002 · Scroll restore instant al dar back desde /partido/[id] (Jun 28)
+- [x] UX-003 · MatchContextDrawer: portal, swipe/X/back/click-fuera cierran, backdrop transparente, 72dvh, prefetch en touchstart (Jun 28)
+- [x] Odds cron cambiado a cada 2h en Supabase (Jun 28)
+- [x] Cron update-matches: re-fetcha FINISHED últimos 20min para capturar goals con delay de API (Jun 28)
+- [x] Strip de <cite> tags en facts del drawer (Jun 28)
+- [x] Árbitros R32 primeros 5 partidos populados directamente en DB (Jun 28)
 - [x] BUG-001 · Botón "Buscar árbitros" — fix loop tool_use + catch con error real (Jun 28)
 - [x] FEAT-001 back-end · Columnas `penalty_winner` en predictions y matches, `duration` en matches, función `resolvePenaltyWinner`, cron actualizado (Jun 28)
 - [x] Edge Function `health-check` v2 + pg_cron `health-check-daily` 08:00 UTC (Jun 28)
