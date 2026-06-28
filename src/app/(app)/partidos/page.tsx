@@ -125,7 +125,7 @@ export default async function PartidosPage({
     <SwipeNav currentFecha={activeFecha} currentEtapa={etapa} primaryColor={getTheme(theme).colors.primary}>
       <LiveRefresher hasLiveMatches={hasLiveMatches} />
       <div style={{ paddingTop: 14 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, transform: 'translateZ(0)' }}>
           <h1 style={{ fontSize: 18, fontWeight: 700, margin: 0, color: 'var(--text-main)' }}>
             Partidos
           </h1>
@@ -143,7 +143,7 @@ export default async function PartidosPage({
             const locked = isMatchLocked(match.scheduled_time, bloqueoMinutos, match.early_unlock_at)
             const isNext = match.id === nextMatch?.id
             return (
-              <div key={match.id} id={isNext ? 'next-match' : undefined} style={isNext ? { scrollMarginTop: 80 } : undefined}>
+              <div key={match.id} id={isNext ? 'next-match' : undefined}>
                 <MatchCard
                   match={match}
                   myPrediction={myPredMap.get(match.id)}
