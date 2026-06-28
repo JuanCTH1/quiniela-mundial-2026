@@ -29,10 +29,15 @@ export function SwipeNav({ children, currentFecha, currentEtapa, primaryColor = 
 
   useEffect(() => {
     if (!scrollToNextMatch) return
+    let rafId: number
     const t = setTimeout(() => {
-      document.getElementById('next-match')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      rafId = requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          document.getElementById('next-match')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        })
+      })
     }, 350)
-    return () => clearTimeout(t)
+    return () => { clearTimeout(t); cancelAnimationFrame(rafId) }
   }, [scrollToNextMatch, searchParams])
   const blocked = useRef(false)
   const [swipe, setSwipe] = useState<'left' | 'right' | null>(null)

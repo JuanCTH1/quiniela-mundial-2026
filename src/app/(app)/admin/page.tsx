@@ -9,7 +9,7 @@ export default async function AdminPage() {
 
   const [
     settingsRes, logsRes, usersRes,
-    allMatchesRes, scheduledRes, oddsRes, teamMetaRes, factsRes,
+    allMatchesRes, scheduledRes, oddsRes, teamMetaRes, factsRes, tbdRes,
   ] = await Promise.all([
     supabase.from('settings').select('key, value'),
     supabase.from('system_logs').select('*').order('created_at', { ascending: false }).limit(50),
@@ -35,6 +35,12 @@ export default async function AdminPage() {
     admin.from('match_facts')
       .select('id, match_id, category, body, position, reviewed')
       .order('position', { ascending: true }),
+    // Partidos de eliminatorias con equipos sin definir (TBD)
+    supabase.from('matches')
+      .select('home_team, away_team, scheduled_time, stage')
+      .eq('status', 'SCHEDULED')
+      .not('stage', 'in', '("GROUP","GROUP_STAGE")')
+      .or('home_team.like.TBD%,away_team.like.TBD%'),
   ])
 
   const settings      = settingsRes.data ?? []
@@ -42,6 +48,7 @@ export default async function AdminPage() {
   const users         = usersRes.data ?? []
   const allMatches    = allMatchesRes.data ?? []
   const scheduled     = scheduledRes.data ?? []
+  const tbdKnockout   = tbdRes.data ?? []
 
   const appMode       = settings.find(s => s.key === 'app_mode')?.value ?? 'test'
   const bloqueoMinutos = settings.find(s => s.key === 'bloqueo_minutos')?.value ?? '15'
@@ -55,6 +62,30 @@ export default async function AdminPage() {
     if (!factsByMatch.has(f.match_id)) factsByMatch.set(f.match_id, [])
     factsByMatch.get(f.match_id)!.push(f)
   }
+
+  // Alertas de salud para el banner superior
+  const now48h = new Date(Date.now() + 48 * 3600 * 1000)
+  const upcoming48h = scheduled.filter(m => new Date(m.scheduled_time) <= now48h)
+  const missingFacts48h = upcoming48h.filter(m => !factsByMatch.has(m.id))
+  const unreviewedFacts48h = upcoming48h.filter(m => {
+    const mFacts = factsByMatch.get(m.id) ?? []
+    return mFacts.length > 0 && mFacts.some(f => !f.reviewed)
+  })
+
+  const healthAlerts: { level: 'red' | 'yellow'; message: string }[] = [
+    ...tbdKnockout.map(m => ({
+      level: 'red' as const,
+      message: `Equipo sin definir: ${m.home_team} vs ${m.away_team} (${m.stage})`,
+    })),
+    ...(missingFacts48h.length > 0 ? [{
+      level: 'red' as const,
+      message: `${missingFacts48h.length} partido${missingFacts48h.length > 1 ? 's' : ''} en 48h sin datos curiosos: ${missingFacts48h.map(m => `${m.home_team} vs ${m.away_team}`).join(', ')}`,
+    }] : []),
+    ...(unreviewedFacts48h.length > 0 ? [{
+      level: 'yellow' as const,
+      message: `Facts sin aprobar para: ${unreviewedFacts48h.map(m => `${m.home_team} vs ${m.away_team}`).join(', ')}`,
+    }] : []),
+  ]
 
   const healthMatches: MatchHealth[] = scheduled.map(m => {
     const hm = teamMeta.get(m.home_team)
@@ -86,7 +117,7 @@ export default async function AdminPage() {
         Con gran poder viene gran irresponsabilidad
       </p>
 
-      <ContextHealthPanel matches={healthMatches} />
+      <ContextHealthPanel matches={healthMatches} alerts={healthAlerts} />
 
       <div style={{ marginTop: 16 }}>
         <AdminActions
