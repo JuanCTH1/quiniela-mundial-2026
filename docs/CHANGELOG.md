@@ -1,5 +1,33 @@
 # Changelog — Quiniela Overrated 2026
 
+## [Salud + Facts Auto-Aprobados + UX Admin] — 2026-06-28
+
+### Features
+- **Sistema de alertas de salud**: Edge Function `health-check` v2 deployada en Supabase. 5 checks: (1) equipos TBD en knockout próximas 48h, (2) facts faltantes en 72h, (3) partidos FINISHED sin resultado, (4) momios faltantes, (5) árbitros faltantes. Envía email via Resend si hay alertas. Logs en `system_logs` con `log_type='HEALTH_CHECK'`.
+- **pg_cron `health-check-daily`**: job #23, corre 08:00 UTC todos los días, llama Edge Function con `verify_jwt=false`.
+- **ContextHealthPanel en /admin**: panel de salud con chips de estado por partido (Sede, Momios, Árbitro, DTs, Edad, Facts). Chips verde/rojo por campo, solo rojo si falta algo crítico.
+- **AdminTools**: nueva sección "Herramientas de datos" en /admin con botones: "Backfill scores jornada 1" y "Buscar árbitros (7 días)".
+- **Búsqueda de árbitros**: `/api/admin/sync-referees-web` llama Claude Haiku + web_search_20250305 para cada partido próximo sin árbitro; parsea JSON y actualiza `matches.referee`.
+
+### Fixes
+- **Facts auto-aprobados**: `generate-facts` v4 inserta con `reviewed: true`. Los 120 facts existentes aprobados con `UPDATE match_facts SET reviewed = true WHERE reviewed = false`.
+- **Panel /admin sin ruido amarillo**: `ContextHealthPanel` ya no marca como roto por facts sin revisar. `healthAlerts` en `admin/page.tsx` ya no incluye alerta de "facts sin aprobar".
+- **health-check v2**: eliminado check #3 (unreviewed facts) — ya no aplica porque todo se auto-aprueba.
+- **Alertas TBD reducidas de 7d → 48h**: `admin/page.tsx` query y `health-check` Edge Function ahora solo alertan TBD en próximas 48h (antes 7 días = demasiado ruido con SF/QF/R16 aún no definidos).
+- **"Forma reciente" renombrada**: label → "Resultados en el torneo". Bug fix: `computeForm` usaba `home_score_fulltime` (solo 40/72 partidos tenían dato) → cambiado a `home_score_quiniela` (columna correcta).
+- **Espaciado TENDENCIA chip**: `marginTop: 8` en wrapper de `RankingPreview` en `MatchCard.tsx`.
+
+### Datos insertados manualmente esta sesión
+- **DT Senegal**: `Pape Thiaw` (reemplazó a Aliou Cissé, despedido Oct 2024)
+- **Árbitros R32** confirmados por FIFA antes del 28 Jun: varios insertados en `matches.referee`
+
+### Infraestructura
+- `generate-facts` v4: `reviewed: true` en cada insert
+- `health-check` v2: ventana TBD 48h, sin check de unreviewed
+- pg_cron job #23: `health-check-daily` a las 08:00 UTC
+
+---
+
 ## [Live + Knockout Sync] — 2026-06-25
 
 ### Features
