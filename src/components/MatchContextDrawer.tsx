@@ -62,15 +62,13 @@ export function MatchContextButton({ matchId, homeTeam, awayTeam }: Props) {
 
   const portal = mounted ? createPortal(
     <>
-      {/* Backdrop — cubre todo, bloquea interacción con el fondo */}
+      {/* Overlay transparente — solo captura clicks afuera para cerrar */}
       <div
         onClick={close}
         style={{
           position: 'fixed', inset: 0, zIndex: 200,
-          background: 'rgba(0,0,0,0.35)',
-          opacity: isOpen ? 1 : 0,
+          background: 'transparent',
           pointerEvents: isOpen ? 'auto' : 'none',
-          transition: 'opacity 0.25s',
         }}
       />
 

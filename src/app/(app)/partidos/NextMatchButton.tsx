@@ -13,7 +13,7 @@ export function NextMatchButton() {
         whiteSpace: 'nowrap',
       }}
     >
-      ↓ Siguiente
+      ↓ Siguiente partido
     </button>
   )
 }
