@@ -36,11 +36,12 @@ export default async function AdminPage() {
     admin.from('match_facts')
       .select('id, match_id, category, body, position, reviewed')
       .order('position', { ascending: true }),
-    // Partidos de eliminatorias con equipos sin definir (TBD)
+    // Partidos de eliminatorias con equipos sin definir (TBD) en próximas 48h
     supabase.from('matches')
       .select('home_team, away_team, scheduled_time, stage')
       .eq('status', 'SCHEDULED')
       .not('stage', 'in', '("GROUP","GROUP_STAGE")')
+      .lte('scheduled_time', new Date(Date.now() + 48 * 3600 * 1000).toISOString())
       .or('home_team.like.TBD%,away_team.like.TBD%'),
   ])
 
