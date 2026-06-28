@@ -100,16 +100,13 @@ export function MatchCard({
         }),
       }}
     >
-      {/* Header row — fuera del Link para que el botón ⓘ no dispare navegación */}
+      {/* Header row */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
         <span style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
           {STAGE_LABELS[match.stage] ?? match.stage}
           {match.group_name ? ` · G${match.group_name.replace('GROUP_', '')}` : ''}
         </span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ fontSize: 14, fontWeight: 600, color: stateColor }}>{stateLabel}</span>
-          <MatchContextButton matchId={match.id} homeTeam={match.home_team} awayTeam={match.away_team} />
-        </div>
+        <span style={{ fontSize: 14, fontWeight: 600, color: stateColor }}>{stateLabel}</span>
       </div>
 
       {/* Body — clickable al detalle */}
@@ -207,6 +204,11 @@ export function MatchCard({
           </div>
         )}
       </Link>
+
+      {/* Botón análisis — centrado, fuera del Link */}
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: 10, marginBottom: 2 }}>
+        <MatchContextButton matchId={match.id} homeTeam={match.home_team} awayTeam={match.away_team} />
+      </div>
 
       {/* Countdown + form (OPEN) */}
       {isOpen && (
