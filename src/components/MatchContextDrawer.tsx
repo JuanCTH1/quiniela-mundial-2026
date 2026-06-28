@@ -12,6 +12,12 @@ interface Props {
 
 export function MatchContextButton({ matchId, homeTeam, awayTeam }: Props) {
   const [isOpen, setIsOpen] = useState(false)
+  // `render` controla el montaje del portal: cerrado = NO está en el DOM.
+  // Antes el sheet se renderizaba siempre (oculto) en cada tarjeta, dejando
+  // una capa will-change:transform permanente por partido y saturando el
+  // compositor de Chrome mobile (causa de los bugs de pintado intermitentes).
+  const [render, setRender] = useState(false)
+  const [slideIn, setSlideIn] = useState(false)
   const [data, setData] = useState<MatchContextData | null>(null)
   const [loading, setLoading] = useState(false)
   const [mounted, setMounted] = useState(false)
@@ -37,15 +43,22 @@ export function MatchContextButton({ matchId, homeTeam, awayTeam }: Props) {
   }
 
   function open() {
+    setRender(true)
     setIsOpen(true)
     document.body.style.overflow = 'hidden'
     history.pushState({ drawerOpen: matchId }, '', location.href)
     fetchData()
+    // Doble rAF: deja pintar el frame inicial en translateY(110%) antes de
+    // transicionar a 0, para que el slide-up se vea aunque montemos al abrir.
+    requestAnimationFrame(() => requestAnimationFrame(() => setSlideIn(true)))
   }
 
   function close() {
     setIsOpen(false)
+    setSlideIn(false)
     document.body.style.overflow = ''
+    // Desmonta tras la transición de salida (0.32s) — libera la capa GPU.
+    setTimeout(() => setRender(false), 340)
   }
 
   useEffect(() => {
@@ -93,7 +106,7 @@ export function MatchContextButton({ matchId, homeTeam, awayTeam }: Props) {
     }
   }, [isOpen])
 
-  const portal = mounted ? createPortal(
+  const portal = mounted && render ? createPortal(
     <>
       {/* Overlay transparente — solo captura clicks afuera para cerrar */}
       <div
@@ -116,7 +129,7 @@ export function MatchContextButton({ matchId, homeTeam, awayTeam }: Props) {
           borderRadius: '20px 20px 0 0',
           borderTop: '1px solid var(--glass-border)',
           paddingBottom: 'env(safe-area-inset-bottom)',
-          transform: isOpen ? `translateY(${dragOffset}px)` : 'translateY(110%)',
+          transform: slideIn ? `translateY(${dragOffset}px)` : 'translateY(110%)',
           transition: dragOffset > 0 ? 'none' : 'transform 0.32s cubic-bezier(0.32,0.72,0,1)',
           willChange: 'transform',
           overscrollBehavior: 'contain',
