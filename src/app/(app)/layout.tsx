@@ -60,6 +60,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         WebkitBackdropFilter: 'blur(20px) saturate(180%)',
         background: 'var(--header-bg)',
         borderBottom: '1px solid var(--header-border)',
+        willChange: 'transform',
       }}>
         {appMode === 'test' && <TestModeBanner theme={theme} />}
         {alertRes.data && (

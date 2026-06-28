@@ -212,7 +212,7 @@ export function MatchCard({
 
       {/* Countdown + form (OPEN) */}
       {isOpen && (
-        <div style={{ marginTop: 8, borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 8, transform: 'translateZ(0)' }}>
+        <div style={{ marginTop: 8, borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 8 }}>
           {/* Mi pronóstico cuando está abierto — arriba del form */}
           {myPrediction?.home_score != null && (
             <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>
