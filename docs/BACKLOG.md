@@ -25,12 +25,19 @@
 - Se guarda en `predictions` como columna nueva (ej. `penalty_winner`)
 - Si el partido termina en penalties, comparar el clasificado real con `penalty_winner` → bonus de puntos o solo tracking visual (a definir con el grupo)
 
-**Preguntas abiertas antes de implementar (confirmar con el grupo):**
+**Contexto técnico — cómo funciona el corte hoy (`src/lib/football-data.ts:104`):**
+- `corte='90'` (default actual): si el partido va a prórroga o penales → se usa `regularTime` (marcador a 90'). Un 1-1 que termina 2-1 en prórroga = resultado quiniela **1-1**. Pronosticar 2-1 no tiene sentido bajo esta config.
+- `corte='120'`: se usa `fullTime` (marcador al final de prórroga). Un 2-1 en prórroga = resultado válido **2-1**. Bajo esta config sí tiene sentido pronosticar resultados de prórroga.
+- `corte='PENALTIES'`: igual que `'120'` en la implementación actual.
+
+**Implicación para FEAT-001:** El selector "¿quién avanza?" solo tiene sentido con `corte='90'` — porque con ese corte el empate a 90' es definitivo y alguien tiene que clasificar. Con `corte='120'`, el empate en prórroga no existe (la prórroga siempre da ganador), así que el selector no aplica.
+
+**Confirmar con el grupo antes de implementar:**
+- ¿El corte de etapa es 90' o 120'? (actualmente 90' por default)
 - ¿Da puntos extra acertar el clasificado en penales? ¿Cuántos?
 - ¿El selector es obligatorio o se puede dejar sin responder?
-- ¿Aplica solo si el pronóstico es empate, o siempre en knockout?
 
-**Impacto técnico:** Nueva columna `predictions.penalty_winner`, cambio en `PredictionForm.tsx` (mostrar selector cuando stage ≠ group Y score es empate), cambio en cálculo de puntos si se decide dar bonus.
+**Impacto técnico:** Nueva columna `predictions.penalty_winner`, cambio en `PredictionForm.tsx` (mostrar selector cuando stage ≠ group Y score es empate Y `corte='90'`), cambio en cálculo de puntos si se decide dar bonus.
 
 ---
 
