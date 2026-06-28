@@ -132,7 +132,7 @@ export function MatchContext({ data, defaultOpen = false }: { data: MatchContext
           {/* Forma reciente */}
           {data.form && (
             <>
-              <Label>En el torneo</Label>
+              <Label>Resultados en el torneo</Label>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
                   <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>{homeTeam}</div>

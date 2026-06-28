@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { AdminActions } from './AdminActions'
+import { AdminTools } from './AdminTools'
 import { ContextHealthPanel, type MatchHealth } from './ContextHealthPanel'
 
 export default async function AdminPage() {
@@ -118,6 +119,7 @@ export default async function AdminPage() {
       </p>
 
       <ContextHealthPanel matches={healthMatches} alerts={healthAlerts} />
+      <AdminTools />
 
       <div style={{ marginTop: 16 }}>
         <AdminActions
