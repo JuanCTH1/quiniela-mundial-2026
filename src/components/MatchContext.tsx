@@ -266,7 +266,13 @@ export function MatchContext({ data, defaultOpen = false }: { data: MatchContext
               {data.facts.map((f, i) => (
                 <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', background: 'rgba(255,255,255,0.03)', borderRadius: 8, padding: '9px 12px', marginBottom: i < data.facts!.length - 1 ? 8 : 0 }}>
                   <span style={{ fontSize: 15, flexShrink: 0 }}>💡</span>
-                  <div style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5 }}>{f.body}</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5 }}>
+                    {f.body
+                      .replace(/<cite[^>]*>[\s\S]*?<\/cite>/g, '')
+                      .replace(/<cite[^>]*/g, '')
+                      .replace(/^\s*[.,;]\s*/, '')
+                      .trim()}
+                  </div>
                 </div>
               ))}
             </>

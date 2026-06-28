@@ -7,6 +7,7 @@ import { LiveTimeLabel } from './LiveTimeLabel'
 import { GoalList } from './GoalList'
 import { TeamFlag } from './TeamFlag'
 import { getTheme, type Theme } from '@/lib/themes'
+import { MatchContextButton } from './MatchContextDrawer'
 import type { GoalEntry } from '@/lib/football-data'
 import type { Tables } from '@/types/database.types'
 type Match = Tables<'matches'>
@@ -99,17 +100,17 @@ export function MatchCard({
         }),
       }}
     >
-      {/* Top section — clickable al detalle */}
-      <Link href={`/partido/${match.id}`} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
-        {/* Header row */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-          <span style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            {STAGE_LABELS[match.stage] ?? match.stage}
-            {match.group_name ? ` · G${match.group_name.replace('GROUP_', '')}` : ''}
-          </span>
-          <span style={{ fontSize: 14, fontWeight: 600, color: stateColor }}>{stateLabel}</span>
-        </div>
+      {/* Header row */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+        <span style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          {STAGE_LABELS[match.stage] ?? match.stage}
+          {match.group_name ? ` · G${match.group_name.replace('GROUP_', '')}` : ''}
+        </span>
+        <span style={{ fontSize: 14, fontWeight: 600, color: stateColor }}>{stateLabel}</span>
+      </div>
 
+      {/* Body — clickable al detalle */}
+      <Link href={`/partido/${match.id}`} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
         {/* Teams + score */}
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
           {/* Home */}
@@ -203,6 +204,11 @@ export function MatchCard({
           </div>
         )}
       </Link>
+
+      {/* Botón análisis — fuera del Link, alineado a la derecha (bajo bandera visitante) */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 6 }}>
+        <MatchContextButton matchId={match.id} homeTeam={match.home_team} awayTeam={match.away_team} />
+      </div>
 
       {/* Countdown + form (OPEN) */}
       {isOpen && (

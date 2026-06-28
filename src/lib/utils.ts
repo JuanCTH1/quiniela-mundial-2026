@@ -182,27 +182,27 @@ export function approxLiveMinute(
   if (!actualStartTime || !period) return null
   if (period === 'MT' || period === 'MTE' || period === 'PEN') return null
   const elapsed = Math.floor((Date.now() - new Date(actualStartTime).getTime()) / 60000)
-  if (period === '1T') return Math.min(elapsed, 48)
+  if (period === '1T') return Math.min(elapsed, 55)
   if (period === '2T') {
     if (secondHalfStartTime) {
       const e2 = Math.floor((Date.now() - new Date(secondHalfStartTime).getTime()) / 60000)
-      return Math.min(45 + e2, 97)
+      return Math.min(45 + e2, 100)
     }
-    return Math.min(Math.max(elapsed - 15, 46), 97)
+    return Math.min(Math.max(elapsed - 15, 46), 100)
   }
   if (period === 'ET1') {
     if (extraTimeStartTime) {
       const eET = Math.floor((Date.now() - new Date(extraTimeStartTime).getTime()) / 60000)
-      return Math.min(90 + eET, 108)
+      return Math.min(90 + eET, 112)
     }
-    return Math.min(Math.max(elapsed - 32, 91), 108)
+    return Math.min(Math.max(elapsed - 32, 91), 112)
   }
   if (period === 'ET2') {
     if (extraTimeStartTime) {
       const eET = Math.floor((Date.now() - new Date(extraTimeStartTime).getTime()) / 60000)
-      return Math.min(105 + (eET - 20), 122)
+      return Math.min(105 + (eET - 20), 127)
     }
-    return Math.min(Math.max(elapsed - 47, 106), 122)
+    return Math.min(Math.max(elapsed - 47, 106), 127)
   }
   return null
 }

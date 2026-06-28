@@ -23,7 +23,10 @@ function computeLabel(
   const fixed = formatLivePeriod(period, null)
   if (fixed === 'MT' || fixed === 'MTE' || fixed === 'PEN') return fixed
   const approx = approxLiveMinute(actualStartTime, period, secondHalfStartTime, extraTimeStartTime)
-  if (approx != null) return `~${approx}' · ${period}`
+  if (approx != null) {
+    const minuteStr = formatLivePeriod(period, approx) ?? `${approx}'`
+    return `~${minuteStr} · ${period}`
+  }
   return fixed
 }
 

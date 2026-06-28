@@ -5,6 +5,7 @@ import { LiveRefresher } from '@/components/LiveRefresher'
 import { isMatchLocked, localTodayStr, dayBoundsUTC } from '@/lib/utils'
 import { DateNav } from './DateNav'
 import { SwipeNav } from './SwipeNav'
+import { NextMatchButton } from './NextMatchButton'
 import { getTheme, type Theme } from '@/lib/themes'
 
 export default async function PartidosPage({
@@ -121,12 +122,15 @@ export default async function PartidosPage({
   const hasLiveMatches = matches?.some(m => m.status === 'IN_PROGRESS') ?? false
 
   return (
-    <SwipeNav currentFecha={activeFecha} currentEtapa={etapa} primaryColor={getTheme(theme).colors.primary} scrollToNextMatch={!!nextMatch}>
+    <SwipeNav currentFecha={activeFecha} currentEtapa={etapa} primaryColor={getTheme(theme).colors.primary}>
       <LiveRefresher hasLiveMatches={hasLiveMatches} />
       <div style={{ paddingTop: 14 }}>
-        <h1 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 12px', color: 'var(--text-main)' }}>
-          Partidos
-        </h1>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+          <h1 style={{ fontSize: 18, fontWeight: 700, margin: 0, color: 'var(--text-main)' }}>
+            Partidos
+          </h1>
+          {nextMatch && <NextMatchButton />}
+        </div>
 
         <DateNav currentFecha={fecha} currentEtapa={etapa} timezone={timezone} availableDates={availableDates} />
 

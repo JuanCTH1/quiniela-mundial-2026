@@ -8,7 +8,6 @@ interface Props {
   currentFecha: string
   currentEtapa?: string
   primaryColor?: string
-  scrollToNextMatch?: boolean
 }
 
 function startsInScrollable(target: EventTarget | null): boolean {
@@ -22,18 +21,30 @@ function startsInScrollable(target: EventTarget | null): boolean {
   return false
 }
 
-export function SwipeNav({ children, currentFecha, currentEtapa, primaryColor = '#006847', scrollToNextMatch }: Props) {
+export function SwipeNav({ children, currentFecha, currentEtapa, primaryColor = '#006847' }: Props) {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const touchStart = useRef<{ x: number; y: number } | null>(null)
 
+  // Restaurar posición de scroll cuando se regresa desde detalle de partido
   useEffect(() => {
-    if (!scrollToNextMatch) return
-    const t = setTimeout(() => {
-      document.getElementById('next-match')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }, 350)
-    return () => clearTimeout(t)
-  }, [scrollToNextMatch, searchParams])
+    const saved = sessionStorage.getItem('partidos-scroll')
+    if (saved) {
+      sessionStorage.removeItem('partidos-scroll')
+      requestAnimationFrame(() => window.scrollTo({ top: parseInt(saved), behavior: 'instant' as ScrollBehavior }))
+    }
+  }, [])
+
+  // Guardar posición de scroll al navegar a detalle de partido
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      const a = (e.target as HTMLElement).closest('a[href]') as HTMLAnchorElement | null
+      if (a?.pathname?.startsWith('/partido/')) {
+        sessionStorage.setItem('partidos-scroll', String(window.scrollY))
+      }
+    }
+    document.addEventListener('click', handleClick)
+    return () => document.removeEventListener('click', handleClick)
+  }, [])
   const blocked = useRef(false)
   const [swipe, setSwipe] = useState<'left' | 'right' | null>(null)
 
