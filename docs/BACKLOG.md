@@ -12,6 +12,28 @@
 
 ---
 
+## 🟠 IMPORTANTE (próxima sesión, antes de Modo Real)
+
+### FEAT-001 · Pronóstico de penales en eliminatorias con empate
+**Qué:** Cuando un usuario pronostica empate en un partido de eliminatoria (LAST_32, ROUND_OF_16, QUARTER_FINALS, SEMI_FINALS, FINAL), mostrar un selector adicional: "¿Quién avanza?" con los dos equipos.
+
+**Comportamiento actual:** El resultado válido es a 90' (`regularTime`). Si pronosticas 2-2 y el partido termina 2-2 en 90' antes de ir a penales → puntos completos. Pero no hay forma de pronosticar el clasificado.
+
+**UX propuesta:**
+- Al escribir un empate en un partido knockout → aparece un selector visual sencillo debajo del score (`[Equipo A] vs [Equipo B]`, tipo pill seleccionable)
+- El selector solo aparece en stages ≠ GROUP/GROUP_STAGE
+- Se guarda en `predictions` como columna nueva (ej. `penalty_winner`)
+- Si el partido termina en penalties, comparar el clasificado real con `penalty_winner` → bonus de puntos o solo tracking visual (a definir con el grupo)
+
+**Preguntas abiertas antes de implementar (confirmar con el grupo):**
+- ¿Da puntos extra acertar el clasificado en penales? ¿Cuántos?
+- ¿El selector es obligatorio o se puede dejar sin responder?
+- ¿Aplica solo si el pronóstico es empate, o siempre en knockout?
+
+**Impacto técnico:** Nueva columna `predictions.penalty_winner`, cambio en `PredictionForm.tsx` (mostrar selector cuando stage ≠ group Y score es empate), cambio en cálculo de puntos si se decide dar bonus.
+
+---
+
 ## 🟡 PENDIENTES OPERATIVOS (antes de Modo Real)
 
 ### OP-001 · Backfill de scores jornada 1
