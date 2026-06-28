@@ -25,19 +25,20 @@
 - Se guarda en `predictions` como columna nueva (ej. `penalty_winner`)
 - Si el partido termina en penalties, comparar el clasificado real con `penalty_winner` → bonus de puntos o solo tracking visual (a definir con el grupo)
 
-**Contexto técnico — cómo funciona el corte hoy (`src/lib/football-data.ts:104`):**
-- `corte='90'` (default actual): si el partido va a prórroga o penales → se usa `regularTime` (marcador a 90'). Un 1-1 que termina 2-1 en prórroga = resultado quiniela **1-1**. Pronosticar 2-1 no tiene sentido bajo esta config.
-- `corte='120'`: se usa `fullTime` (marcador al final de prórroga). Un 2-1 en prórroga = resultado válido **2-1**. Bajo esta config sí tiene sentido pronosticar resultados de prórroga.
-- `corte='PENALTIES'`: igual que `'120'` en la implementación actual.
+**Corte confirmado: `'120'`** — el resultado válido es el marcador final del partido, incluyendo prórroga. Se usa `fullTime` de la API (`src/lib/football-data.ts:121`).
 
-**Implicación para FEAT-001:** El selector "¿quién avanza?" solo tiene sentido con `corte='90'` — porque con ese corte el empate a 90' es definitivo y alguien tiene que clasificar. Con `corte='120'`, el empate en prórroga no existe (la prórroga siempre da ganador), así que el selector no aplica.
+**Los tres casos en eliminatorias:**
+- `duration='REGULAR'` → fullTime = resultado (ej. 2-0). Sin empate posible.
+- `duration='EXTRA_TIME'` → fullTime = resultado tras prórroga (ej. 2-1). Sin empate posible.
+- `duration='PENALTY_SHOOTOUT'` → fullTime = **empate a 120'** (ej. 1-1). Alguien avanza por penales. **Este es el único caso donde FEAT-001 aplica.**
 
-**Confirmar con el grupo antes de implementar:**
-- ¿El corte de etapa es 90' o 120'? (actualmente 90' por default)
+**FEAT-001 aplica solo cuando `duration='PENALTY_SHOOTOUT'`** — es decir, cuando el partido termina en empate después de 120' y se resuelve en penales. El marcador para puntuar es el empate (ej. 1-1), y el selector "¿quién avanza?" captura la dimensión extra.
+
+**Pendiente confirmar con el grupo:**
 - ¿Da puntos extra acertar el clasificado en penales? ¿Cuántos?
-- ¿El selector es obligatorio o se puede dejar sin responder?
+- ¿El selector es obligatorio cuando hay empate knockout, o se puede omitir?
 
-**Impacto técnico:** Nueva columna `predictions.penalty_winner`, cambio en `PredictionForm.tsx` (mostrar selector cuando stage ≠ group Y score es empate Y `corte='90'`), cambio en cálculo de puntos si se decide dar bonus.
+**Impacto técnico:** Nueva columna `predictions.penalty_winner`, cambio en `PredictionForm.tsx` (mostrar selector cuando stage ≠ group Y score es empate), lógica en cálculo de puntos si se decide dar bonus.
 
 ---
 
