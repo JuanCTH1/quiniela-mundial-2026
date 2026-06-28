@@ -106,7 +106,10 @@ export function MatchCard({
           {STAGE_LABELS[match.stage] ?? match.stage}
           {match.group_name ? ` · G${match.group_name.replace('GROUP_', '')}` : ''}
         </span>
-        <span style={{ fontSize: 14, fontWeight: 600, color: stateColor }}>{stateLabel}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 14, fontWeight: 600, color: stateColor }}>{stateLabel}</span>
+          <MatchContextButton matchId={match.id} homeTeam={match.home_team} awayTeam={match.away_team} />
+        </div>
       </div>
 
       {/* Body — clickable al detalle */}
@@ -177,32 +180,33 @@ export function MatchCard({
           </div>
         </div>
 
-      </Link>
-
-      {/* Pronóstico + botón análisis — misma fila */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 8, marginBottom: 2 }}>
+        {/* Mi pronóstico — debajo del marcador, prominente pero secundario */}
         {myPrediction?.home_score != null && !isOpen && (
           <div style={{
-            display: 'inline-flex', alignItems: 'center', gap: 6,
-            padding: '4px 12px', borderRadius: 10,
-            background: myColors?.bg ?? 'rgba(255,255,255,0.05)',
-            border: `1px solid ${myColors?.border ?? 'rgba(255,255,255,0.12)'}`,
+            marginTop: 8,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
           }}>
-            <span style={{ fontSize: 10, color: myColors?.text ?? 'var(--text-muted)' }}>
-              {myResult ? (resultLabels[myResult.type] ?? myResult.type) : t.texts.you}
-            </span>
-            <span style={{ fontSize: 17, fontWeight: 700, color: myColors?.text ?? 'var(--text-main)', letterSpacing: 1 }}>
-              {myPrediction.home_score}–{myPrediction.away_score}
-            </span>
-            {myResult && (
-              <span style={{ fontSize: 10, color: myColors?.text, fontWeight: 600 }}>
-                {myResult.pts}pts
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              padding: '4px 12px', borderRadius: 10,
+              background: myColors?.bg ?? 'rgba(255,255,255,0.05)',
+              border: `1px solid ${myColors?.border ?? 'rgba(255,255,255,0.12)'}`,
+            }}>
+              <span style={{ fontSize: 10, color: myColors?.text ?? 'var(--text-muted)' }}>
+                {myResult ? (resultLabels[myResult.type] ?? myResult.type) : t.texts.you}
               </span>
-            )}
+              <span style={{ fontSize: 17, fontWeight: 700, color: myColors?.text ?? 'var(--text-main)', letterSpacing: 1 }}>
+                {myPrediction.home_score}–{myPrediction.away_score}
+              </span>
+              {myResult && (
+                <span style={{ fontSize: 10, color: myColors?.text, fontWeight: 600 }}>
+                  {myResult.pts}pts
+                </span>
+              )}
+            </div>
           </div>
         )}
-        <MatchContextButton matchId={match.id} homeTeam={match.home_team} awayTeam={match.away_team} />
-      </div>
+      </Link>
 
       {/* Countdown + form (OPEN) */}
       {isOpen && (

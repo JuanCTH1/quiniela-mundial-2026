@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { MatchContext, type MatchContextData } from './MatchContext'
 
@@ -15,6 +15,8 @@ export function MatchContextButton({ matchId, homeTeam, awayTeam }: Props) {
   const [data, setData] = useState<MatchContextData | null>(null)
   const [loading, setLoading] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const sheetRef = useRef<HTMLDivElement>(null)
+  const touchStartY = useRef(0)
 
   useEffect(() => { setMounted(true) }, [])
 
@@ -72,6 +74,13 @@ export function MatchContextButton({ matchId, homeTeam, awayTeam }: Props) {
 
       {/* Bottom sheet — renderizado en document.body via portal */}
       <div
+        ref={sheetRef}
+        onTouchStart={e => { touchStartY.current = e.touches[0].clientY }}
+        onTouchEnd={e => {
+          const delta = e.changedTouches[0].clientY - touchStartY.current
+          const atTop = (sheetRef.current?.scrollTop ?? 0) === 0
+          if (atTop && delta > 48) close()
+        }}
         style={{
           position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 201,
           // 64px = sticky header aprox — evita que el sheet tape el nav de arriba
