@@ -17,6 +17,8 @@ export function MatchContextButton({ matchId, homeTeam, awayTeam }: Props) {
   const [mounted, setMounted] = useState(false)
   const sheetRef = useRef<HTMLDivElement>(null)
   const touchStartY = useRef(0)
+  const dragY = useRef(0)
+  const [dragOffset, setDragOffset] = useState(0)
 
   useEffect(() => { setMounted(true) }, [])
 
@@ -75,11 +77,25 @@ export function MatchContextButton({ matchId, homeTeam, awayTeam }: Props) {
       {/* Bottom sheet — renderizado en document.body via portal */}
       <div
         ref={sheetRef}
-        onTouchStart={e => { touchStartY.current = e.touches[0].clientY }}
-        onTouchEnd={e => {
-          const delta = e.changedTouches[0].clientY - touchStartY.current
+        onTouchStart={e => {
+          touchStartY.current = e.touches[0].clientY
+          dragY.current = 0
+        }}
+        onTouchMove={e => {
           const atTop = (sheetRef.current?.scrollTop ?? 0) === 0
-          if (atTop && delta > 48) close()
+          const delta = e.touches[0].clientY - touchStartY.current
+          // Solo arrastrar hacia abajo cuando el scroll ya llegó al tope
+          if (atTop && delta > 0) {
+            dragY.current = delta
+            setDragOffset(delta)
+          }
+        }}
+        onTouchEnd={() => {
+          if (dragY.current > 80) {
+            close()
+          }
+          setDragOffset(0)
+          dragY.current = 0
         }}
         style={{
           position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 201,
@@ -90,8 +106,8 @@ export function MatchContextButton({ matchId, homeTeam, awayTeam }: Props) {
           borderRadius: '20px 20px 0 0',
           borderTop: '1px solid var(--glass-border)',
           paddingBottom: 'env(safe-area-inset-bottom)',
-          transform: isOpen ? 'translateY(0)' : 'translateY(110%)',
-          transition: 'transform 0.32s cubic-bezier(0.32,0.72,0,1)',
+          transform: isOpen ? `translateY(${dragOffset}px)` : 'translateY(110%)',
+          transition: dragOffset > 0 ? 'none' : 'transform 0.32s cubic-bezier(0.32,0.72,0,1)',
           willChange: 'transform',
           overscrollBehavior: 'contain',
         }}

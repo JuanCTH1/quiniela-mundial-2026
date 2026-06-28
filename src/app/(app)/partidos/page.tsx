@@ -125,15 +125,14 @@ export default async function PartidosPage({
     <SwipeNav currentFecha={activeFecha} currentEtapa={etapa} primaryColor={getTheme(theme).colors.primary}>
       <LiveRefresher hasLiveMatches={hasLiveMatches} />
       <div style={{ paddingTop: 14 }}>
-        <h1 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 12px', color: 'var(--text-main)' }}>
-          Partidos
-        </h1>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+          <h1 style={{ fontSize: 18, fontWeight: 700, margin: 0, color: 'var(--text-main)' }}>
+            Partidos
+          </h1>
+          {nextMatch && <NextMatchButton />}
+        </div>
 
         <DateNav currentFecha={fecha} currentEtapa={etapa} timezone={timezone} availableDates={availableDates} />
-
-        {nextMatch && (
-          <NextMatchButton />
-        )}
 
         {!matches?.length ? (
           <p style={{ color: 'var(--text-muted)', fontSize: 14, textAlign: 'center', marginTop: 40 }}>

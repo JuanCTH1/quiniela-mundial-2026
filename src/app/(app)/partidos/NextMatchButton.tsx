@@ -5,14 +5,15 @@ export function NextMatchButton() {
     <button
       onClick={() => document.getElementById('next-match')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
       style={{
-        display: 'flex', alignItems: 'center', gap: 6,
-        padding: '6px 14px', marginBottom: 12, borderRadius: 20,
+        display: 'flex', alignItems: 'center', gap: 4,
+        padding: '4px 10px', borderRadius: 16,
         background: 'color-mix(in srgb, var(--theme-primary) 14%, transparent)',
         border: '1px solid color-mix(in srgb, var(--theme-primary) 30%, transparent)',
-        color: 'var(--theme-primary)', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+        color: 'var(--theme-primary)', fontSize: 11, fontWeight: 600, cursor: 'pointer',
+        whiteSpace: 'nowrap',
       }}
     >
-      ↓ Siguiente partido
+      ↓ Siguiente
     </button>
   )
 }
