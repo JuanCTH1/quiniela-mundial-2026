@@ -63,9 +63,7 @@ export function MatchContextButton({ matchId, homeTeam, awayTeam }: Props) {
         onClick={close}
         style={{
           position: 'fixed', inset: 0, zIndex: 200,
-          background: 'rgba(0,0,0,0.75)',
-          backdropFilter: 'blur(3px)',
-          WebkitBackdropFilter: 'blur(3px)',
+          background: 'rgba(0,0,0,0.35)',
           opacity: isOpen ? 1 : 0,
           pointerEvents: isOpen ? 'auto' : 'none',
           transition: 'opacity 0.25s',
@@ -79,7 +77,7 @@ export function MatchContextButton({ matchId, homeTeam, awayTeam }: Props) {
           // 64px = sticky header aprox — evita que el sheet tape el nav de arriba
           maxHeight: 'calc(100dvh - 64px)',
           overflowY: 'auto',
-          background: 'var(--bg-card)',
+          background: 'rgba(10, 15, 13, 0.97)',
           borderRadius: '20px 20px 0 0',
           borderTop: '1px solid var(--glass-border)',
           paddingBottom: 'env(safe-area-inset-bottom)',
@@ -92,7 +90,7 @@ export function MatchContextButton({ matchId, homeTeam, awayTeam }: Props) {
         {/* Header sticky */}
         <div style={{
           position: 'sticky', top: 0, zIndex: 1,
-          background: 'var(--bg-card)',
+          background: 'rgba(10, 15, 13, 0.97)',
           padding: '14px 16px 10px',
           borderBottom: '1px solid var(--glass-border)',
           display: 'flex', alignItems: 'center',
