@@ -62,28 +62,6 @@ Deno.serve(async () => {
     ok.push('Facts: todos los partidos próximos 72h tienen datos ✓')
   }
 
-  // ── 3. Facts sin aprobar para partidos próximos 48h ───────────────────────
-  const ids48h = (upcoming72 ?? [])
-    .filter(m => new Date(m.scheduled_time) <= in48h)
-    .map(m => m.id)
-
-  if (ids48h.length > 0) {
-    const { data: unreviewed } = await supabase
-      .from('match_facts')
-      .select('match_id')
-      .eq('reviewed', false)
-      .in('match_id', ids48h)
-
-    if (unreviewed?.length) {
-      const matchNames = (upcoming72 ?? [])
-        .filter(m => ids48h.includes(m.id) && (unreviewed ?? []).some((f: { match_id: string }) => f.match_id === m.id))
-        .map(m => `${m.home_team} vs ${m.away_team}`)
-      alerts.push({ level: 'yellow', message: `Facts sin aprobar para partidos en 48h: ${matchNames.join(', ')}` })
-    } else if (ids48h.length > 0) {
-      ok.push('Facts aprobados: todos revisados para próximos 48h ✓')
-    }
-  }
-
   // ── 4. Partidos FINISHED sin resultado registrado ─────────────────────────
   const { data: brokenFinished } = await supabase
     .from('matches')

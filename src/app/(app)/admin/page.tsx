@@ -68,10 +68,6 @@ export default async function AdminPage() {
   const now48h = new Date(Date.now() + 48 * 3600 * 1000)
   const upcoming48h = scheduled.filter(m => new Date(m.scheduled_time) <= now48h)
   const missingFacts48h = upcoming48h.filter(m => !factsByMatch.has(m.id))
-  const unreviewedFacts48h = upcoming48h.filter(m => {
-    const mFacts = factsByMatch.get(m.id) ?? []
-    return mFacts.length > 0 && mFacts.some(f => !f.reviewed)
-  })
 
   const healthAlerts: { level: 'red' | 'yellow'; message: string }[] = [
     ...tbdKnockout.map(m => ({
@@ -81,10 +77,6 @@ export default async function AdminPage() {
     ...(missingFacts48h.length > 0 ? [{
       level: 'red' as const,
       message: `${missingFacts48h.length} partido${missingFacts48h.length > 1 ? 's' : ''} en 48h sin datos curiosos: ${missingFacts48h.map(m => `${m.home_team} vs ${m.away_team}`).join(', ')}`,
-    }] : []),
-    ...(unreviewedFacts48h.length > 0 ? [{
-      level: 'yellow' as const,
-      message: `Facts sin aprobar para: ${unreviewedFacts48h.map(m => `${m.home_team} vs ${m.away_team}`).join(', ')}`,
     }] : []),
   ]
 

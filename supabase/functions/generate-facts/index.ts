@@ -133,7 +133,7 @@ Devuelve ÚNICAMENTE un JSON array válido (sin markdown, sin backticks, sin tex
       if (!Array.isArray(facts) || facts.length < 1) throw new Error(`facts inválidos`)
 
       const rows = facts.slice(0, 3).map((f, i) => ({
-        match_id: m.id, category: f.category, body: f.body, position: i, reviewed: false,
+        match_id: m.id, category: f.category, body: f.body, position: i, reviewed: true,
       }))
 
       const { error: iErr } = await supabase.from('match_facts').insert(rows)

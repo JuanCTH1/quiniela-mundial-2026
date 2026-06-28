@@ -283,11 +283,11 @@ export interface HealthAlert { level: 'red' | 'yellow'; message: string }
 export function ContextHealthPanel({ matches, alerts = [] }: { matches: MatchHealth[]; alerts?: HealthAlert[] }) {
   const withBreaks = matches.filter(m =>
     !m.has_venue || !m.has_odds || !m.has_home_coach || !m.has_away_coach ||
-    m.facts.length === 0 || m.facts.some(f => !f.reviewed)
+    m.facts.length === 0
   )
   const healthy = matches.filter(m =>
     m.has_venue && m.has_odds && m.has_home_coach && m.has_away_coach &&
-    m.facts.length > 0 && m.facts.every(f => f.reviewed)
+    m.facts.length > 0
   )
 
   return (
