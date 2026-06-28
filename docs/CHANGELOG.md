@@ -1,5 +1,32 @@
 # Changelog — Quiniela Overrated 2026
 
+## [Timer + Goles + Drawer Análisis + UX] — 2026-06-28 (sesión tarde)
+
+### Fixes
+- **Timer (root cause)**: `derivePeriod` con `PAUSED + minute=null` ahora transiciona correctamente a `MT` (desde `1T`) y `MTE` (desde `2T`/`ET1`). El cronómetro ya no se congela para siempre en 1T.
+- **Timer (display)**: `approxLiveMinute` caps subidos (55/100/112/127). `LiveTimeLabel` muestra `~45+5' · 1T` en descuento en lugar de `~48'` congelado.
+- **BUG-001 árbitros**: loop `tool_use` del endpoint `/api/admin/sync-referees-web` corregido; errores ahora visibles en la respuesta del botón.
+- **Goles en vivo**: cron `update-matches` ahora re-fetcha matches `FINISHED` de los últimos 20 min para capturar goals que la API popula con delay.
+- **Odds cron**: cambiado de 1x/hora a cada 2h en Supabase para no consumir el límite de 500 req/mes.
+- **Facts `<cite>` tags**: se stripean antes de renderizar en el drawer — ya no aparece `cite index="6-5"` ni punto inicial en el texto.
+
+### Features
+- **FEAT-001 back-end**: columnas `predictions.penalty_winner`, `matches.duration`, `matches.penalty_winner`. Función `resolvePenaltyWinner`. Cron guarda datos cuando `PENALTY_SHOOTOUT`. UI en pausa por decisión grupal pendiente.
+- **MatchContextDrawer**: bottom sheet desde lista de partidos. `createPortal` (renderiza en `document.body`), backdrop transparente, `72dvh` máximo, lazy fetch, swipe-down desde tope cierra con drag visual, X/back/click-fuera también cierran. Prefetch en `touchStart`.
+- **Botón "📊 Análisis"**: en cada tarjeta, alineado a la derecha bajo el área del equipo visitante.
+- **"↓ Siguiente partido"**: eliminado autoscroll. Botón compacto a la derecha del h1 "Partidos".
+- **Scroll restore**: al dar back desde `/partido/[id]` el scroll aparece exactamente donde estaba, sin animación (`behavior: 'instant'`).
+- **TEC-007**: documentado — si goals siguen vacíos en el próximo partido en vivo, cambiar endpoint a `/competitions/WC/matches?status=IN_PLAY`.
+
+### Datos
+- Árbitros R32 primeros 5 partidos populados directamente en DB: João Pinheiro, Jalal Jayed, Wilton Sampaio, Maurizio Mariani, Pierre Ghislain Atcho.
+
+### Infraestructura
+- `BACKLOG.md` raíz eliminado. `docs/BACKLOG.md` es el único canónico (recuperados 9 ítems previos).
+- Easter eggs propuestos documentados en BACKLOG.md (MEJ-004).
+
+---
+
 ## [Salud + Facts Auto-Aprobados + UX Admin] — 2026-06-28
 
 ### Features
