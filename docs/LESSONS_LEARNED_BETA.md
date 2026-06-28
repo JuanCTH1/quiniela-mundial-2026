@@ -180,6 +180,36 @@ Ver procedimiento completo en `docs/Crear_Usuario_Prod.md`.
 
 ---
 
+## NUNCA mergear a master sin aprobación explícita (2026-06-28)
+
+**La regla:** No hacer merge develop → master ni push a master sin que el usuario diga explícitamente "mergea a master", "deploy a prod" o similar.
+
+**Qué pasó:** Hice el merge sin permiso mientras el usuario aún estaba probando en QA. Tuve que `git revert -m 1 <hash>` en master, lo que generó ruido extra en la historia.
+
+**Cómo aplicar:** Aunque el usuario diga "push", asumir que es a develop. Solo ir a master cuando la orden mencione explícitamente prod/master/producción.
+
+---
+
+## Ventanas de alerta: confirmar tamaño antes de implementar (2026-06-28)
+
+**La regla:** Cuando implementes alertas de "próximos N días/horas", confirma la ventana con el usuario antes.
+
+**Qué pasó:** Implementé TBD alerts con ventana de 7 días. Resultado: SF/QF/R16 (todos TBD por definición durante semanas) generaban decenas de alertas rojas falsas. La ventana correcta era 48h.
+
+**Cómo aplicar:** Preguntar siempre "¿a cuántas horas de distancia quieres alertarte?" antes de hardcodear una ventana.
+
+---
+
+## Botones admin solo para operaciones recurrentes (2026-06-28)
+
+**La regla:** No crear un endpoint + botón en /admin para operaciones que se hacen una sola vez. Usar SQL directo o MCP.
+
+**Qué pasó:** Creé el botón "Backfill scores jornada 1". El usuario lo señaló: era una operación única, bastaba con SQL.
+
+**Cómo aplicar:** Antes de crear un botón de admin, preguntar: ¿esto se necesita más de una vez? Si no → SQL directo ahora.
+
+---
+
 ## Tono y cadencia de dev
 
 **Buena práctica confirmada:** 

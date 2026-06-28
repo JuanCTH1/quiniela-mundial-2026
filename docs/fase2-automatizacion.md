@@ -111,7 +111,21 @@ Se corre una vez por clasificado confirmado, al terminar la fase de grupos.
 - 7 etapas en `reglas_puntuacion` incluyendo LAST_32 (ronda nueva del Mundial 2026 con 48 equipos)
 - `system_logs` activos con cada corrida del cron
 
-## Pendiente
+## Sistema de alertas de salud (agregado Jun 28)
 
-- **RESEND_API_KEY**: para email de alerta en FAILSAFE_ALERT. La lógica en el cron ya escribe el log; cuando se configure Resend, se agrega el envío de email sin cambiar la lógica principal.
-- **Variable CRON_SECRET en Railway**: agregar manualmente en el dashboard (producción y QA).
+Edge Function `health-check` v2 deployada. 5 checks ejecutados diariamente a las 08:00 UTC via pg_cron job #23:
+
+1. Equipos TBD en knockout próximas **48h** (antes era 7d — demasiado ruido)
+2. Facts faltantes en próximas 72h
+3. Partidos FINISHED sin `home_score_quiniela`
+4. Momios faltantes próximas 72h
+5. Árbitros faltantes próximas 72h
+
+Envía email via Resend si hay alertas. Logs en `system_logs` con `log_type='HEALTH_CHECK'`.
+
+## Estado actualizado (Jun 28)
+
+- `RESEND_API_KEY` ✅ configurada en Railway (prod y QA)
+- `CRON_SECRET` ✅ configurada en Railway
+- `health-check-daily` ✅ pg_cron job #23, 08:00 UTC
+- 104 partidos base + R32 fixtures actualizados automáticamente por `sync-fixtures`

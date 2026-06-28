@@ -19,7 +19,7 @@ clave, datos curiosos). Inspirada en FotMob/SofaScore, adaptada a la quiniela.
 | Botón "Ver en mapa" | Link plano `google.com/maps?q=lat,lng` | Cero dependencia, nunca falla |
 | Momios | **The Odds API**, mercado `h2h` por partido (key ya configurada) | Cuotas reales = no sesgadas, a diferencia del Elo del sorteo |
 | Datos curiosos | **Generados con Claude (Haiku 4.5)** antes del partido, guardados en DB | Latencia/costo cero en runtime; revisables |
-| Revisión de facts | **Obligatoria** — RLS solo muestra `reviewed = true` a jugadores | Listón "cero fallos"; nada generado por IA se libera sin ojo humano |
+| Revisión de facts | ~~Obligatoria~~ → **Auto-aprobado** (Jun 28) — `generate-facts` v4 inserta con `reviewed: true`. RLS sigue mostrando solo `reviewed = true`, pero ahora se aprueba en el momento de inserción. | Decisión: la calidad de Haiku + web_search fue suficientemente buena; el paso de revisión manual generaba ruido en /admin sin valor real. |
 | Imágenes en bucket | Bucket `venues` **público** | Son fotos de estadios; `<img>` carga directo sin firmar URLs |
 | Consenso de la quiniela | **Descartado** por ahora | — |
 | Probabilidades del ranking de sorteo | **Backlog** | Sesga (Elo del sorteo) |
@@ -78,10 +78,8 @@ Las keys ya están en `.env.local` (`ODDS_API_KEY`, `ANTHROPIC_API_KEY`,
    el cruce, encolar facts con delay **60 min** (margen para revisar).
 5. **Edge function `update-match-odds`** — gemelo de `functions/update-odds`, mercado
    `h2h` de `soccer_fifa_world_cup`; upsert en `match_odds`. 1 request cubre toda la jornada.
-6. **Validación (cron diario 8am)** — revisa próximas 48h contra checklist (venue,
-   metadata, ≥3 facts, facts revisados, árbitro si <5 días, forma fresca); si falta
-   algo → email Resend al admin + panel admin con semáforo y botón re-trigger.
-7. **Panel admin** para revisar/aprobar facts (`reviewed = true`).
+6. ~~**Validación (cron diario 8am)**~~ ✅ **HECHO (Jun 28)** — Edge Function `health-check` v2. 5 checks: TBD equipos 48h, facts faltantes 72h, FINISHED sin score, momios 72h, árbitros 72h. pg_cron `health-check-daily` 08:00 UTC. Email Resend si hay alertas. Panel /admin con `ContextHealthPanel`.
+7. ~~**Panel admin** para revisar/aprobar facts~~ ✅ **HECHO (Jun 28)** — Auto-aprobado en inserción. Panel muestra estado sin chip de "pendiente de revisión".
 
 ### Loader — TODOs marcados en `src/lib/match-context.ts`
 - `stakes`: calcular desde standings del grupo (matemática pura, NO Claude).
