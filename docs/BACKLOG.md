@@ -124,6 +124,12 @@ Feature implementada Jun 25 (GoalList + goals JSONB). Verificar end-to-end:
 - `LiveRefresher` actualiza lista cada 20s sin recargar.
 - Banner se actualiza en ~5s.
 
+### TEC-007 · Verificar si /matches/{id} devuelve goals durante IN_PROGRESS
+
+Si en el próximo partido en vivo `matches.goals` sigue vacío, cambiar el cron para usar
+`/competitions/WC/matches?status=IN_PLAY` (endpoint de competencia) que sí incluye el array
+`goals` completo. Mismo tier pagado, sin costo extra. Revisar `system_logs` tras el partido.
+
 ### TEC-006 · generate-facts: verificar logging a system_logs en producción
 
 `generate-facts` v4 deployada con `reviewed: true`. Verificar que el bloque `system_logs` está presente en la versión deployada (hubo un deploy donde el return estaba antes del insert).
