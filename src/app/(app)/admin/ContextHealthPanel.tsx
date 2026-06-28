@@ -277,14 +277,17 @@ function MatchRow({ match }: { match: MatchHealth }) {
   )
 }
 
-export function ContextHealthPanel({ matches }: { matches: MatchHealth[] }) {
+export interface HealthAlert { level: 'red' | 'yellow'; message: string }
+
+
+export function ContextHealthPanel({ matches, alerts = [] }: { matches: MatchHealth[]; alerts?: HealthAlert[] }) {
   const withBreaks = matches.filter(m =>
     !m.has_venue || !m.has_odds || !m.has_home_coach || !m.has_away_coach ||
-    m.facts.length === 0 || m.facts.some(f => !f.reviewed)
+    m.facts.length === 0
   )
   const healthy = matches.filter(m =>
     m.has_venue && m.has_odds && m.has_home_coach && m.has_away_coach &&
-    m.facts.length > 0 && m.facts.every(f => f.reviewed)
+    m.facts.length > 0
   )
 
   return (
@@ -295,9 +298,26 @@ export function ContextHealthPanel({ matches }: { matches: MatchHealth[] }) {
           {healthy.length}/{matches.length} ok
         </span>
       </div>
-      <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '0 0 14px' }}>
+      <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '0 0 10px' }}>
         Salud de datos y aprobación de facts para partidos próximos.
       </p>
+
+      {alerts.length > 0 && (
+        <div style={{ marginBottom: 14, display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {alerts.map((a, i) => (
+            <div key={i} style={{
+              padding: '8px 12px', borderRadius: 8, fontSize: 12, fontWeight: 500,
+              background: a.level === 'red' ? 'rgba(206,17,38,0.12)' : 'rgba(255,193,7,0.10)',
+              border: `1px solid ${a.level === 'red' ? 'rgba(206,17,38,0.35)' : 'rgba(255,193,7,0.35)'}`,
+              color: a.level === 'red' ? 'var(--mx-red)' : 'var(--gold)',
+              lineHeight: 1.4,
+            }}>
+              {a.level === 'red' ? '🔴' : '🟡'} {a.message}
+            </div>
+          ))}
+        </div>
+      )}
+
 
       {matches.length === 0 && (
         <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>No hay partidos SCHEDULED con equipos definidos.</p>

@@ -157,14 +157,14 @@ async function computeForm(
   const lastFive = async (team: string): Promise<FormResult[]> => {
     const { data } = await supabase
       .from('matches')
-      .select('home_team, away_team, home_score_fulltime, away_score_fulltime, scheduled_time')
+      .select('home_team, away_team, home_score_quiniela, away_score_quiniela, scheduled_time')
       .or(`home_team.eq.${team},away_team.eq.${team}`)
       .eq('status', 'FINISHED')
       .order('scheduled_time', { ascending: false })
       .limit(5)
     return (data ?? [])
-      .filter(m => m.home_score_fulltime != null && m.away_score_fulltime != null)
-      .map(m => resultFor(team, m.home_team, m.away_team, m.home_score_fulltime!, m.away_score_fulltime!))
+      .filter(m => m.home_score_quiniela != null && m.away_score_quiniela != null)
+      .map(m => resultFor(team, m.home_team, m.away_team, m.home_score_quiniela!, m.away_score_quiniela!))
   }
   const [home, away] = await Promise.all([lastFive(homeTeam), lastFive(awayTeam)])
   if (home.length === 0 && away.length === 0) return null

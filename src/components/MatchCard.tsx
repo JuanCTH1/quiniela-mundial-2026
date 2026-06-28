@@ -229,15 +229,17 @@ export function MatchCard({
 
       {/* Ranking preview (LOCKED / FINISHED / LIVE) */}
       {(isLocked || isFinished || isLive) && allPredictions && allPredictions.length > 0 && (
-        <RankingPreview
-          matchId={match.id}
-          match={match}
-          allPredictions={allPredictions}
-          currentUserId={currentUserId ?? ''}
-          isFinished={isFinished}
-          isLive={isLive}
-          theme={theme}
-        />
+        <div style={{ marginTop: 8 }}>
+          <RankingPreview
+            matchId={match.id}
+            match={match}
+            allPredictions={allPredictions}
+            currentUserId={currentUserId ?? ''}
+            isFinished={isFinished}
+            isLive={isLive}
+            theme={theme}
+          />
+        </div>
       )}
     </div>
   )
