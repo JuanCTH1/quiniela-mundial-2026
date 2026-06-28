@@ -1,5 +1,18 @@
 # Changelog — Quiniela Overrated 2026
 
+## [Bugfix front-end: render intermitente + scroll offset] — 2026-06-28 (sesión noche)
+
+### Bugs corregidos
+
+- **BUG: Form de pronósticos invisible (intermitente)**: El `MatchContextDrawer` montaba su bottom-sheet portal para **cada** `MatchCard` en el DOM, oculto con `translateY(110%)` pero con `will-change: transform` activo. Con 8-10 partidos en pantalla eso dejaba 8-10 capas GPU permanentes que saturaban el compositor de Chrome mobile; el browser descartaba invalidaciones de pintado y el form/header quedaban con espacio reservado pero invisible hasta que un scroll/touch forzaba recompositing. Fix: el portal solo se monta cuando el drawer se abre (`render` state); se desmonta 340ms después de cerrar. Doble `requestAnimationFrame` preserva animación slide-up.
+- **BUG: Header "Partidos" + botón "↓ Siguiente partido" invisible (intermitente)**: Misma causa raíz que el bug anterior.
+- **BUG: Botón "↓ Siguiente partido" cortaba la tarjeta**: `scrollMarginTop: 80` hardcodeado no contemplaba el header sticky con altura variable (TestModeBanner + SystemAlertBanner + NextMatchBanner pueden sumar más de 80px). Fix: `data-sticky-header` en el div sticky del layout + `getBoundingClientRect()` en el click para calcular offset real. Eliminado `scrollMarginTop` estático.
+
+### Mejoras técnicas
+- `will-change: transform` en el sticky header para estabilizar su capa de composición.
+
+---
+
 ## [Timer + Goles + Drawer Análisis + UX] — 2026-06-28 (sesión tarde)
 
 ### Fixes
