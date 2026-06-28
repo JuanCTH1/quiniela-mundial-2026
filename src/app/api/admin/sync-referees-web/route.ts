@@ -17,30 +17,33 @@ async function findReferee(apiKey: string, homeTeam: string, awayTeam: string, d
       },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 256,
+        max_tokens: 512,
         tools: [{ type: 'web_search_20250305', name: 'web_search' }],
         messages,
       }),
     })
-    if (!res.ok) throw new Error(`Anthropic ${res.status}`)
+    if (!res.ok) {
+      const body = await res.text().catch(() => '')
+      throw new Error(`Anthropic ${res.status}: ${body}`)
+    }
     const data = await res.json() as Record<string, unknown>
     const content = data.content as Array<Record<string, unknown>>
 
     if (data.stop_reason === 'end_turn') {
       const text = content.filter(b => b.type === 'text').at(-1)?.text as string ?? ''
-      const match = text.trim().match(/\{[\s\S]*?\}/)
+      const match = text.match(/\{[^{}]*\}/)
       if (!match) return null
-      const parsed = JSON.parse(match[0]) as { referee?: string | null }
-      return parsed.referee ?? null
+      try {
+        const parsed = JSON.parse(match[0]) as { referee?: string | null }
+        return parsed.referee ?? null
+      } catch {
+        return null
+      }
     }
-    if (data.stop_reason === 'tool_use') {
+    // web_search_20250305 is server-side: Anthropic executes the search.
+    // Just push the assistant turn and loop — no tool_result needed from our side.
+    if (data.stop_reason === 'tool_use' || data.stop_reason === 'server_tool_use') {
       messages.push({ role: 'assistant', content })
-      messages.push({
-        role: 'user',
-        content: content
-          .filter(b => b.type === 'tool_use')
-          .map(b => ({ type: 'tool_result', tool_use_id: b.id, content: '(search executed)' })),
-      })
       continue
     }
     break
@@ -71,7 +74,7 @@ export async function POST() {
     return NextResponse.json({ ok: true, updated: 0, message: 'Sin partidos pendientes de árbitro en 7 días' })
   }
 
-  const results: { match: string; referee: string | null; ok: boolean }[] = []
+  const results: { match: string; referee: string | null; ok: boolean; reason?: string }[] = []
 
   for (const m of matches) {
     const date = new Date(m.scheduled_time).toLocaleDateString('es-MX', {
@@ -83,11 +86,12 @@ export async function POST() {
         await admin.from('matches').update({ referee }).eq('id', m.id)
         results.push({ match: `${m.home_team} vs ${m.away_team}`, referee, ok: true })
       } else {
-        results.push({ match: `${m.home_team} vs ${m.away_team}`, referee: null, ok: false })
+        results.push({ match: `${m.home_team} vs ${m.away_team}`, referee: null, ok: false, reason: 'not_found' })
       }
       await new Promise(r => setTimeout(r, 1000))
     } catch (e) {
-      results.push({ match: `${m.home_team} vs ${m.away_team}`, referee: null, ok: false })
+      const msg = e instanceof Error ? e.message : String(e)
+      results.push({ match: `${m.home_team} vs ${m.away_team}`, referee: null, ok: false, reason: msg })
     }
   }
 

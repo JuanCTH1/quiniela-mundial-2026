@@ -5,6 +5,7 @@ const WC_ID = 'WC'
 interface ApiScore {
   fullTime: { home: number | null; away: number | null }
   regularTime?: { home: number | null; away: number | null } | null
+  penalties?: { home: number | null; away: number | null } | null
   duration: 'REGULAR' | 'EXTRA_TIME' | 'PENALTY_SHOOTOUT'
 }
 
@@ -123,6 +124,19 @@ export function resolveQuinielaScore(
   }
 
   return null
+}
+
+// Determina el equipo ganador en una tanda de penales.
+// Retorna el nombre del equipo ganador, o null si los datos de la API no están disponibles.
+export function resolvePenaltyWinner(
+  penalties: { home: number | null; away: number | null } | null | undefined,
+  homeTeamName: string | null,
+  awayTeamName: string | null
+): string | null {
+  if (!penalties || penalties.home == null || penalties.away == null) return null
+  if (penalties.home > penalties.away) return homeTeamName
+  if (penalties.away > penalties.home) return awayTeamName
+  return null // empate en penales no debería ocurrir
 }
 
 // Mapea el stage de la API al valor en nuestra tabla

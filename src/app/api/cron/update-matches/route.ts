@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { fetchMatch, resolveQuinielaScore, normalizeStage, normalizeStatus, extractGoals } from '@/lib/football-data'
+import { fetchMatch, resolveQuinielaScore, normalizeStage, normalizeStatus, extractGoals, resolvePenaltyWinner } from '@/lib/football-data'
 import type { TablesInsert } from '@/types/database.types'
 
 const FAILSAFE_HOURS = 3
@@ -16,12 +16,13 @@ export async function GET(request: NextRequest) {
   const startedAt = new Date().toISOString()
   const results = { updated: 0, skipped: 0, errors: 0, failsafe_alerts: 0 }
 
-  // Partidos candidatos: SCHEDULED (próximos 30 min) o IN_PROGRESS
-  // home_score_fulltime/away_score_fulltime incluidos para detectar cambios de marcador
+  // Partidos candidatos: SCHEDULED (próximos 30 min), IN_PROGRESS,
+  // o recién terminados (últimos 20 min) — la API popula goals con pequeño delay tras FINISHED.
+  const twentyMinAgo = new Date(Date.now() - 20 * 60 * 1000).toISOString()
   const { data: candidates, error: fetchErr } = await supabase
     .from('matches')
     .select('id, external_id, status, stage, scheduled_time, actual_start_time, home_score_fulltime, away_score_fulltime, current_minute, current_period, second_half_start_time, extra_time_start_time')
-    .in('status', ['SCHEDULED', 'IN_PROGRESS'])
+    .or(`status.in.(SCHEDULED,IN_PROGRESS),and(status.eq.FINISHED,updated_at.gte.${twentyMinAgo})`)
     .lte('scheduled_time', new Date(Date.now() + 30 * 60 * 1000).toISOString())
 
   if (fetchErr) {
@@ -69,6 +70,12 @@ export async function GET(request: NextRequest) {
       const isSecondHalfStart = newPeriod === '2T' && match.current_period === 'MT' && !match.second_half_start_time
       const isExtraTimeStart = newPeriod === 'ET1' && match.current_period === 'MTE' && !match.extra_time_start_time
 
+      // Determinar ganador de penales cuando aplica
+      const isPenaltyShootout = apiMatch.score.duration === 'PENALTY_SHOOTOUT'
+      const penWinner = isPenaltyShootout && isFinished
+        ? resolvePenaltyWinner(apiMatch.score.penalties, apiMatch.homeTeam?.name ?? null, apiMatch.awayTeam?.name ?? null)
+        : undefined
+
       const payload: Partial<TablesInsert<'matches'>> = {
         status: apiStatus,
         home_score_fulltime: apiMatch.score.fullTime.home,
@@ -82,6 +89,8 @@ export async function GET(request: NextRequest) {
           home_score_quiniela: quiniela!.home,
           away_score_quiniela: quiniela!.away,
           result_source: 'AUTOMATIC',
+          duration: apiMatch.score.duration,
+          ...(penWinner !== undefined && { penalty_winner: penWinner }),
         }),
         ...(isFirstLive && {
           actual_start_time: detectedAt.toISOString(),
@@ -167,15 +176,22 @@ export async function GET(request: NextRequest) {
 // Valores: 1T, MT, 2T, ET1, MTE, ET2, PEN — null cuando no está en juego
 function derivePeriod(rawStatus: string, minute: number | null | undefined, currentPeriod: string | null): string | null {
   if (rawStatus === 'PAUSED') {
-    // Si ya estamos en MT o MTE, quedarse ahí (re-poll estable)
+    // Ya estamos en un descanso conocido — quedarse ahí (re-poll estable)
     if (currentPeriod === 'MT') return 'MT'
     if (currentPeriod === 'MTE') return 'MTE'
-    // Transición a descanso de prórroga
+
+    // Con minuto explícito: detección fiable
+    if (minute != null) {
+      if (minute >= 90) return 'MTE'   // pausa después de 90' → descanso de prórroga
+      if (minute >= 43) return 'MT'    // pausa después de 43' → medio tiempo
+      return currentPeriod ?? 'MT'    // pausa antes de 43' → cooling/water break, quedarse
+    }
+
+    // Sin minuto: inferir por periodo actual.
+    // Los water breaks son cortos (<2 min) y el cron a 2 min puede no capturarlos,
+    // así que priorizar la transición de descanso como caso más probable.
+    if (currentPeriod === '1T') return 'MT'
     if (currentPeriod === '2T' || currentPeriod === 'ET1') return 'MTE'
-    if (minute != null && minute >= 90) return 'MTE'
-    // Transición a medio tiempo normal: solo si el minuto indica final del 1T
-    if (minute != null && minute >= 43) return 'MT'
-    // Pausa temprana (water/cooling break dentro del 1T): quedarse en periodo actual
     return currentPeriod ?? 'MT'
   }
   if (rawStatus !== 'IN_PLAY') return null
