@@ -268,9 +268,8 @@ export function MatchContext({ data, defaultOpen = false }: { data: MatchContext
                   <span style={{ fontSize: 15, flexShrink: 0 }}>💡</span>
                   <div style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5 }}>
                     {f.body
-                      .replace(/<cite[^>]*>[\s\S]*?<\/cite>/g, '')
-                      .replace(/<cite[^>]*/g, '')
-                      .replace(/^\s*[.,;]\s*/, '')
+                      .replace(/<cite[^>]*>([\s\S]*?)<\/cite>/g, '$1')
+                      .replace(/<cite[^>]*>/g, '')
                       .trim()}
                   </div>
                 </div>

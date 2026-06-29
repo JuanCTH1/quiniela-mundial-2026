@@ -81,7 +81,10 @@ function FactRow({ fact, onApprove, onReject, loading }: {
         )}
       </div>
       <p style={{ fontSize: 12, color: 'var(--text-main)', lineHeight: 1.5, margin: '0 0 8px' }}>
-        {fact.body}
+        {fact.body
+          .replace(/<cite[^>]*>([\s\S]*?)<\/cite>/g, '$1')
+          .replace(/<cite[^>]*>/g, '')
+          .trim()}
       </p>
       {!fact.reviewed && (
         <div style={{ display: 'flex', gap: 6 }}>
