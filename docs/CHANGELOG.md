@@ -1,5 +1,12 @@
 # Changelog — Quiniela Overrated 2026
 
+## [Fix facts cite tags] — 2026-06-29
+
+### Fixes
+- **Facts con `<cite>` tags**: regex corregida de "eliminar" a "unwrap" — preserva el texto dentro del tag. Afectaba todos los R32: matches donde el body era puro `<cite>texto</cite>` aparecían vacíos (Holanda-Marruecos, Brasil-Japón); matches mixtos mostraban solo el fragmento fuera del tag (Alemania-Paraguay). Fix aplicado en `MatchContext.tsx` y `ContextHealthPanel.tsx`. Dev y prod.
+
+---
+
 ## [Bugfix front-end: render intermitente + scroll offset] — 2026-06-28 (sesión noche)
 
 ### Bugs corregidos
