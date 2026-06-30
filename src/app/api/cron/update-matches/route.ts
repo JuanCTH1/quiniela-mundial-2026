@@ -76,12 +76,15 @@ export async function GET(request: NextRequest) {
         ? resolvePenaltyWinner(apiMatch.score.penalties, apiMatch.homeTeam?.name ?? null, apiMatch.awayTeam?.name ?? null)
         : undefined
 
+      const penalties = apiMatch.score.penalties
       const payload: Partial<TablesInsert<'matches'>> = {
         status: apiStatus,
         home_score_fulltime: apiMatch.score.fullTime.home,
         away_score_fulltime: apiMatch.score.fullTime.away,
         home_score_regular: apiMatch.score.regularTime?.home ?? null,
         away_score_regular: apiMatch.score.regularTime?.away ?? null,
+        home_score_penalties: penalties?.home ?? null,
+        away_score_penalties: penalties?.away ?? null,
         current_minute: apiStatus === 'IN_PROGRESS' ? (apiMatch.minute ?? null) : null,
         current_period: newPeriod,
         goals: extractGoals(apiMatch) as unknown as import('@/types/database.types').Json,

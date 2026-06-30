@@ -168,6 +168,7 @@ export type Database = {
         Row: {
           actual_start_time: string | null
           away_score_fulltime: number | null
+          away_score_penalties: number | null
           away_score_quiniela: number | null
           away_score_regular: number | null
           away_team: string
@@ -180,6 +181,7 @@ export type Database = {
           goals: Json | null
           group_name: string | null
           home_score_fulltime: number | null
+          home_score_penalties: number | null
           home_score_quiniela: number | null
           home_score_regular: number | null
           home_team: string
@@ -199,6 +201,7 @@ export type Database = {
         Insert: {
           actual_start_time?: string | null
           away_score_fulltime?: number | null
+          away_score_penalties?: number | null
           away_score_quiniela?: number | null
           away_score_regular?: number | null
           away_team: string
@@ -211,6 +214,7 @@ export type Database = {
           goals?: Json | null
           group_name?: string | null
           home_score_fulltime?: number | null
+          home_score_penalties?: number | null
           home_score_quiniela?: number | null
           home_score_regular?: number | null
           home_team: string
@@ -230,6 +234,7 @@ export type Database = {
         Update: {
           actual_start_time?: string | null
           away_score_fulltime?: number | null
+          away_score_penalties?: number | null
           away_score_quiniela?: number | null
           away_score_regular?: number | null
           away_team?: string
@@ -242,6 +247,7 @@ export type Database = {
           goals?: Json | null
           group_name?: string | null
           home_score_fulltime?: number | null
+          home_score_penalties?: number | null
           home_score_quiniela?: number | null
           home_score_regular?: number | null
           home_team?: string
