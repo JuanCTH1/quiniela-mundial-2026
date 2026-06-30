@@ -82,11 +82,13 @@ Deno.serve(async () => {
 
     if (error) throw error
 
-    // Borrar equipos que ya no devuelve la API (eliminados del torneo)
+    // Borrar equipos que ya no devuelve la API (eliminados del torneo).
+    // Guardia: si desaparecen más de 4 equipos de un ciclo a otro, la API probablemente
+    // tuvo una respuesta parcial — saltamos el cleanup para no borrar equipos válidos.
     const activeTeams = rows.map(r => r.team_name)
     const { data: existing } = await supabase.from('team_odds').select('team_name')
     const toDelete = (existing ?? []).map(r => r.team_name).filter(n => !activeTeams.includes(n))
-    if (toDelete.length > 0) {
+    if (toDelete.length > 0 && toDelete.length <= 4) {
       await supabase.from('team_odds').delete().in('team_name', toDelete)
     }
 
