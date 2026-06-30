@@ -1,5 +1,22 @@
 # Changelog — Quiniela Overrated 2026
 
+## [Penales en vivo + UX score + odds cleanup + árbitros] — 2026-06-30
+
+### Features
+- **Display de penales `(penH) 1–1 (penA)`**: el marcador de quiniela ahora muestra el resultado a 120' (no el acumulado de la API que suma goles de penales) con los tiros de penal entre paréntesis junto a cada equipo, formato estándar ESPN/FlashScore. En vivo durante `current_period='PEN'` resta los penales del `fullTime`; finalizado usa `home/away_score_quiniela`. Aplicado en `MatchCard`, `LiveMatchClient` (detalle), `NextMatchBanner` (header).
+- **Árbitros R32 cargados manualmente** (8/12): Ivory Coast-Norway (Valenzuela), France-Sweden (Makkelie), England-Congo DR (Makhadmeh), Belgium-Senegal (Martínez), USA-Bosnia (Claus), Spain-Austria (Nyberg), Portugal-Croatia (Eskås), Switzerland-Algeria (Falcón). Los 4 restantes (3-4 jul) los anuncia FIFA 24-48h antes; el botón admin los jala.
+
+### Fixes
+- **`update-odds` no limpiaba equipos eliminados**: solo hacía upsert, dejando registros huérfanos (Alemania 4%, Holanda 5% seguían apareciendo tras ser eliminados). Ahora borra de `team_odds` los equipos que ya no devuelve la API, con guardia anti-glitch (si desaparecen >4 de un ciclo, omite el cleanup por sospecha de respuesta parcial). Limpieza manual de 17 equipos huérfanos. Edge Function v6 desplegada.
+- **`sync-referees-web` timeout**: 12 partidos × ~10s por llamada Claude excedía el límite de Railway. Añadido `export const maxDuration = 300`.
+- **Banderas emoji en `NextMatchBanner`**: `getTeamFlag()` (emoji 🇨🇮) no renderiza en desktop Windows. Reemplazado por `<TeamFlag>` (imagen) en el banner del header.
+- **Alineación score vs nombres + centrado mobile**: el marcador quedaba desfasado verticalmente y, con penales, descentrado hacia el equipo local en mobile. Fix: `minHeight:32` en filas de nombre + `lineHeight:32px` en el marcador, `flexShrink:0` en columna del score + `minWidth:0` en columnas de equipo.
+
+### Datos corregidos (sesión anterior, confirmado)
+- `home_score_quiniela` de Holanda-Marruecos y Alemania-Paraguay corregidos a 1-1 (la API acumulaba goles de penales). Puntos recalculados: Gus/Ernesto/JCT +4, Javier -3. **Pendiente grupo**: decisión sobre los 3pts de Javier por tendencia.
+
+---
+
 ## [Fix facts cite tags] — 2026-06-29
 
 ### Fixes
