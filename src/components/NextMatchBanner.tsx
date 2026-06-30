@@ -16,6 +16,8 @@ type MatchSlim = Pick<Tables<'matches'>,
 type LiveMatchSlim = MatchSlim & {
   home_score_fulltime: number | null
   away_score_fulltime: number | null
+  home_score_penalties: number | null
+  away_score_penalties: number | null
   current_minute: number | null
   current_period: string | null
   actual_start_time: string | null
@@ -28,6 +30,7 @@ type Pred = { home_score: number | null; away_score: number | null } | null
 // Marcador/tiempo mutable de un partido en vivo (se actualiza en tiempo real)
 type LiveScore = {
   home: number | null; away: number | null
+  homePen: number | null; awayPen: number | null
   minute: number | null; period: string | null
   actualStart: string | null; secondHalfStart: string | null; extraTimeStart: string | null
 }
@@ -35,6 +38,7 @@ type LiveScore = {
 function initScores(matches: LiveMatchSlim[]): Record<string, LiveScore> {
   return Object.fromEntries(matches.map(m => [m.id, {
     home: m.home_score_fulltime, away: m.away_score_fulltime,
+    homePen: m.home_score_penalties, awayPen: m.away_score_penalties,
     minute: m.current_minute, period: m.current_period,
     actualStart: m.actual_start_time, secondHalfStart: m.second_half_start_time, extraTimeStart: m.extra_time_start_time,
   }]))
@@ -79,6 +83,7 @@ export function NextMatchBanner({ liveMatches, liveMatch, nextMatch, prediction,
         if (row.status !== 'IN_PROGRESS') { router.refresh(); return }
         setLiveScores(prev => ({ ...prev, [row.id]: {
           home: row.home_score_fulltime, away: row.away_score_fulltime,
+          homePen: row.home_score_penalties ?? null, awayPen: row.away_score_penalties ?? null,
           minute: row.current_minute, period: row.current_period,
           actualStart: row.actual_start_time, secondHalfStart: row.second_half_start_time, extraTimeStart: row.extra_time_start_time,
         } }))
@@ -87,7 +92,7 @@ export function NextMatchBanner({ liveMatches, liveMatch, nextMatch, prediction,
 
     const poll = setInterval(async () => {
       const { data } = await sb.from('matches')
-        .select('id, home_score_fulltime, away_score_fulltime, current_minute, current_period, status, actual_start_time, second_half_start_time, extra_time_start_time')
+        .select('id, home_score_fulltime, away_score_fulltime, home_score_penalties, away_score_penalties, current_minute, current_period, status, actual_start_time, second_half_start_time, extra_time_start_time')
         .in('id', ids)
       if (!data) return
       if (data.some(m => m.status !== 'IN_PROGRESS')) { router.refresh(); return }
@@ -95,6 +100,7 @@ export function NextMatchBanner({ liveMatches, liveMatch, nextMatch, prediction,
         const next = { ...prev }
         for (const m of data) next[m.id] = {
           home: m.home_score_fulltime, away: m.away_score_fulltime,
+          homePen: m.home_score_penalties ?? null, awayPen: m.away_score_penalties ?? null,
           minute: m.current_minute, period: m.current_period,
           actualStart: m.actual_start_time, secondHalfStart: m.second_half_start_time, extraTimeStart: m.extra_time_start_time,
         }
@@ -109,8 +115,16 @@ export function NextMatchBanner({ liveMatches, liveMatch, nextMatch, prediction,
 
   const scoreFor = (m: LiveMatchSlim): LiveScore => liveScores[m.id] ?? {
     home: m.home_score_fulltime, away: m.away_score_fulltime,
+    homePen: m.home_score_penalties, awayPen: m.away_score_penalties,
     minute: m.current_minute, period: m.current_period,
     actualStart: m.actual_start_time, secondHalfStart: m.second_half_start_time, extraTimeStart: m.extra_time_start_time,
+  }
+
+  function mainScore(sc: LiveScore) {
+    if (sc.period === 'PEN' && sc.homePen != null && sc.awayPen != null && sc.home != null && sc.away != null) {
+      return { h: sc.home - sc.homePen, a: sc.away - sc.awayPen, penH: sc.homePen, penA: sc.awayPen }
+    }
+    return { h: sc.home, a: sc.away, penH: null, penA: null }
   }
 
   if (pathname.startsWith('/partido/')) return null
@@ -142,8 +156,7 @@ export function NextMatchBanner({ liveMatches, liveMatch, nextMatch, prediction,
           const homeFlag = getTeamFlag(m.home_team)
           const awayFlag = getTeamFlag(m.away_team)
           const sc = scoreFor(m)
-          const h = sc.home ?? '–'
-          const a = sc.away ?? '–'
+          const { h, a, penH, penA } = mainScore(sc)
 
           return (
             <Link key={m.id} href={`/partido/${m.id}`} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6, marginTop: i > 0 ? 4 : 0 }}>
@@ -151,7 +164,8 @@ export function NextMatchBanner({ liveMatches, liveMatch, nextMatch, prediction,
               <span style={{ fontSize: 13, color: 'var(--text-main)', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>
                 {homeFlag}
                 <span style={{ fontWeight: 600, marginLeft: 3 }}>{homeAbbr}</span>
-                <span style={{ fontWeight: 800, color: 'var(--warning)', margin: '0 5px' }}>{h}–{a}</span>
+                <span style={{ fontWeight: 800, color: 'var(--warning)', margin: '0 5px' }}>{h ?? '–'}–{a ?? '–'}</span>
+                {penH != null && <span style={{ fontSize: 10, color: 'var(--warning)', marginRight: 3 }}>(pen {penH}–{penA})</span>}
                 <span style={{ fontWeight: 600 }}>{awayAbbr}</span>
                 {awayFlag}
                 <LiveTimeLabel
@@ -180,6 +194,7 @@ export function NextMatchBanner({ liveMatches, liveMatch, nextMatch, prediction,
   if (liveMatch) {
     const hasPred = prediction?.home_score != null
     const sc = scoreFor(liveMatch)
+    const { h: lh, a: la, penH: lPenH, penA: lPenA } = mainScore(sc)
     return (
       <div>
         <Link href={`/partido/${liveMatch.id}`} style={{ textDecoration: 'none', display: 'block' }}>
@@ -198,8 +213,11 @@ export function NextMatchBanner({ liveMatches, liveMatch, nextMatch, prediction,
             </div>
             <div style={{ textAlign: 'right', flexShrink: 0 }}>
               <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--warning)', letterSpacing: 2 }}>
-                {sc.home ?? '–'} – {sc.away ?? '–'}
+                {lh ?? '–'} – {la ?? '–'}
               </div>
+              {lPenH != null && (
+                <div style={{ fontSize: 10, color: 'var(--warning)', fontWeight: 600 }}>pen {lPenH}–{lPenA}</div>
+              )}
               <LiveTimeLabel
                 period={sc.period} minute={sc.minute}
                 actualStartTime={sc.actualStart} secondHalfStartTime={sc.secondHalfStart} extraTimeStartTime={sc.extraTimeStart}

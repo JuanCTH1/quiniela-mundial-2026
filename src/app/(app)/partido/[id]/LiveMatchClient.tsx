@@ -17,6 +17,8 @@ interface Props {
   matchId: string
   initialHomeScore: number | null | undefined
   initialAwayScore: number | null | undefined
+  initialHomePenalties?: number | null
+  initialAwayPenalties?: number | null
   initialMinute?: number | null
   initialPeriod?: string | null
   initialActualStartTime?: string | null
@@ -29,12 +31,15 @@ interface Props {
 
 export function LiveMatchClient({
   matchId, initialHomeScore, initialAwayScore,
+  initialHomePenalties, initialAwayPenalties,
   initialMinute, initialPeriod,
   initialActualStartTime, initialSecondHalfStartTime, initialExtraTimeStartTime,
   isLive, isFinished, predictions,
 }: Props) {
   const [home, setHome] = useState(initialHomeScore ?? null)
   const [away, setAway] = useState(initialAwayScore ?? null)
+  const [homePen, setHomePen] = useState(initialHomePenalties ?? null)
+  const [awayPen, setAwayPen] = useState(initialAwayPenalties ?? null)
   const [minute, setMinute] = useState(initialMinute ?? null)
   const [period, setPeriod] = useState(initialPeriod ?? null)
   const [actualStart, setActualStart] = useState(initialActualStartTime ?? null)
@@ -69,6 +74,8 @@ export function LiveMatchClient({
         const row = payload.new as Database['public']['Tables']['matches']['Row']
         setHome(row.home_score_fulltime)
         setAway(row.away_score_fulltime)
+        setHomePen(row.home_score_penalties ?? null)
+        setAwayPen(row.away_score_penalties ?? null)
         setMinute(row.current_minute ?? null)
         setPeriod(row.current_period ?? null)
         if (row.actual_start_time) setActualStart(row.actual_start_time)
@@ -81,12 +88,14 @@ export function LiveMatchClient({
     const poll = setInterval(async () => {
       const { data } = await sb
         .from('matches')
-        .select('home_score_fulltime, away_score_fulltime, current_minute, current_period, status, actual_start_time, second_half_start_time, extra_time_start_time')
+        .select('home_score_fulltime, away_score_fulltime, home_score_penalties, away_score_penalties, current_minute, current_period, status, actual_start_time, second_half_start_time, extra_time_start_time')
         .eq('id', matchId)
         .single()
       if (data) {
         setHome(data.home_score_fulltime)
         setAway(data.away_score_fulltime)
+        setHomePen(data.home_score_penalties ?? null)
+        setAwayPen(data.away_score_penalties ?? null)
         setMinute(data.current_minute ?? null)
         setPeriod(data.current_period ?? null)
         if (data.actual_start_time) setActualStart(data.actual_start_time)
@@ -110,6 +119,10 @@ export function LiveMatchClient({
     }
   }
 
+  const isPenaltyPhase = period === 'PEN' && homePen != null && awayPen != null && home != null && away != null
+  const displayHome = isPenaltyPhase ? home! - homePen! : home
+  const displayAway = isPenaltyPhase ? away! - awayPen! : away
+
   return (
     <div>
       <div style={{
@@ -117,8 +130,14 @@ export function LiveMatchClient({
         color: isLive ? 'var(--warning)' : 'var(--text-main)',
         letterSpacing: 2,
       }}>
-        {home ?? '–'} – {away ?? '–'}
+        {displayHome ?? '–'} – {displayAway ?? '–'}
       </div>
+
+      {isPenaltyPhase && (
+        <div style={{ fontSize: 12, color: 'var(--warning)', fontWeight: 600 }}>
+          pen {homePen} – {awayPen}
+        </div>
+      )}
 
       {isLive && (
         <div style={{ fontSize: 11, color: 'var(--warning)', marginTop: 2, fontWeight: 600 }}>
