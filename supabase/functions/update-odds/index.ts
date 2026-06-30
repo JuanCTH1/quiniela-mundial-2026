@@ -82,6 +82,15 @@ Deno.serve(async () => {
 
     if (error) throw error
 
+    // Borrar equipos que ya no devuelve la API (eliminados del torneo)
+    const activeTeams = rows.map(r => r.team_name)
+    const { data: existing } = await supabase.from('team_odds').select('team_name')
+    const toDelete = (existing ?? []).map(r => r.team_name).filter(n => !activeTeams.includes(n))
+    if (toDelete.length > 0) {
+      await supabase.from('team_odds').delete().in('team_name', toDelete)
+    }
+
+
     const quotaRemaining = res.headers.get('x-requests-remaining') ?? 'unknown'
     const quotaUsed      = res.headers.get('x-requests-used')      ?? 'unknown'
 
