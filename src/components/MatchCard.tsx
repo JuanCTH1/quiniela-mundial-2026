@@ -138,26 +138,18 @@ export function MatchCard({
           {/* Score / time */}
           <div style={{ textAlign: 'center', minWidth: 76 }}>
             {isFinished ? (
-              <>
-                <span style={{ fontSize: 24, fontWeight: 800, letterSpacing: 2, color: 'var(--text-main)' }}>
-                  {finalHome} – {finalAway}
-                </span>
-                {hasPenalties && (
-                  <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 1 }}>
-                    pen {match.home_score_penalties} – {match.away_score_penalties}
-                  </div>
-                )}
-              </>
+              <span style={{ fontSize: 24, fontWeight: 800, letterSpacing: 2, color: 'var(--text-main)', display: 'flex', alignItems: 'baseline', gap: 3 }}>
+                {hasPenalties && <span style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 600 }}>({match.home_score_penalties})</span>}
+                {finalHome} – {finalAway}
+                {hasPenalties && <span style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 600 }}>({match.away_score_penalties})</span>}
+              </span>
             ) : hasLiveScore ? (
               <>
-                <span style={{ fontSize: 28, fontWeight: 800, letterSpacing: 2, color: 'var(--warning)' }}>
+                <span style={{ fontSize: 28, fontWeight: 800, letterSpacing: 2, color: 'var(--warning)', display: 'flex', alignItems: 'baseline', gap: 3 }}>
+                  {isPenaltyPhase && hasPenalties && <span style={{ fontSize: 13, fontWeight: 700 }}>({match.home_score_penalties})</span>}
                   {liveMainHome} – {liveMainAway}
+                  {isPenaltyPhase && hasPenalties && <span style={{ fontSize: 13, fontWeight: 700 }}>({match.away_score_penalties})</span>}
                 </span>
-                {isPenaltyPhase && hasPenalties && (
-                  <div style={{ fontSize: 11, color: 'var(--warning)', fontWeight: 600 }}>
-                    pen {match.home_score_penalties} – {match.away_score_penalties}
-                  </div>
-                )}
                 <LiveTimeLabel
                   period={match.current_period}
                   minute={match.current_minute}

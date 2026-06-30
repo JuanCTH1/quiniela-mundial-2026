@@ -5,9 +5,10 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Countdown } from './Countdown'
-import { getTeamFlag, getTeamAbbr, getLockTime } from '@/lib/utils'
+import { getTeamAbbr, getLockTime } from '@/lib/utils'
 import { getTheme, type Theme } from '@/lib/themes'
 import { LiveTimeLabel } from './LiveTimeLabel'
+import { TeamFlag } from './TeamFlag'
 import type { Tables } from '@/types/database.types'
 
 type MatchSlim = Pick<Tables<'matches'>,
@@ -153,21 +154,20 @@ export function NextMatchBanner({ liveMatches, liveMatch, nextMatch, prediction,
           const hasPred = pred?.home_score != null
           const homeAbbr = getTeamAbbr(m.home_team)
           const awayAbbr = getTeamAbbr(m.away_team)
-          const homeFlag = getTeamFlag(m.home_team)
-          const awayFlag = getTeamFlag(m.away_team)
           const sc = scoreFor(m)
           const { h, a, penH, penA } = mainScore(sc)
 
           return (
             <Link key={m.id} href={`/partido/${m.id}`} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6, marginTop: i > 0 ? 4 : 0 }}>
               {/* Score side */}
-              <span style={{ fontSize: 13, color: 'var(--text-main)', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>
-                {homeFlag}
-                <span style={{ fontWeight: 600, marginLeft: 3 }}>{homeAbbr}</span>
-                <span style={{ fontWeight: 800, color: 'var(--warning)', margin: '0 5px' }}>{h ?? '–'}–{a ?? '–'}</span>
-                {penH != null && <span style={{ fontSize: 10, color: 'var(--warning)', marginRight: 3 }}>(pen {penH}–{penA})</span>}
+              <span style={{ fontSize: 13, color: 'var(--text-main)', whiteSpace: 'nowrap', flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 3 }}>
+                <TeamFlag name={m.home_team} size={14} />
+                <span style={{ fontWeight: 600 }}>{homeAbbr}</span>
+                {penH != null && <span style={{ fontSize: 10, color: 'var(--warning)', fontWeight: 700 }}>({penH})</span>}
+                <span style={{ fontWeight: 800, color: 'var(--warning)', margin: '0 2px' }}>{h ?? '–'}–{a ?? '–'}</span>
+                {penA != null && <span style={{ fontSize: 10, color: 'var(--warning)', fontWeight: 700 }}>({penA})</span>}
                 <span style={{ fontWeight: 600 }}>{awayAbbr}</span>
-                {awayFlag}
+                <TeamFlag name={m.away_team} size={14} />
                 <LiveTimeLabel
                   period={sc.period} minute={sc.minute}
                   actualStartTime={sc.actualStart} secondHalfStartTime={sc.secondHalfStart} extraTimeStartTime={sc.extraTimeStart}
@@ -207,17 +207,18 @@ export function NextMatchBanner({ liveMatches, liveMatch, nextMatch, prediction,
               {t.texts.liveNow}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {getTeamFlag(liveMatch.home_team)} {liveMatch.home_team} vs {liveMatch.away_team} {getTeamFlag(liveMatch.away_team)}
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'flex', alignItems: 'center', gap: 4 }}>
+                <TeamFlag name={liveMatch.home_team} size={16} />
+                {liveMatch.home_team} vs {liveMatch.away_team}
+                <TeamFlag name={liveMatch.away_team} size={16} />
               </div>
             </div>
             <div style={{ textAlign: 'right', flexShrink: 0 }}>
-              <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--warning)', letterSpacing: 2 }}>
+              <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--warning)', letterSpacing: 2, display: 'flex', alignItems: 'center', gap: 3 }}>
+                {lPenH != null && <span style={{ fontSize: 12, fontWeight: 700 }}>({lPenH})</span>}
                 {lh ?? '–'} – {la ?? '–'}
+                {lPenA != null && <span style={{ fontSize: 12, fontWeight: 700 }}>({lPenA})</span>}
               </div>
-              {lPenH != null && (
-                <div style={{ fontSize: 10, color: 'var(--warning)', fontWeight: 600 }}>pen {lPenH}–{lPenA}</div>
-              )}
               <LiveTimeLabel
                 period={sc.period} minute={sc.minute}
                 actualStartTime={sc.actualStart} secondHalfStartTime={sc.secondHalfStart} extraTimeStartTime={sc.extraTimeStart}
@@ -241,8 +242,10 @@ export function NextMatchBanner({ liveMatches, liveMatch, nextMatch, prediction,
               display: 'flex', alignItems: 'center', gap: 8,
             }}>
               <div style={{ fontSize: 10, color: 'var(--text-dim)', flexShrink: 0 }}>{t.texts.nextSmall}</div>
-              <div style={{ fontSize: 11, color: 'var(--text-muted)', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {getTeamFlag(nextMatch.home_team)} {nextMatch.home_team} vs {nextMatch.away_team} {getTeamFlag(nextMatch.away_team)}
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'flex', alignItems: 'center', gap: 3 }}>
+                <TeamFlag name={nextMatch.home_team} size={12} />
+                {nextMatch.home_team} vs {nextMatch.away_team}
+                <TeamFlag name={nextMatch.away_team} size={12} />
               </div>
               <Countdown target={nextMatch.scheduled_time} label="" small />
             </div>
@@ -271,8 +274,10 @@ export function NextMatchBanner({ liveMatches, liveMatch, nextMatch, prediction,
       }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 3 }}>{t.texts.nextMatch}</div>
-          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            {getTeamFlag(nextMatch!.home_team)} {nextMatch!.home_team} vs {nextMatch!.away_team} {getTeamFlag(nextMatch!.away_team)}
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'flex', alignItems: 'center', gap: 4 }}>
+            <TeamFlag name={nextMatch!.home_team} size={16} />
+            {nextMatch!.home_team} vs {nextMatch!.away_team}
+            <TeamFlag name={nextMatch!.away_team} size={16} />
           </div>
           <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{kickoffStr}</div>
         </div>

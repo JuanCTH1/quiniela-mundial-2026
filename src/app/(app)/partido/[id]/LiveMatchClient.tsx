@@ -129,15 +129,12 @@ export function LiveMatchClient({
         fontSize: 32, fontWeight: 800,
         color: isLive ? 'var(--warning)' : 'var(--text-main)',
         letterSpacing: 2,
+        display: 'flex', alignItems: 'baseline', gap: 4,
       }}>
+        {isPenaltyPhase && <span style={{ fontSize: 18, fontWeight: 700 }}>({homePen})</span>}
         {displayHome ?? '–'} – {displayAway ?? '–'}
+        {isPenaltyPhase && <span style={{ fontSize: 18, fontWeight: 700 }}>({awayPen})</span>}
       </div>
-
-      {isPenaltyPhase && (
-        <div style={{ fontSize: 12, color: 'var(--warning)', fontWeight: 600 }}>
-          pen {homePen} – {awayPen}
-        </div>
-      )}
 
       {isLive && (
         <div style={{ fontSize: 11, color: 'var(--warning)', marginTop: 2, fontWeight: 600 }}>
