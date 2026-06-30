@@ -138,14 +138,14 @@ export function MatchCard({
           {/* Score / time */}
           <div style={{ textAlign: 'center', minWidth: 76 }}>
             {isFinished ? (
-              <span style={{ fontSize: 24, fontWeight: 800, letterSpacing: 2, color: 'var(--text-main)', display: 'flex', alignItems: 'baseline', gap: 3 }}>
+              <span style={{ fontSize: 24, fontWeight: 800, letterSpacing: 2, color: 'var(--text-main)' }}>
                 {hasPenalties && <span style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 600 }}>({match.home_score_penalties})</span>}
                 {finalHome} – {finalAway}
                 {hasPenalties && <span style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 600 }}>({match.away_score_penalties})</span>}
               </span>
             ) : hasLiveScore ? (
               <>
-                <span style={{ fontSize: 28, fontWeight: 800, letterSpacing: 2, color: 'var(--warning)', display: 'flex', alignItems: 'baseline', gap: 3 }}>
+                <span style={{ fontSize: 28, fontWeight: 800, letterSpacing: 2, color: 'var(--warning)' }}>
                   {isPenaltyPhase && hasPenalties && <span style={{ fontSize: 13, fontWeight: 700 }}>({match.home_score_penalties})</span>}
                   {liveMainHome} – {liveMainAway}
                   {isPenaltyPhase && hasPenalties && <span style={{ fontSize: 13, fontWeight: 700 }}>({match.away_score_penalties})</span>}
