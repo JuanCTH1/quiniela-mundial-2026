@@ -1,12 +1,14 @@
 # Estado del Proyecto — Quiniela Overrated 2026
 
-> Actualizado: 2026-06-28 (cierre sesión noche)
+> Actualizado: 2026-06-30 (cierre sesión)
 
 ## Estado general
 
-**Fase activa: Torneo en curso — Ronda de 32 en juego. Modo Real activo.**
+**Fase activa: Torneo en curso — Ronda de 32 / inicio R16. Modo Real activo.**
 
-App en prod con los 6 jugadores. Fase de grupos terminó Jun 27. R32 en curso. Timer en vivo OK. Drawer de análisis OK. Bugs de render intermitente (form pronósticos + header) corregidos — causa raíz: `will-change: transform` permanente por cada portal del drawer. Scroll "Siguiente partido" corregido con offset dinámico.
+App en prod con los 6 jugadores. Fase de grupos terminó Jun 27. R32 en curso. Timer en vivo OK. Drawer de análisis OK. Display de penales implementado en lista/detalle/banner (resultado a 120' + `(penH) X–Y (penA)`). `update-odds` ahora limpia equipos eliminados. 8/12 árbitros R32 cargados (resto los anuncia FIFA 24-48h antes). Alineación de marcador en card corregida (vertical + centrado mobile).
+
+**Pendiente del grupo:** decisión sobre los 3pts de Javier por tendencia en Holanda-Marruecos (ganados por el bug de penales ya corregido).
 
 ## Usuarios en producción
 
@@ -48,7 +50,7 @@ App en prod con los 6 jugadores. Fase de grupos terminó Jun 27. R32 en curso. T
 | `generate-facts-final` | Jul 19 14:00 UTC | Facts Final |
 | `sync-referees` | cada 3h | Árbitros |
 | `sync-scorers` | cada 6h | Goleadores |
-| `update-odds` | cada 2h | Cuotas Sorteo (500 req/mes, ~252 restantes) |
+| `update-odds` | cada 2h | Cuotas Sorteo (500 req/mes). URL apunta a Edge Function Supabase (no Railway). |
 | `health-check-daily` | 08:00 UTC | Alertas de salud + email Resend |
 
 ## Edge Functions en Supabase
@@ -57,7 +59,7 @@ App en prod con los 6 jugadores. Fase de grupos terminó Jun 27. R32 en curso. T
 |---|---|---|
 | `generate-facts` | v4 | 3 facts/partido con Haiku + web_search. `reviewed: true` por default. |
 | `health-check` | v2 | 5 checks, alerta 48h TBD, email Resend. |
-| `update-odds` | v1 | Cuotas The-Odds-API → `team_odds` |
+| `update-odds` | v6 | Cuotas The-Odds-API → `team_odds`. Borra equipos eliminados (guardia ≤4 por ciclo). |
 
 ## Features en producción (Jun 28)
 
