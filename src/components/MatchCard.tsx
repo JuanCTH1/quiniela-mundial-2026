@@ -123,10 +123,10 @@ export function MatchCard({
       {/* Body — clickable al detalle */}
       <Link href={`/partido/${match.id}`} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
         {/* Teams + score */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
           {/* Home */}
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, minHeight: 32 }}>
               <span style={{ fontSize: 13, fontWeight: 600 }}>{match.home_team}</span>
               <TeamFlag name={match.home_team} size={22} />
             </div>
@@ -136,16 +136,16 @@ export function MatchCard({
           </div>
 
           {/* Score / time */}
-          <div style={{ textAlign: 'center', minWidth: 76 }}>
+          <div style={{ textAlign: 'center', minWidth: 76, flexShrink: 0 }}>
             {isFinished ? (
-              <span style={{ fontSize: 24, fontWeight: 800, letterSpacing: 2, color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
+              <span style={{ fontSize: 24, fontWeight: 800, letterSpacing: 2, color: 'var(--text-main)', whiteSpace: 'nowrap', display: 'block', lineHeight: '32px' }}>
                 {hasPenalties && <span style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 600, verticalAlign: 'middle' }}>({match.home_score_penalties})</span>}
                 {finalHome} – {finalAway}
                 {hasPenalties && <span style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 600, verticalAlign: 'middle' }}>({match.away_score_penalties})</span>}
               </span>
             ) : hasLiveScore ? (
               <>
-                <span style={{ fontSize: 28, fontWeight: 800, letterSpacing: 2, color: 'var(--warning)', whiteSpace: 'nowrap' }}>
+                <span style={{ fontSize: 28, fontWeight: 800, letterSpacing: 2, color: 'var(--warning)', whiteSpace: 'nowrap', display: 'block', lineHeight: '32px' }}>
                   {isPenaltyPhase && hasPenalties && <span style={{ fontSize: 13, fontWeight: 700, verticalAlign: 'middle' }}>({match.home_score_penalties})</span>}
                   {liveMainHome} – {liveMainAway}
                   {isPenaltyPhase && hasPenalties && <span style={{ fontSize: 13, fontWeight: 700, verticalAlign: 'middle' }}>({match.away_score_penalties})</span>}
@@ -181,8 +181,8 @@ export function MatchCard({
           </div>
 
           {/* Away */}
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, minHeight: 32 }}>
               <TeamFlag name={match.away_team} size={22} />
               <span style={{ fontSize: 13, fontWeight: 600 }}>{match.away_team}</span>
             </div>
