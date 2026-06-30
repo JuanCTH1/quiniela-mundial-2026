@@ -56,6 +56,17 @@ export function MatchCard({
   const isFinished = match.status === 'FINISHED' && finalHome != null
   const isLive = match.status === 'IN_PROGRESS'
   const hasLiveScore = isLive && match.home_score_fulltime != null
+
+  // Penales: separar marcador de 120' del conteo de tiros
+  const hasPenalties = match.home_score_penalties != null && match.away_score_penalties != null
+  const isPenaltyPhase = isLive && match.current_period === 'PEN'
+  // Score a mostrar como principal (excluye goles de penales del acumulado API)
+  const liveMainHome = isPenaltyPhase && hasPenalties
+    ? (match.home_score_fulltime ?? 0) - match.home_score_penalties!
+    : match.home_score_fulltime
+  const liveMainAway = isPenaltyPhase && hasPenalties
+    ? (match.away_score_fulltime ?? 0) - match.away_score_penalties!
+    : match.away_score_fulltime
   const isOpen = !isLocked && match.status === 'SCHEDULED'
 
   const lockTime = getLockTime(match.scheduled_time, bloqueoMinutos)
@@ -127,13 +138,17 @@ export function MatchCard({
           {/* Score / time */}
           <div style={{ textAlign: 'center', minWidth: 76 }}>
             {isFinished ? (
-              <span style={{ fontSize: 24, fontWeight: 800, letterSpacing: 2, color: 'var(--text-main)' }}>
+              <span style={{ fontSize: 24, fontWeight: 800, letterSpacing: 2, color: 'var(--text-main)', display: 'flex', alignItems: 'baseline', gap: 3 }}>
+                {hasPenalties && <span style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 600 }}>({match.home_score_penalties})</span>}
                 {finalHome} – {finalAway}
+                {hasPenalties && <span style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 600 }}>({match.away_score_penalties})</span>}
               </span>
             ) : hasLiveScore ? (
               <>
-                <span style={{ fontSize: 28, fontWeight: 800, letterSpacing: 2, color: 'var(--warning)' }}>
-                  {match.home_score_fulltime} – {match.away_score_fulltime}
+                <span style={{ fontSize: 28, fontWeight: 800, letterSpacing: 2, color: 'var(--warning)', display: 'flex', alignItems: 'baseline', gap: 3 }}>
+                  {isPenaltyPhase && hasPenalties && <span style={{ fontSize: 13, fontWeight: 700 }}>({match.home_score_penalties})</span>}
+                  {liveMainHome} – {liveMainAway}
+                  {isPenaltyPhase && hasPenalties && <span style={{ fontSize: 13, fontWeight: 700 }}>({match.away_score_penalties})</span>}
                 </span>
                 <LiveTimeLabel
                   period={match.current_period}

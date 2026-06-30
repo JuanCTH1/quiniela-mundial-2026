@@ -120,6 +120,13 @@ export function resolveQuinielaScore(
   }
 
   if (corte === '120' || corte === 'PENALTIES') {
+    // football-data.org acumula los goles de penales en fullTime para PENALTY_SHOOTOUT.
+    // El score a 120' es fullTime - penalties.
+    if (duration === 'PENALTY_SHOOTOUT' && score.penalties?.home != null && score.penalties?.away != null) {
+      return fullTime.home != null
+        ? { home: fullTime.home - score.penalties.home, away: fullTime.away! - score.penalties.away }
+        : null
+    }
     return fullTime.home != null ? { home: fullTime.home, away: fullTime.away! } : null
   }
 

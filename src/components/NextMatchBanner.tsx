@@ -5,9 +5,10 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Countdown } from './Countdown'
-import { getTeamFlag, getTeamAbbr, getLockTime } from '@/lib/utils'
+import { getTeamAbbr, getLockTime } from '@/lib/utils'
 import { getTheme, type Theme } from '@/lib/themes'
 import { LiveTimeLabel } from './LiveTimeLabel'
+import { TeamFlag } from './TeamFlag'
 import type { Tables } from '@/types/database.types'
 
 type MatchSlim = Pick<Tables<'matches'>,
@@ -16,6 +17,8 @@ type MatchSlim = Pick<Tables<'matches'>,
 type LiveMatchSlim = MatchSlim & {
   home_score_fulltime: number | null
   away_score_fulltime: number | null
+  home_score_penalties: number | null
+  away_score_penalties: number | null
   current_minute: number | null
   current_period: string | null
   actual_start_time: string | null
@@ -28,6 +31,7 @@ type Pred = { home_score: number | null; away_score: number | null } | null
 // Marcador/tiempo mutable de un partido en vivo (se actualiza en tiempo real)
 type LiveScore = {
   home: number | null; away: number | null
+  homePen: number | null; awayPen: number | null
   minute: number | null; period: string | null
   actualStart: string | null; secondHalfStart: string | null; extraTimeStart: string | null
 }
@@ -35,6 +39,7 @@ type LiveScore = {
 function initScores(matches: LiveMatchSlim[]): Record<string, LiveScore> {
   return Object.fromEntries(matches.map(m => [m.id, {
     home: m.home_score_fulltime, away: m.away_score_fulltime,
+    homePen: m.home_score_penalties, awayPen: m.away_score_penalties,
     minute: m.current_minute, period: m.current_period,
     actualStart: m.actual_start_time, secondHalfStart: m.second_half_start_time, extraTimeStart: m.extra_time_start_time,
   }]))
@@ -79,6 +84,7 @@ export function NextMatchBanner({ liveMatches, liveMatch, nextMatch, prediction,
         if (row.status !== 'IN_PROGRESS') { router.refresh(); return }
         setLiveScores(prev => ({ ...prev, [row.id]: {
           home: row.home_score_fulltime, away: row.away_score_fulltime,
+          homePen: row.home_score_penalties ?? null, awayPen: row.away_score_penalties ?? null,
           minute: row.current_minute, period: row.current_period,
           actualStart: row.actual_start_time, secondHalfStart: row.second_half_start_time, extraTimeStart: row.extra_time_start_time,
         } }))
@@ -87,7 +93,7 @@ export function NextMatchBanner({ liveMatches, liveMatch, nextMatch, prediction,
 
     const poll = setInterval(async () => {
       const { data } = await sb.from('matches')
-        .select('id, home_score_fulltime, away_score_fulltime, current_minute, current_period, status, actual_start_time, second_half_start_time, extra_time_start_time')
+        .select('id, home_score_fulltime, away_score_fulltime, home_score_penalties, away_score_penalties, current_minute, current_period, status, actual_start_time, second_half_start_time, extra_time_start_time')
         .in('id', ids)
       if (!data) return
       if (data.some(m => m.status !== 'IN_PROGRESS')) { router.refresh(); return }
@@ -95,6 +101,7 @@ export function NextMatchBanner({ liveMatches, liveMatch, nextMatch, prediction,
         const next = { ...prev }
         for (const m of data) next[m.id] = {
           home: m.home_score_fulltime, away: m.away_score_fulltime,
+          homePen: m.home_score_penalties ?? null, awayPen: m.away_score_penalties ?? null,
           minute: m.current_minute, period: m.current_period,
           actualStart: m.actual_start_time, secondHalfStart: m.second_half_start_time, extraTimeStart: m.extra_time_start_time,
         }
@@ -109,8 +116,16 @@ export function NextMatchBanner({ liveMatches, liveMatch, nextMatch, prediction,
 
   const scoreFor = (m: LiveMatchSlim): LiveScore => liveScores[m.id] ?? {
     home: m.home_score_fulltime, away: m.away_score_fulltime,
+    homePen: m.home_score_penalties, awayPen: m.away_score_penalties,
     minute: m.current_minute, period: m.current_period,
     actualStart: m.actual_start_time, secondHalfStart: m.second_half_start_time, extraTimeStart: m.extra_time_start_time,
+  }
+
+  function mainScore(sc: LiveScore) {
+    if (sc.period === 'PEN' && sc.homePen != null && sc.awayPen != null && sc.home != null && sc.away != null) {
+      return { h: sc.home - sc.homePen, a: sc.away - sc.awayPen, penH: sc.homePen, penA: sc.awayPen }
+    }
+    return { h: sc.home, a: sc.away, penH: null, penA: null }
   }
 
   if (pathname.startsWith('/partido/')) return null
@@ -139,21 +154,20 @@ export function NextMatchBanner({ liveMatches, liveMatch, nextMatch, prediction,
           const hasPred = pred?.home_score != null
           const homeAbbr = getTeamAbbr(m.home_team)
           const awayAbbr = getTeamAbbr(m.away_team)
-          const homeFlag = getTeamFlag(m.home_team)
-          const awayFlag = getTeamFlag(m.away_team)
           const sc = scoreFor(m)
-          const h = sc.home ?? '–'
-          const a = sc.away ?? '–'
+          const { h, a, penH, penA } = mainScore(sc)
 
           return (
             <Link key={m.id} href={`/partido/${m.id}`} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6, marginTop: i > 0 ? 4 : 0 }}>
               {/* Score side */}
-              <span style={{ fontSize: 13, color: 'var(--text-main)', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>
-                {homeFlag}
-                <span style={{ fontWeight: 600, marginLeft: 3 }}>{homeAbbr}</span>
-                <span style={{ fontWeight: 800, color: 'var(--warning)', margin: '0 5px' }}>{h}–{a}</span>
+              <span style={{ fontSize: 13, color: 'var(--text-main)', whiteSpace: 'nowrap', flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 3 }}>
+                <TeamFlag name={m.home_team} size={14} />
+                <span style={{ fontWeight: 600 }}>{homeAbbr}</span>
+                {penH != null && <span style={{ fontSize: 10, color: 'var(--warning)', fontWeight: 700 }}>({penH})</span>}
+                <span style={{ fontWeight: 800, color: 'var(--warning)', margin: '0 2px' }}>{h ?? '–'}–{a ?? '–'}</span>
+                {penA != null && <span style={{ fontSize: 10, color: 'var(--warning)', fontWeight: 700 }}>({penA})</span>}
                 <span style={{ fontWeight: 600 }}>{awayAbbr}</span>
-                {awayFlag}
+                <TeamFlag name={m.away_team} size={14} />
                 <LiveTimeLabel
                   period={sc.period} minute={sc.minute}
                   actualStartTime={sc.actualStart} secondHalfStartTime={sc.secondHalfStart} extraTimeStartTime={sc.extraTimeStart}
@@ -180,6 +194,7 @@ export function NextMatchBanner({ liveMatches, liveMatch, nextMatch, prediction,
   if (liveMatch) {
     const hasPred = prediction?.home_score != null
     const sc = scoreFor(liveMatch)
+    const { h: lh, a: la, penH: lPenH, penA: lPenA } = mainScore(sc)
     return (
       <div>
         <Link href={`/partido/${liveMatch.id}`} style={{ textDecoration: 'none', display: 'block' }}>
@@ -192,13 +207,17 @@ export function NextMatchBanner({ liveMatches, liveMatch, nextMatch, prediction,
               {t.texts.liveNow}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {getTeamFlag(liveMatch.home_team)} {liveMatch.home_team} vs {liveMatch.away_team} {getTeamFlag(liveMatch.away_team)}
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'flex', alignItems: 'center', gap: 4 }}>
+                <TeamFlag name={liveMatch.home_team} size={16} />
+                {liveMatch.home_team} vs {liveMatch.away_team}
+                <TeamFlag name={liveMatch.away_team} size={16} />
               </div>
             </div>
             <div style={{ textAlign: 'right', flexShrink: 0 }}>
-              <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--warning)', letterSpacing: 2 }}>
-                {sc.home ?? '–'} – {sc.away ?? '–'}
+              <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--warning)', letterSpacing: 2, display: 'flex', alignItems: 'center', gap: 3 }}>
+                {lPenH != null && <span style={{ fontSize: 12, fontWeight: 700 }}>({lPenH})</span>}
+                {lh ?? '–'} – {la ?? '–'}
+                {lPenA != null && <span style={{ fontSize: 12, fontWeight: 700 }}>({lPenA})</span>}
               </div>
               <LiveTimeLabel
                 period={sc.period} minute={sc.minute}
@@ -223,8 +242,10 @@ export function NextMatchBanner({ liveMatches, liveMatch, nextMatch, prediction,
               display: 'flex', alignItems: 'center', gap: 8,
             }}>
               <div style={{ fontSize: 10, color: 'var(--text-dim)', flexShrink: 0 }}>{t.texts.nextSmall}</div>
-              <div style={{ fontSize: 11, color: 'var(--text-muted)', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {getTeamFlag(nextMatch.home_team)} {nextMatch.home_team} vs {nextMatch.away_team} {getTeamFlag(nextMatch.away_team)}
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'flex', alignItems: 'center', gap: 3 }}>
+                <TeamFlag name={nextMatch.home_team} size={12} />
+                {nextMatch.home_team} vs {nextMatch.away_team}
+                <TeamFlag name={nextMatch.away_team} size={12} />
               </div>
               <Countdown target={nextMatch.scheduled_time} label="" small />
             </div>
@@ -253,8 +274,10 @@ export function NextMatchBanner({ liveMatches, liveMatch, nextMatch, prediction,
       }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 3 }}>{t.texts.nextMatch}</div>
-          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            {getTeamFlag(nextMatch!.home_team)} {nextMatch!.home_team} vs {nextMatch!.away_team} {getTeamFlag(nextMatch!.away_team)}
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'flex', alignItems: 'center', gap: 4 }}>
+            <TeamFlag name={nextMatch!.home_team} size={16} />
+            {nextMatch!.home_team} vs {nextMatch!.away_team}
+            <TeamFlag name={nextMatch!.away_team} size={16} />
           </div>
           <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{kickoffStr}</div>
         </div>

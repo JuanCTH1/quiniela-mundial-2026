@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
+export const maxDuration = 300
+
 async function findReferee(apiKey: string, homeTeam: string, awayTeam: string, date: string): Promise<string | null> {
   const prompt = `Busca el árbitro principal asignado por FIFA para el partido ${homeTeam} vs ${awayTeam} en la Ronda de 32 del Mundial 2026 (${date}). Responde ÚNICAMENTE con JSON: {"referee": "Nombre Apellido"} o {"referee": null} si no encuentras información confirmada.`
 
