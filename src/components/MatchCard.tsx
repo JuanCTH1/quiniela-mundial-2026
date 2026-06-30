@@ -123,7 +123,7 @@ export function MatchCard({
       {/* Body — clickable al detalle */}
       <Link href={`/partido/${match.id}`} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
         {/* Teams + score */}
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {/* Home */}
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -138,17 +138,17 @@ export function MatchCard({
           {/* Score / time */}
           <div style={{ textAlign: 'center', minWidth: 76 }}>
             {isFinished ? (
-              <span style={{ fontSize: 24, fontWeight: 800, letterSpacing: 2, color: 'var(--text-main)' }}>
-                {hasPenalties && <span style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 600 }}>({match.home_score_penalties})</span>}
+              <span style={{ fontSize: 24, fontWeight: 800, letterSpacing: 2, color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
+                {hasPenalties && <span style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 600, verticalAlign: 'middle' }}>({match.home_score_penalties})</span>}
                 {finalHome} – {finalAway}
-                {hasPenalties && <span style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 600 }}>({match.away_score_penalties})</span>}
+                {hasPenalties && <span style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 600, verticalAlign: 'middle' }}>({match.away_score_penalties})</span>}
               </span>
             ) : hasLiveScore ? (
               <>
-                <span style={{ fontSize: 28, fontWeight: 800, letterSpacing: 2, color: 'var(--warning)' }}>
-                  {isPenaltyPhase && hasPenalties && <span style={{ fontSize: 13, fontWeight: 700 }}>({match.home_score_penalties})</span>}
+                <span style={{ fontSize: 28, fontWeight: 800, letterSpacing: 2, color: 'var(--warning)', whiteSpace: 'nowrap' }}>
+                  {isPenaltyPhase && hasPenalties && <span style={{ fontSize: 13, fontWeight: 700, verticalAlign: 'middle' }}>({match.home_score_penalties})</span>}
                   {liveMainHome} – {liveMainAway}
-                  {isPenaltyPhase && hasPenalties && <span style={{ fontSize: 13, fontWeight: 700 }}>({match.away_score_penalties})</span>}
+                  {isPenaltyPhase && hasPenalties && <span style={{ fontSize: 13, fontWeight: 700, verticalAlign: 'middle' }}>({match.away_score_penalties})</span>}
                 </span>
                 <LiveTimeLabel
                   period={match.current_period}
