@@ -42,7 +42,7 @@ export default async function PartidoPage({ params }: { params: Promise<{ id: st
   const timezone = profileRes.data?.timezone ?? 'America/Mexico_City'
   const theme = (profileRes.data?.theme as Theme) ?? 'mexico'
   const t = getTheme(theme)
-  const locked = isMatchLocked(match.scheduled_time, bloqueoMinutos, match.early_unlock_at)
+  const locked = isMatchLocked(match.scheduled_time, bloqueoMinutos, match.early_unlock_at, match.locked_at, match.status)
   const isFinished = match.status === 'FINISHED' && match.home_score_quiniela != null
   const isLive = match.status === 'IN_PROGRESS'
 

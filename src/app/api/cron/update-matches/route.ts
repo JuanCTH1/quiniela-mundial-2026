@@ -64,6 +64,10 @@ export async function GET(request: NextRequest) {
       // No escribir si no hay datos completos (evita nulos parciales)
       const isFinished = apiStatus === 'FINISHED' && quiniela !== null
       const isFirstLive = apiStatus === 'IN_PROGRESS' && !match.actual_start_time
+      // Retraso/aplazamiento: la API "des-arranca" un partido (IN_PROGRESS → SCHEDULED).
+      // Limpiamos los timestamps de reloj para que re-detecte el arranque REAL más tarde
+      // y no muestre un minuto inflado. El bloqueo NO se toca: locked_at ya está sellado.
+      const isRevertToScheduled = apiStatus === 'SCHEDULED' && match.status === 'IN_PROGRESS'
       const detectedAt = new Date()
       const newPeriod = derivePeriod(apiMatch.status, apiMatch.minute, match.current_period)
       // Detectar inicio del 2T: transición MT → 2T, solo se escribe una vez
@@ -104,6 +108,11 @@ export async function GET(request: NextRequest) {
         ...(isExtraTimeStart && {
           extra_time_start_time: detectedAt.toISOString(),
         }),
+        ...(isRevertToScheduled && {
+          actual_start_time: null,
+          second_half_start_time: null,
+          extra_time_start_time: null,
+        }),
       }
 
       // Log para verificar que el API devuelve el campo minute.
@@ -131,6 +140,14 @@ export async function GET(request: NextRequest) {
           `${match.external_id} detectado EN JUEGO ${delayMin}min después del kickoff programado`,
           false, match.id,
           { delay_minutes: delayMin, scheduled_time: match.scheduled_time, detected_at: detectedAt.toISOString() }
+        )
+      }
+
+      // Log del "des-arranque" (retraso/aplazamiento detectado)
+      if (isRevertToScheduled) {
+        await logEntry(supabase, 'DELAY_DETECTED',
+          `${match.external_id} volvió a SCHEDULED — reloj reiniciado (posible retraso). Bloqueo intacto.`,
+          false, match.id, { scheduled_time: match.scheduled_time }
         )
       }
 

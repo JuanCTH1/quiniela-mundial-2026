@@ -241,7 +241,17 @@ export function calcResult(
   return { type: 'FALLO', pts: 0 }
 }
 
-export function isMatchLocked(scheduledTime: string, bloqueoMinutos: number, earlyUnlockAt?: string | null): boolean {
+export function isMatchLocked(
+  scheduledTime: string,
+  bloqueoMinutos: number,
+  earlyUnlockAt?: string | null,
+  lockedAt?: string | null,
+  status?: string | null,
+): boolean {
+  // Candado de una sola vía: una vez sellado (o si el partido ya no está
+  // SCHEDULED), queda bloqueado para siempre, sin importar la hora.
+  if (lockedAt) return true
+  if (status && status !== 'SCHEDULED') return true
   if (earlyUnlockAt && new Date(earlyUnlockAt) <= new Date()) return true
   const lockTime = new Date(scheduledTime).getTime() - bloqueoMinutos * 60_000
   return Date.now() >= lockTime

@@ -64,7 +64,7 @@ export default async function PartidosPage({
 
   // Parallel: my predictions + locked/finished predictions + profiles
   const lockedIds = (matches ?? [])
-    .filter(m => isMatchLocked(m.scheduled_time, bloqueoMinutos, m.early_unlock_at) || m.status === 'FINISHED' || m.status === 'IN_PROGRESS')
+    .filter(m => isMatchLocked(m.scheduled_time, bloqueoMinutos, m.early_unlock_at, m.locked_at, m.status) || m.status === 'FINISHED' || m.status === 'IN_PROGRESS')
     .map(m => m.id)
 
   const [myPredsRes, allPredsRes, allProfilesRes] = await Promise.all([
@@ -140,7 +140,7 @@ export default async function PartidosPage({
           </p>
         ) : (
           matches.map(match => {
-            const locked = isMatchLocked(match.scheduled_time, bloqueoMinutos, match.early_unlock_at)
+            const locked = isMatchLocked(match.scheduled_time, bloqueoMinutos, match.early_unlock_at, match.locked_at, match.status)
             const isNext = match.id === nextMatch?.id
             return (
               <div key={match.id} id={isNext ? 'next-match' : undefined}>
