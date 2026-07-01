@@ -187,6 +187,7 @@ export type Database = {
           home_team: string
           id: string
           is_placeholder: boolean
+          locked_at: string | null
           matchday: number | null
           referee: string | null
           referee_country: string | null
@@ -220,6 +221,7 @@ export type Database = {
           home_team: string
           id?: string
           is_placeholder?: boolean
+          locked_at?: string | null
           matchday?: number | null
           referee?: string | null
           referee_country?: string | null
@@ -253,6 +255,7 @@ export type Database = {
           home_team?: string
           id?: string
           is_placeholder?: boolean
+          locked_at?: string | null
           matchday?: number | null
           referee?: string | null
           referee_country?: string | null
