@@ -1,6 +1,6 @@
 # BACKLOG — Quiniela Overrated 2026
 
-> Actualizado: 2026-06-28
+> Actualizado: 2026-07-03
 
 ---
 
@@ -134,6 +134,10 @@ Si en el próximo partido en vivo `matches.goals` sigue vacío, cambiar el cron 
 
 `generate-facts` v4 deployada con `reviewed: true`. Verificar que el bloque `system_logs` está presente en la versión deployada (hubo un deploy donde el return estaba antes del insert).
 
+### TEC-008 · Confirmar si QA y prod comparten API key de football-data.org
+
+**Contexto (2026-07-03):** `update-matches-2min` (QA) y `update-matches-prod` corrían cada 2 min casi simultáneos contra football-data.org, generando 429 en ~1 partido por ciclo. Se bajó QA a cada 10 min (`28_qa_cron_throttle.sql`) como mitigación, pero si comparten la misma key el riesgo de colisión sigue latente (solo menos frecuente). Confirmar en Railway si son keys distintas; si no, evaluar sacar una key separada para QA.
+
 ---
 
 ## 🟣 UX (mejoras de experiencia)
@@ -211,6 +215,12 @@ Ideas propuestas — no implementar durante el torneo sin probar en QA primero:
 
 ## ✅ COMPLETADOS
 
+- [x] Auditoría de predicciones: trigger a `audit_log` en cada guardado + RPC `log_prediction_rejected` para intentos bloqueados (Jul 3)
+- [x] Cron QA (`update-matches-2min`) bajado de 2min a 10min — chocaba con `update-matches-prod` contra la misma cuota de football-data.org (Jul 3)
+- [x] `PredictionForm`: check ✓ ya no queda prendido en falso al editar sin guardar — inputs controlados + comparación contra lo guardado (Jul 3)
+- [x] `PredictionForm`: mensaje de bloqueo como banner visible + re-chequeo proactivo cada 15s (Jul 3)
+- [x] `PredictionForm`: botón dice "Guardar" o "Guardado" según corresponda, ya no "Editar" (Jul 3)
+- [x] `PredictionForm`: aviso "sin guardar todavía" (pill) cuando hay cambios pendientes (Jul 3)
 - [x] BUG-002 · Timer cronómetro: derivePeriod transiciona a MT/MTE sin minute, approxLiveMinute muestra 45+N', topes subidos (Jun 28)
 - [x] UX-001 · Botón "↓ Siguiente partido" junto al h1 Partidos, autoscroll eliminado (Jun 28)
 - [x] UX-002 · Scroll restore instant al dar back desde /partido/[id] (Jun 28)

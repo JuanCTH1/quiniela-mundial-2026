@@ -210,6 +210,32 @@ Ver procedimiento completo en `docs/Crear_Usuario_Prod.md`.
 
 ---
 
+## Upsert sin columnas de auditoría: el timestamp miente (2026-07-03)
+
+**Qué pasó:** `predictions.submitted_at` tiene `DEFAULT now()`, pero el `.upsert(payload, {onConflict})` del cliente solo incluía `home_score`/`away_score` en el payload. En un conflicto (UPDATE), Postgres solo actualiza las columnas presentes en el payload — `submitted_at` se queda con el valor del INSERT original para siempre. Para debuggear el reporte de un usuario ("mi cambio no se guardó") tuve que inferir la edición fallida comparando valores, no timestamps, porque el timestamp no reflejaba la realidad.
+
+**Cómo evitarlo:** Si una tabla tiene una columna tipo `submitted_at`/`updated_at` con propósito de auditoría, o la excluyes explícitamente del upsert (documentando por qué), o la incluyes siempre en el payload (`submitted_at: new Date().toISOString()`), o mejor: usa un trigger `BEFORE UPDATE` que la actualice sin depender del cliente.
+
+**Aplicar:** Antes de confiar en un timestamp para debug, confirmar si el código que escribe esa fila realmente la toca en cada camino (insert Y update).
+
+---
+
+## Cron nuevo en otro ambiente: revisar qué comparte con el existente (2026-07-03)
+
+**Qué pasó:** El 2026-06-21 se agregó `update-matches-prod` (cron de producción) sin bajar la frecuencia del `update-matches-2min` ya existente (QA). Los dos quedaron corriendo cada 2 min, casi simultáneos, contra la misma cuota compartida de football-data.org — generando 429 en ~1 partido por ciclo durante casi 2 semanas sin que nadie lo notara, porque el fallo era parcial (la mayoría de partidos sí se actualizaban) y no rompía nada visible.
+
+**Cómo evitarlo:** Al agregar un cron/job nuevo que llama un recurso externo con cuota, preguntar explícitamente: ¿qué otros crons llaman el mismo recurso? ¿Comparten cuota? Sumar las llamadas totales, no evaluar cada cron aislado.
+
+---
+
+## Inputs controlados para poder comparar contra el estado guardado (2026-07-03)
+
+**Qué pasó:** `PredictionForm` usaba inputs no controlados (`ref` + `defaultValue`). El indicador "✓ guardado" dependía solo de "¿existe un pronóstico guardado?", no de si el valor visible coincidía con lo guardado — así que editar el marcador sin darle Guardar dejaba el ✓ prendido de forma engañosa.
+
+**Cómo evitarlo:** Si la UI necesita comparar "lo que se ve" contra "lo que está guardado" (dirty-state), los inputs tienen que ser controlados desde el inicio. Con `ref`/`defaultValue` esa comparación es imposible sin leer el DOM directamente, lo cual es frágil.
+
+---
+
 ## Tono y cadencia de dev
 
 **Buena práctica confirmada:** 

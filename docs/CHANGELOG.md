@@ -1,5 +1,25 @@
 # Changelog — Quiniela Overrated 2026
 
+## [Auditoría de predicciones + fix cron QA + UX de guardado] — 2026-07-03
+
+### Investigación
+- **Caso Javier — Suiza-Algeria "no se guardó"**: reportó haber cambiado el marcador de varios partidos (incluyendo Suiza-Argelia) sin que se reflejara. Se confirmó cruzando `predictions` que las ediciones nunca llegaron a la DB. Causa: intentó editar dentro (o después) de la ventana de bloqueo de cada partido (`bloqueo_minutos = 15`) — comportamiento correcto del sistema, pero sin ningún rastro que lo confirmara ni un aviso lo bastante visible para notarlo en el momento.
+
+### Fixes
+- **Rastro de auditoría de predicciones**: `submitted_at` no se actualizaba en un UPDATE (el upsert del cliente no lo tocaba) — no había forma de saber cuándo se editó un pronóstico. Trigger `log_prediction_change` en `predictions` que registra cada guardado exitoso en `audit_log` (valor anterior/nuevo). RPC `log_prediction_rejected` para que el cliente registre en `system_logs` cuando un intento se bloquea (chequeo de tiempo en cliente o rechazo de RLS) — antes esos intentos no dejaban ningún rastro. Migración `27_prediction_audit_trail.sql`.
+- **Choque de rate-limit en cron de resultados**: `update-matches-2min` (QA) y `update-matches-prod` corrían ambos cada 2 min casi al mismo segundo contra la misma cuota de football-data.org, causando un 429 por ciclo en ~1 partido (leftover de cuando se agregó el job de prod en Jun 21 sin bajar la frecuencia del de QA). QA pasa a cada 10 min — sigue actualizándose, deja de pelear la cuota con producción. Migración `28_qa_cron_throttle.sql`.
+- **`PredictionForm` — palomita ✓ engañosa al editar**: dependía solo de "¿ya existe un pronóstico guardado?", no de si el valor en pantalla coincidía con lo guardado. Resultado: si editabas el marcador sin darle Guardar, la palomita seguía prendida como si el cambio ya estuviera guardado. Inputs ahora controlados para poder comparar contra lo guardado.
+- **`PredictionForm` — mensaje de bloqueo poco visible**: pasó de texto de 12px a banner con fondo y borde. Además, re-chequeo proactivo cada 15s: si la pestaña quedó abierta desde antes del bloqueo, el formulario se oculta solo en vez de esperar a un submit rechazado y silencioso.
+- **`PredictionForm` — label "Editar" confuso**: el botón siempre ejecuta un guardado (nunca "edita" nada aparte), así que el label dual "Editar"/"Guardar" era engañoso. Ahora: "Guardar" cuando hay algo pendiente por guardar, "Guardado" (deshabilitado) cuando no hay cambios — traducido por tema.
+
+### Features
+- **Aviso de cambios sin guardar**: pill con punto + texto (traducido por tema) cuando el marcador en pantalla no coincide con lo guardado, para dejar claro que falta darle Guardar antes de que se pierda el cambio.
+
+### Infraestructura
+- `develop` mergeado a `master` (los 5 commits de esta sesión: auditoría de predicciones, throttle de cron QA, y los 3 fixes de UX de `PredictionForm`).
+
+---
+
 ## [Penales en vivo + UX score + odds cleanup + árbitros] — 2026-06-30
 
 ### Features

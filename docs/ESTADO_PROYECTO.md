@@ -1,14 +1,14 @@
 # Estado del Proyecto — Quiniela Overrated 2026
 
-> Actualizado: 2026-06-30 (cierre sesión)
+> Actualizado: 2026-07-03 (cierre sesión)
 
 ## Estado general
 
-**Fase activa: Torneo en curso — Ronda de 32 / inicio R16. Modo Real activo.**
+**Fase activa: Torneo en curso — Ronda de 32/16. Modo Real activo.**
 
-App en prod con los 6 jugadores. Fase de grupos terminó Jun 27. R32 en curso. Timer en vivo OK. Drawer de análisis OK. Display de penales implementado en lista/detalle/banner (resultado a 120' + `(penH) X–Y (penA)`). `update-odds` ahora limpia equipos eliminados. 8/12 árbitros R32 cargados (resto los anuncia FIFA 24-48h antes). Alineación de marcador en card corregida (vertical + centrado mobile).
+App en prod con los 6 jugadores. Fase de grupos terminó Jun 27. R32/R16 en curso. Timer en vivo OK. Drawer de análisis OK. Display de penales implementado en lista/detalle/banner (resultado a 120' + `(penH) X–Y (penA)`). `update-odds` ahora limpia equipos eliminados. Alineación de marcador en card corregida (vertical + centrado mobile). Auditoría de predicciones agregada (`audit_log` + rechazos en `system_logs`). `PredictionForm` con UX corregida: check ya no queda prendido en falso al editar, aviso de "sin guardar", botón dice "Guardado" cuando no hay nada pendiente. Cron `update-matches-2min` (QA) bajado a cada 10min para no chocar con el rate-limit de football-data.org junto con `update-matches-prod`.
 
-**Pendiente del grupo:** decisión sobre los 3pts de Javier por tendencia en Holanda-Marruecos (ganados por el bug de penales ya corregido).
+**Pendiente del grupo:** decisión sobre los 3pts de Javier por tendencia en Holanda-Marruecos (ganados por el bug de penales ya corregido). Confirmar `bloqueo_minutos` (corre en 15 default, sin confirmar formalmente — ver `CLAUDE.md`).
 
 ## Usuarios en producción
 
@@ -43,6 +43,7 @@ App en prod con los 6 jugadores. Fase de grupos terminó Jun 27. R32 en curso. T
 | Cron | Frecuencia | Para qué |
 |---|---|---|
 | `update-matches-prod` | cada 2min | Marcadores en vivo |
+| `update-matches-2min` (QA) | cada 10min (bajado de 2min el 2026-07-03, ver CHANGELOG) | Marcadores en vivo QA |
 | `sync-fixtures` + `sync-fixtures-jul` | cada hora Jun 27–Jul 19 | Equipos reales en knockout |
 | `generate-facts-r16` | Jul 3 14:00 UTC | Facts R16 |
 | `generate-facts-qf` | Jul 8 14:00 UTC | Facts QF |
@@ -83,7 +84,9 @@ App en prod con los 6 jugadores. Fase de grupos terminó Jun 27. R32 en curso. T
 - **TEC-002**: árbitros R32 restantes (Jun 30–Jul 4) — FIFA anuncia 24-48h antes; usar botón "Buscar árbitros" en /admin.
 - **TEC-006**: verificar que `generate-facts` loguea correctamente en `system_logs` en prod.
 - **FEAT-001 UI**: selector de penales en `PredictionForm` — en pausa por decisión grupal pendiente.
+- **TEC-008**: confirmar si QA y prod comparten la misma API key de football-data.org. Si es así, el throttle de QA a 10min (2026-07-03) reduce pero no elimina el riesgo de 429 — considerar API key separada para QA si el problema persiste.
 
 ## Pendientes grupales
 
 - [ ] Resultado válido en eliminatorias: ¿90', 120' o penales? (FEAT-001 UI en pausa)
+- [ ] Confirmar `bloqueo_minutos` (corre en 15 default desde antes de modo real, nunca confirmado formalmente — ver caso Suiza-Algeria 2026-07-03 en CHANGELOG)
