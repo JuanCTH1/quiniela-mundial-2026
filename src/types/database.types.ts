@@ -175,6 +175,7 @@ export type Database = {
           created_at: string
           current_minute: number | null
           current_period: string | null
+          duration: string | null
           early_unlock_at: string | null
           external_id: number | null
           extra_time_start_time: string | null
@@ -189,6 +190,7 @@ export type Database = {
           is_placeholder: boolean
           locked_at: string | null
           matchday: number | null
+          penalty_winner: string | null
           referee: string | null
           referee_country: string | null
           result_source: string | null
@@ -209,6 +211,7 @@ export type Database = {
           created_at?: string
           current_minute?: number | null
           current_period?: string | null
+          duration?: string | null
           early_unlock_at?: string | null
           external_id?: number | null
           extra_time_start_time?: string | null
@@ -223,6 +226,7 @@ export type Database = {
           is_placeholder?: boolean
           locked_at?: string | null
           matchday?: number | null
+          penalty_winner?: string | null
           referee?: string | null
           referee_country?: string | null
           result_source?: string | null
@@ -243,6 +247,7 @@ export type Database = {
           created_at?: string
           current_minute?: number | null
           current_period?: string | null
+          duration?: string | null
           early_unlock_at?: string | null
           external_id?: number | null
           extra_time_start_time?: string | null
@@ -257,6 +262,7 @@ export type Database = {
           is_placeholder?: boolean
           locked_at?: string | null
           matchday?: number | null
+          penalty_winner?: string | null
           referee?: string | null
           referee_country?: string | null
           result_source?: string | null
@@ -310,6 +316,7 @@ export type Database = {
           home_score: number
           id: string
           match_id: string
+          penalty_winner: string | null
           submitted_at: string
           user_id: string
         }
@@ -318,6 +325,7 @@ export type Database = {
           home_score: number
           id?: string
           match_id: string
+          penalty_winner?: string | null
           submitted_at?: string
           user_id: string
         }
@@ -326,6 +334,7 @@ export type Database = {
           home_score?: number
           id?: string
           match_id?: string
+          penalty_winner?: string | null
           submitted_at?: string
           user_id?: string
         }
@@ -593,6 +602,15 @@ export type Database = {
     Functions: {
       get_lock_time: { Args: { p_match_id: string }; Returns: string }
       is_match_locked: { Args: { p_match_id: string }; Returns: boolean }
+      log_prediction_rejected: {
+        Args: {
+          p_attempted_away: number
+          p_attempted_home: number
+          p_match_id: string
+          p_reason: string
+        }
+        Returns: undefined
+      }
       prediction_count: { Args: { p_match_id: string }; Returns: number }
     }
     Enums: {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useTransition } from 'react'
+import { useState, useRef, useTransition, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { getTheme, type Theme } from '@/lib/themes'
@@ -12,6 +12,23 @@ interface Props {
   currentPrediction?: { home_score: number | null; away_score: number | null } | null
   disabled?: boolean
   theme?: Theme
+}
+
+// Registra un intento rechazado (bloqueo/RLS) para poder auditarlo después —
+// sin esto no queda ningún rastro de que el usuario lo intentó.
+async function logRejection(matchId: string, home: number | null, away: number | null, reason: string) {
+  try {
+    const sb = createClient()
+    // El RPC acepta NULL en Postgres aunque los tipos generados los marquen non-null
+    await sb.rpc('log_prediction_rejected', {
+      p_match_id: matchId,
+      p_attempted_home: home as number,
+      p_attempted_away: away as number,
+      p_reason: reason,
+    })
+  } catch {
+    // El logging nunca debe romper la UX del usuario
+  }
 }
 
 export function PredictionForm({ matchId, scheduledTime, bloqueoMinutos, currentPrediction, disabled, theme = 'mexico' }: Props) {
@@ -27,7 +44,23 @@ export function PredictionForm({ matchId, scheduledTime, bloqueoMinutos, current
   const homeRef = useRef<HTMLInputElement>(null)
   const awayRef = useRef<HTMLInputElement>(null)
 
-  if (disabled) {
+  const isNowLocked = useCallback(() => {
+    const lockMs = new Date(scheduledTime).getTime() - bloqueoMinutos * 60 * 1000
+    return Date.now() >= lockMs
+  }, [scheduledTime, bloqueoMinutos])
+
+  // Re-chequeo proactivo: si la pestaña quedó abierta desde antes del bloqueo,
+  // el formulario se oculta solo en vez de esperar a un submit rechazado.
+  const [lockedNow, setLockedNow] = useState(isNowLocked)
+  useEffect(() => {
+    if (lockedNow) return
+    const id = setInterval(() => {
+      if (isNowLocked()) setLockedNow(true)
+    }, 15_000)
+    return () => clearInterval(id)
+  }, [lockedNow, isNowLocked])
+
+  if (disabled || lockedNow) {
     return (
       <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 8 }}>
         🔒 Cerrado
@@ -35,22 +68,20 @@ export function PredictionForm({ matchId, scheduledTime, bloqueoMinutos, current
     )
   }
 
-  function isNowLocked() {
-    const lockMs = new Date(scheduledTime).getTime() - bloqueoMinutos * 60 * 1000
-    return Date.now() >= lockMs
-  }
-
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
+
+    const home = parseInt(homeRef.current?.value ?? '')
+    const away = parseInt(awayRef.current?.value ?? '')
 
     // Verificación de tiempo en cliente — evita el submit silencioso post-bloqueo
     if (isNowLocked()) {
       setError('🔒 Ups, muy tarde — los pronósticos ya cerraron.')
+      setLockedNow(true)
+      void logRejection(matchId, isNaN(home) ? null : home, isNaN(away) ? null : away, 'client_lock_pre_submit')
       return
     }
 
-    const home = parseInt(homeRef.current?.value ?? '')
-    const away = parseInt(awayRef.current?.value ?? '')
     if (isNaN(home) || isNaN(away) || home < 0 || away < 0) return
 
     setError(null)
@@ -58,6 +89,8 @@ export function PredictionForm({ matchId, scheduledTime, bloqueoMinutos, current
       // Segunda verificación antes del network round-trip
       if (isNowLocked()) {
         setError('🔒 Ups, muy tarde — los pronósticos ya cerraron.')
+        setLockedNow(true)
+        void logRejection(matchId, home, away, 'client_lock_pre_network')
         return
       }
 
@@ -73,6 +106,8 @@ export function PredictionForm({ matchId, scheduledTime, bloqueoMinutos, current
       if (err) {
         // RLS rechazó en el servidor (doble seguro)
         setError('🔒 Ups, muy tarde — los pronósticos ya cerraron.')
+        setLockedNow(true)
+        void logRejection(matchId, home, away, 'rls_rejected')
         return
       }
 
@@ -136,7 +171,11 @@ export function PredictionForm({ matchId, scheduledTime, bloqueoMinutos, current
         )}
       </div>
       {error && (
-        <p style={{ fontSize: 12, color: 'var(--warning)', marginTop: 6, fontWeight: 500 }}>
+        <p style={{
+          fontSize: 13, color: 'var(--warning)', marginTop: 8, fontWeight: 600,
+          background: 'rgba(255,180,0,0.12)', border: '1px solid var(--warning)',
+          borderRadius: 8, padding: '6px 10px',
+        }}>
           {error}
         </p>
       )}
