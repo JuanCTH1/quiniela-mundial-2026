@@ -26,9 +26,10 @@ Toda la propuesta, reglas y checklist de fases vive en `docs/`:
 4. **Cálculo en vivo:** los puntos se calculan al momento desde los resultados, no se guardan en tabla.
 5. **No avanzar de fase sin cumplir el 100% del checklist** de la fase anterior.
 
-## Pendientes abiertos (confirmar con el grupo antes de modo real)
-- Resultado válido en eliminatorias: 90', 120' o penales (y si es igual para todas las rondas).
-- Minutos de bloqueo antes del kickoff.
+## Pendientes abiertos
+Modo real ya está activo (desde 2026-06-22) corriendo con valores default sin que el grupo los haya confirmado formalmente. Cerrar esto sigue pendiente:
+- Resultado válido en eliminatorias: 90', 120' o penales (y si es igual para todas las rondas). Corre con `corte = '90'` default en `reglas_puntuacion`.
+- Minutos de bloqueo antes del kickoff. Corre con `bloqueo_minutos = 15` default en `settings`. Un bloqueo de 15 min genera confusión real (ver caso Suiza-Argelia, 2026-07-03, en `docs/CHANGELOG.md`) — vale la pena revisarlo con el grupo, no solo confirmarlo.
 
 ## Notas de implementación
 - Tailwind v4: la configuración de tokens va en `@theme inline {}` dentro de `globals.css`, no en `tailwind.config.ts`.
