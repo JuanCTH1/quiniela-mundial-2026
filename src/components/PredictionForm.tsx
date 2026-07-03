@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useTransition, useEffect, useCallback } from 'react'
+import { useState, useTransition, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { getTheme, type Theme } from '@/lib/themes'
@@ -41,8 +41,11 @@ export function PredictionForm({ matchId, scheduledTime, bloqueoMinutos, current
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
-  const homeRef = useRef<HTMLInputElement>(null)
-  const awayRef = useRef<HTMLInputElement>(null)
+  // Inputs controlados: así se puede saber si lo que está escrito ya está
+  // guardado o es un cambio pendiente — antes el ✓ se quedaba prendido aunque
+  // el usuario editara el marcador sin darle guardar todavía.
+  const [homeInput, setHomeInput] = useState(saved?.home != null ? String(saved.home) : '')
+  const [awayInput, setAwayInput] = useState(saved?.away != null ? String(saved.away) : '')
 
   const isNowLocked = useCallback(() => {
     const lockMs = new Date(scheduledTime).getTime() - bloqueoMinutos * 60 * 1000
@@ -71,8 +74,8 @@ export function PredictionForm({ matchId, scheduledTime, bloqueoMinutos, current
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
 
-    const home = parseInt(homeRef.current?.value ?? '')
-    const away = parseInt(awayRef.current?.value ?? '')
+    const home = parseInt(homeInput)
+    const away = parseInt(awayInput)
 
     // Verificación de tiempo en cliente — evita el submit silencioso post-bloqueo
     if (isNowLocked()) {
@@ -117,15 +120,17 @@ export function PredictionForm({ matchId, scheduledTime, bloqueoMinutos, current
   }
 
   const hasPred = saved !== null
+  const isDirty = String(saved?.home ?? '') !== homeInput || String(saved?.away ?? '') !== awayInput
+  const canSubmit = !pending && (!hasPred || isDirty)
 
   return (
     <form onSubmit={submit} style={{ marginTop: 10 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <input
-          ref={homeRef}
           name="home"
           type="number" min={0} max={20}
-          defaultValue={saved?.home ?? ''}
+          value={homeInput}
+          onChange={e => { setHomeInput(e.target.value); setError(null) }}
           placeholder="0"
           required
           style={{
@@ -137,10 +142,10 @@ export function PredictionForm({ matchId, scheduledTime, bloqueoMinutos, current
         />
         <span style={{ color: 'var(--text-muted)', fontSize: 18 }}>–</span>
         <input
-          ref={awayRef}
           name="away"
           type="number" min={0} max={20}
-          defaultValue={saved?.away ?? ''}
+          value={awayInput}
+          onChange={e => { setAwayInput(e.target.value); setError(null) }}
           placeholder="0"
           required
           style={{
@@ -152,21 +157,21 @@ export function PredictionForm({ matchId, scheduledTime, bloqueoMinutos, current
         />
         <button
           type="submit"
-          disabled={pending}
+          disabled={!canSubmit}
           style={{
             padding: '7px 16px', fontSize: 13,
-            background: hasPred ? 'transparent' : 'var(--primary)',
+            background: canSubmit ? 'var(--primary)' : 'transparent',
             border: '1px solid var(--primary)',
             borderRadius: 8,
-            color: hasPred ? 'var(--primary)' : '#fff',
-            cursor: pending ? 'not-allowed' : 'pointer',
-            opacity: pending ? 0.6 : 1,
+            color: canSubmit ? '#fff' : 'var(--primary)',
+            cursor: canSubmit ? 'pointer' : 'not-allowed',
+            opacity: pending ? 0.6 : canSubmit ? 1 : 0.5,
             fontWeight: 500,
           }}
         >
-          {pending ? '...' : hasPred ? t.texts.edit : t.texts.save}
+          {pending ? '...' : t.texts.save}
         </button>
-        {hasPred && !pending && !error && (
+        {hasPred && !isDirty && !pending && !error && (
           <span style={{ fontSize: 12, color: 'var(--primary)' }}>✓</span>
         )}
       </div>
