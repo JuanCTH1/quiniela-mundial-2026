@@ -169,11 +169,8 @@ export function PredictionForm({ matchId, scheduledTime, bloqueoMinutos, current
             fontWeight: 500,
           }}
         >
-          {pending ? '...' : t.texts.save}
+          {pending ? '...' : hasPred && !isDirty ? t.texts.saved : t.texts.save}
         </button>
-        {hasPred && !isDirty && !pending && !error && (
-          <span style={{ fontSize: 12, color: 'var(--primary)' }}>✓</span>
-        )}
       </div>
       {isDirty && !pending && !error && (
         <p style={{
