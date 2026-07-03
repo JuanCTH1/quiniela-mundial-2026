@@ -175,6 +175,17 @@ export function PredictionForm({ matchId, scheduledTime, bloqueoMinutos, current
           <span style={{ fontSize: 12, color: 'var(--primary)' }}>✓</span>
         )}
       </div>
+      {isDirty && !pending && !error && (
+        <p style={{
+          display: 'inline-flex', alignItems: 'center', gap: 6,
+          fontSize: 12, color: 'var(--accent)', marginTop: 8, fontWeight: 600,
+          background: 'rgba(255,255,255,0.06)', border: '1px solid var(--accent)',
+          borderRadius: 999, padding: '4px 10px',
+        }}>
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent)', flexShrink: 0 }} />
+          {t.texts.unsavedHint}
+        </p>
+      )}
       {error && (
         <p style={{
           fontSize: 13, color: 'var(--warning)', marginTop: 8, fontWeight: 600,
