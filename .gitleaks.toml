@@ -26,12 +26,16 @@ keywords = ["pat-na", "pat-eu", "pat-ap"]
 # one check"). Por eso aquí va COMENTADO. Al calibrar, descoméntalo y deja al
 # menos una entrada real (paths / regexes / stopwords), cada una con su razón.
 # ─────────────────────────────────────────────────────────────────────────
-# [[allowlists]]
-# description = "Excepciones calibradas de este proyecto"
-# paths = [
-#     '''(^|/)package-lock\.json$''',   # ej.: hashes de integridad, no secretos
-# ]
-# regexes = [
-#     '''EXAMPLE_[A-Z0-9]+''',          # ej.: placeholders de documentación
-# ]
-# stopwords = ["example", "sample"]     # si aparece en el match, es falso positivo
+[[allowlists]]
+description = "Excepciones calibradas de Quiniela (FASE 1, 2026-07-08)"
+# Llave 'anon' PÚBLICA de Supabase, incrustada en 2 migraciones de cron
+# (supabase/migrations/17_cron_generate_facts_auth.sql y 25_generate_facts_r16.sql).
+# NO es un secreto: la anon key va a propósito en el frontend y está protegida
+# por Row-Level Security (RLS). Decodificado su claim: role=anon (verificado
+# 2026-07-08). Mismo caso que Ecosistema. Identificamos SOLO esta llave por un
+# trozo único de su firma — cualquier OTRO secreto en esos archivos (p.ej. un
+# service_role) SÍ seguiría siendo atrapado.
+regexTarget = "match"
+regexes = [
+    '''JjvqbMUZ98HmzNtbDbX3KhsMmI69wbhIg''',
+]
