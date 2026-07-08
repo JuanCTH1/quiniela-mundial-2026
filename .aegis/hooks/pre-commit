@@ -1,0 +1,13 @@
+#!/bin/sh
+# Aegis pre-commit (shim). Fuente canónica: master-framework/aegis/hooks/pre-commit
+# No editar la copia del repo: se sobrescribe al reinstalar/actualizar.
+# Solo resuelve Python y delega en aegis_guard.py — cero lógica aquí.
+ROOT=$(git rev-parse --show-toplevel) || exit 1
+for PY in py python python3; do
+    if command -v "$PY" >/dev/null 2>&1; then
+        exec "$PY" "$ROOT/.aegis/hooks/aegis_guard.py" pre-commit
+    fi
+done
+echo "AEGIS: no encuentro Python (py/python/python3) en el PATH." >&2
+echo "       Instálalo o corrige el PATH; sin Python los candados no corren." >&2
+exit 1

@@ -1,0 +1,37 @@
+# Plantilla de configuración de gitleaks para un proyecto Aegis.
+# Copiar a la raíz del repo destino como .gitleaks.toml (lo hace el instalador).
+#
+# Regla de Aegis: gitleaks es el ÚNICO motor de escaneo. No se mantienen regex
+# propias en paralelo. Aquí solo van (a) reglas EXTRA si el stack lo exige y
+# (b) EXCEPCIONES calibradas — cada una con su razón escrita. Sin razón, no entra.
+
+[extend]
+useDefault = true  # hereda todas las reglas mantenidas por la comunidad
+
+# ─────────────────────────────────────────────────────────────────────────
+# Reglas EXTRA del stack (lo que las reglas default NO cubren).
+# ─────────────────────────────────────────────────────────────────────────
+[[rules]]
+id = "hubspot-private-app-token"
+description = "HubSpot private app / Uberall token (pat-<region><n>-...)"
+# gitleaks default NO trae esta; JC usa HubSpot (token rotado en FASE 0).
+regex = '''pat-(na|eu|ap)\d-[0-9a-fA-F-]{8,}'''
+keywords = ["pat-na", "pat-eu", "pat-ap"]
+
+# ─────────────────────────────────────────────────────────────────────────
+# Excepciones (allowlist). Se llenan al calibrar contra el árbol real (FASE 1).
+# Objetivo: cero falsos positivos, cada exclusión justificada.
+#
+# IMPORTANTE: gitleaks RECHAZA un [allowlist] vacío ("must contain at least
+# one check"). Por eso aquí va COMENTADO. Al calibrar, descoméntalo y deja al
+# menos una entrada real (paths / regexes / stopwords), cada una con su razón.
+# ─────────────────────────────────────────────────────────────────────────
+# [[allowlists]]
+# description = "Excepciones calibradas de este proyecto"
+# paths = [
+#     '''(^|/)package-lock\.json$''',   # ej.: hashes de integridad, no secretos
+# ]
+# regexes = [
+#     '''EXAMPLE_[A-Z0-9]+''',          # ej.: placeholders de documentación
+# ]
+# stopwords = ["example", "sample"]     # si aparece en el match, es falso positivo
