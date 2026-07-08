@@ -24,6 +24,10 @@ jobs:
       - name: gitleaks
         uses: gitleaks/gitleaks-action@v2
         env:
+          # gitleaks-action@v2 exige GITHUB_TOKEN para escanear Pull Requests
+          # (lo usa para leer los commits del PR vía API). Sin esto el job
+          # se cae en 5s con "GITHUB_TOKEN is now required". [RADAR 2026-07-08]
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITLEAKS_CONFIG: .gitleaks.toml
           GITLEAKS_ENABLE_UPLOAD_ARTIFACT: false
           GITLEAKS_ENABLE_SUMMARY: true
