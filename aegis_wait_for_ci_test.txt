@@ -1,1 +1,0 @@
-# ping 20260709T165415Z — prueba Wait for CI (Aegis, no borrar sin revisar)
