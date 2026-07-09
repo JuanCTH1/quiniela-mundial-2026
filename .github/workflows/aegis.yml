@@ -1,0 +1,104 @@
+# Aegis — candado de servidor (Bloque B, FASE 1).
+#
+# Fuente canónica: master-framework/aegis/ci/aegis.yml
+# Se copia tal cual a .github/workflows/aegis.yml de cada repo destino.
+# Regla del plan: cero lógica escondida aquí — cada job invoca un script
+# versionado que Claude (y JC) puede leer entero. El YAML solo organiza.
+
+name: Aegis
+
+on:
+  pull_request:
+    branches: ["*"]
+  push:
+    branches: ["*"]
+
+jobs:
+  secretos:
+    name: C1 · gitleaks (árbol + diff)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # historial completo: gitleaks necesita el rango real
+      - name: gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          # gitleaks-action@v2 exige GITHUB_TOKEN para escanear Pull Requests
+          # (lo usa para leer los commits del PR vía API). Sin esto el job
+          # se cae en 5s con "GITHUB_TOKEN is now required". [RADAR 2026-07-08]
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_CONFIG: .gitleaks.toml
+          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: false
+          GITLEAKS_ENABLE_SUMMARY: true
+
+  build:
+    name: C4 · lint + typecheck + build
+    runs-on: ubuntu-latest
+    needs: secretos
+    steps:
+      - uses: actions/checkout@v4
+      # Gate: el build solo corre contra prod (decisión de JC, FASE 1,
+      # 2026-07-09) — QA queda exento a propósito: es el terreno de prueba
+      # activo, iterar ahí no debe pagar ~30s-2min por push. El escaneo de
+      # secretos (C1) sí corre siempre, en todas las ramas, sin excepción —
+      # esa es la pieza que protege contra lo que sí sería grave (una fuga).
+      # Nombre real leído de .aegis/config.json (ramas.prod), NUNCA
+      # hardcodeado aquí: cada repo destino tiene el suyo (diseño E).
+      - name: '¿Corresponde build en esta rama?'
+        id: gate
+        run: |
+          TARGET="${{ github.event_name == 'pull_request' && github.base_ref || github.ref_name }}"
+          PROD=$(python3 -c "import json; print(json.load(open('.aegis/config.json'))['ramas']['prod'])" 2>/dev/null || echo "")
+          if [ "$TARGET" = "$PROD" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            echo "Build SÍ corre: rama destino '$TARGET' es prod."
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "Build exento: rama destino '$TARGET' no es prod (incluye QA)."
+          fi
+      # Nada de lógica de proyecto aquí: el repo destino trae su propio
+      # check_command versionado (el mismo que corre en pre-push local,
+      # aegis/config.json → check_command.comando). Este job solo lo invoca.
+      - name: Setup
+        if: steps.gate.outputs.run == 'true'
+        run: |
+          if [ -f package.json ]; then
+            echo "setup=node" >> "$GITHUB_ENV"
+          elif [ -f pyproject.toml ] || [ -f requirements.txt ]; then
+            echo "setup=python" >> "$GITHUB_ENV"
+          fi
+      - uses: actions/setup-node@v4
+        if: steps.gate.outputs.run == 'true' && env.setup == 'node'
+        with:
+          node-version: 20
+          cache: npm
+      - uses: actions/setup-python@v5
+        if: steps.gate.outputs.run == 'true' && env.setup == 'python'
+        with:
+          python-version: "3.11"
+      - name: Instalar dependencias
+        if: steps.gate.outputs.run == 'true'
+        run: |
+          if [ "$setup" = "node" ]; then npm ci; fi
+          if [ "$setup" = "python" ]; then pip install -r requirements.txt 2>/dev/null || true; fi
+      - name: Build / lint / typecheck (check_command del repo)
+        if: steps.gate.outputs.run == 'true'
+        run: |
+          CMD=$(python3 -c "import json,sys; c=json.load(open('.aegis/config.json')); print(c.get('check_command',{}).get('comando',''))" 2>/dev/null || echo "")
+          if [ -z "$CMD" ]; then
+            echo "Sin check_command configurado en .aegis/config.json — nada que correr."
+            exit 0
+          fi
+          echo "Ejecutando: $CMD"
+          eval "$CMD"
+
+  sello:
+    name: Sello de contexto fresco (placeholder — llega en FASE 4)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Placeholder documentado
+        run: |
+          echo "El check del sello (Verificador, FASE 4) todavía no existe."
+          echo "Este job pasa en verde a propósito hasta que FASE 4 lo active."
+          echo "No lo actives como requerido en branch protection antes de FASE 4."
