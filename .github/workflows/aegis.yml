@@ -38,10 +38,28 @@ jobs:
     needs: secretos
     steps:
       - uses: actions/checkout@v4
+      # Gate: el build solo corre contra prod y staging (decisión de JC,
+      # FASE 1, 2026-07-08) — ramas de feature quedan exentas por costo/ruido.
+      # Nombres reales leídos de .aegis/config.json (ramas.prod / ramas.staging),
+      # NUNCA hardcodeados aquí: cada repo destino tiene los suyos (diseño E).
+      - name: '¿Corresponde build en esta rama?'
+        id: gate
+        run: |
+          TARGET="${{ github.event_name == 'pull_request' && github.base_ref || github.ref_name }}"
+          PROD=$(python3 -c "import json; print(json.load(open('.aegis/config.json'))['ramas']['prod'])" 2>/dev/null || echo "")
+          STAGING=$(python3 -c "import json; print(json.load(open('.aegis/config.json'))['ramas']['staging'])" 2>/dev/null || echo "")
+          if [ "$TARGET" = "$PROD" ] || [ "$TARGET" = "$STAGING" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            echo "Build SÍ corre: rama destino '$TARGET' es prod o staging."
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "Build exento: rama destino '$TARGET' no es prod ni staging."
+          fi
       # Nada de lógica de proyecto aquí: el repo destino trae su propio
       # check_command versionado (el mismo que corre en pre-push local,
       # aegis/config.json → check_command.comando). Este job solo lo invoca.
       - name: Setup
+        if: steps.gate.outputs.run == 'true'
         run: |
           if [ -f package.json ]; then
             echo "setup=node" >> "$GITHUB_ENV"
@@ -49,19 +67,21 @@ jobs:
             echo "setup=python" >> "$GITHUB_ENV"
           fi
       - uses: actions/setup-node@v4
-        if: env.setup == 'node'
+        if: steps.gate.outputs.run == 'true' && env.setup == 'node'
         with:
           node-version: 20
           cache: npm
       - uses: actions/setup-python@v5
-        if: env.setup == 'python'
+        if: steps.gate.outputs.run == 'true' && env.setup == 'python'
         with:
           python-version: "3.11"
       - name: Instalar dependencias
+        if: steps.gate.outputs.run == 'true'
         run: |
           if [ "$setup" = "node" ]; then npm ci; fi
           if [ "$setup" = "python" ]; then pip install -r requirements.txt 2>/dev/null || true; fi
       - name: Build / lint / typecheck (check_command del repo)
+        if: steps.gate.outputs.run == 'true'
         run: |
           CMD=$(python3 -c "import json,sys; c=json.load(open('.aegis/config.json')); print(c.get('check_command',{}).get('comando',''))" 2>/dev/null || echo "")
           if [ -z "$CMD" ]; then
