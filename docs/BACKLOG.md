@@ -4,6 +4,16 @@
 
 ---
 
+## 🔎 Hallazgos de auditoría (2026-07-04)
+
+> De una auditoría externa (sesión Opus 4.8). Detalle en `../../master-framework/docs/dossier_para_fable.md`. Nota honesta: el rastreo de bugs de esta app estaba en buen estado y `.claude/settings.local.json` está limpio (sin tokens, buena higiene vs. el otro proyecto). Lo de abajo es deuda/riesgo, no bugs de comportamiento nuevos.
+
+- **AUD-001 · FMEA de Fase 4 incompleto**: el registro de riesgos de `Checklist_Fases_Quiniela.md` (19 filas: RLS de avatares, escalación de privilegios en Modo Dios, edición de reglas en modo real, doble conteo del cron, etc.) tiene la mayoría de filas **sin marcar como "probado"**, pero la app ya está en Modo Real. Gate de hardening saltado por presión de calendario del Mundial. Repasar y probar/marcar las filas críticas de seguridad (Modo Dios, edición de predicciones bloqueadas con rol admin, liberación con 5/6).
+- **AUD-002 · `as any` como workaround de tipos de Supabase**: al alterar schema y no regenerar tipos, se usó `as any` (documentado en `LESSONS_LEARNED_BETA.md`). Oculta errores de tipo reales. Regenerar tipos (`supabase gen types`) y quitar los `as any` que queden.
+- **AUD-003 · Decisión de datos pendiente (social)**: los 3 pts de Javier por el bug de penales ya corregido siguen sin resolverse con el grupo. No es técnico, pero afecta datos reales del ranking — cerrarlo.
+
+---
+
 ## 🔴 BUGS (reparar antes del próximo partido)
 
 ### BUG-002 · Cronómetro atascado en ~48' · 1T
