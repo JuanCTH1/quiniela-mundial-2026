@@ -13,7 +13,7 @@ Uso (lo llaman los shims, no una persona):
 Candados:
     C1  secretos    -> gitleaks (motor de terceros; cero regex propia)
     C2  rama prod   -> prohíbe commit directo a prod salvo merge
-    C4  build gate  -> check_command en pre-push a staging/prod
+    C4  build gate  -> check_command en pre-push a prod (solo prod, no QA)
 Bypass provisional (hasta FASE 5): archivo .aegis/BYPASS de un solo uso.
 """
 import json
@@ -178,15 +178,21 @@ def c2_guardia_rama(root, cfg):
 # ------------------------------------------------------------- C4 · build
 
 def c4_build_gate(root, cfg, ramas_destino):
-    """C4 en pre-push: corre check_command si el push va a staging o prod.
+    """C4 en pre-push: corre check_command si el push va a prod.
 
-    Ramas de feature: exentas del build (lint/secretos sí corren en todas).
+    Decisión de JC (FASE 1, 2026-07-09): C4 solo gatea prod, no staging/QA —
+    QA es terreno de prueba activo con push iterativo, y pagar el build
+    completo (30s-2min) en cada push ahí no gana seguridad real (el riesgo
+    grave, secretos, sigue gateado siempre vía C1). Debe reflejar EXACTAMENTE
+    la misma regla que el CI en la nube (aegis/ci/aegis.yml) — las dos
+    alturas del candado tienen que estar de acuerdo, o una se vuelve ruido.
+    Ramas de feature Y staging: exentas del build (lint/secretos sí corren
+    en todas).
     """
     prod = cfg.get("ramas", {}).get("prod")
-    staging = cfg.get("ramas", {}).get("staging")
-    criticas = {b for b in (prod, staging) if b}
+    criticas = {b for b in (prod,) if b}
     if not (ramas_destino & criticas):
-        ok("C4 — rama de feature: build exento (secretos sí se revisaron).")
+        ok("C4 — rama exenta de build (secretos sí se revisaron).")
         return
     check = cfg.get("check_command", {})
     comando = check.get("comando")
