@@ -38,22 +38,24 @@ jobs:
     needs: secretos
     steps:
       - uses: actions/checkout@v4
-      # Gate: el build solo corre contra prod y staging (decisión de JC,
-      # FASE 1, 2026-07-08) — ramas de feature quedan exentas por costo/ruido.
-      # Nombres reales leídos de .aegis/config.json (ramas.prod / ramas.staging),
-      # NUNCA hardcodeados aquí: cada repo destino tiene los suyos (diseño E).
+      # Gate: el build solo corre contra prod (decisión de JC, FASE 1,
+      # 2026-07-09) — QA queda exento a propósito: es el terreno de prueba
+      # activo, iterar ahí no debe pagar ~30s-2min por push. El escaneo de
+      # secretos (C1) sí corre siempre, en todas las ramas, sin excepción —
+      # esa es la pieza que protege contra lo que sí sería grave (una fuga).
+      # Nombre real leído de .aegis/config.json (ramas.prod), NUNCA
+      # hardcodeado aquí: cada repo destino tiene el suyo (diseño E).
       - name: '¿Corresponde build en esta rama?'
         id: gate
         run: |
           TARGET="${{ github.event_name == 'pull_request' && github.base_ref || github.ref_name }}"
           PROD=$(python3 -c "import json; print(json.load(open('.aegis/config.json'))['ramas']['prod'])" 2>/dev/null || echo "")
-          STAGING=$(python3 -c "import json; print(json.load(open('.aegis/config.json'))['ramas']['staging'])" 2>/dev/null || echo "")
-          if [ "$TARGET" = "$PROD" ] || [ "$TARGET" = "$STAGING" ]; then
+          if [ "$TARGET" = "$PROD" ]; then
             echo "run=true" >> "$GITHUB_OUTPUT"
-            echo "Build SÍ corre: rama destino '$TARGET' es prod o staging."
+            echo "Build SÍ corre: rama destino '$TARGET' es prod."
           else
             echo "run=false" >> "$GITHUB_OUTPUT"
-            echo "Build exento: rama destino '$TARGET' no es prod ni staging."
+            echo "Build exento: rama destino '$TARGET' no es prod (incluye QA)."
           fi
       # Nada de lógica de proyecto aquí: el repo destino trae su propio
       # check_command versionado (el mismo que corre en pre-push local,
