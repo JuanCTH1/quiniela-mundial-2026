@@ -47,3 +47,7 @@ next-env.d.ts
 
 # assets locales
 Imagenes/
+
+# Aegis — artefactos volátiles, NUNCA commitear
+.aegis/BYPASS
+.aegis/_selftest_secret.txt
