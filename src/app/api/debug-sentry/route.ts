@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 // TEMPORAL: dispara un error para verificar la captura en Sentry. Inerte en prod (404).
-// Borrar tras confirmar el evento en Sentry.
+// Bajo /api para que el middleware de auth no lo redirija. Borrar tras confirmar el evento.
 export async function GET() {
   if (process.env.NEXT_PUBLIC_APP_ENV === "production") {
     return NextResponse.json({ error: "not found" }, { status: 404 });
