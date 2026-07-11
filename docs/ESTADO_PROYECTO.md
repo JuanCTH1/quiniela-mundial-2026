@@ -1,6 +1,7 @@
 # Estado del Proyecto — Quiniela Overrated 2026
 
-> Actualizado: 2026-07-03 (cierre sesión)
+> Actualizado: 2026-07-11 (Aegis Bloque C — Sentry VIVO en prod vía `@sentry/nextjs`, verificado QA→prod (issue de prueba QUINIELA-1 capturado, PR #27 mergeado); Doppler ya es fuente de verdad de QA+PROD (huellas 9/9); `tokens.md` liquidado. Alerta de email por defecto activa; pendiente menor: filtro prod-only + relay de Telegram. Detalle en docs/CHANGELOG.md.)
+> Nota: la observabilidad (Sentry) es infra de Aegis, no toca el flujo de juego. El panel de errores vive en jcth-2v.sentry.io, proyecto `quiniela`.
 
 ## Estado general
 
