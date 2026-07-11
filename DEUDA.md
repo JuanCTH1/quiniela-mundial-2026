@@ -9,6 +9,7 @@
   el historial reciente. Las únicas coincidencias fueron la palabra `service_role` en
   comentarios de código y docs (el concepto de Supabase, no un valor) — falsos positivos.
 
-- **`~/.claude/memory/tokens.md` en texto plano** (riesgo a nivel usuario, no del repo) —
-  todos los secretos en un archivo del perfil. Patrón deliberado de JC. Riesgo aceptado.
-  **Revisión trimestral: 2026-10-01.**
+- ~~**`~/.claude/memory/tokens.md` en texto plano**~~ (riesgo a nivel usuario, no del repo) —
+  **RESUELTO 2026-07-11 (Aegis FASE 1, Bloque C).** El archivo se borró tras migrar los
+  secretos a Doppler y verificar por huella que los activos estaban espejados. El plaintext
+  local dejó de existir; fuente de verdad = Doppler + Railway.
