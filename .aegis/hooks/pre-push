@@ -1,0 +1,13 @@
+#!/bin/sh
+# Aegis pre-push (shim). Fuente canónica: master-framework/aegis/hooks/pre-push
+# No editar la copia del repo: se sobrescribe al reinstalar/actualizar.
+# git pasa los refs por stdin y (remote_name remote_url) por args: se reenvían.
+ROOT=$(git rev-parse --show-toplevel) || exit 1
+for PY in py python python3; do
+    if command -v "$PY" >/dev/null 2>&1; then
+        exec "$PY" "$ROOT/.aegis/hooks/aegis_guard.py" pre-push "$@"
+    fi
+done
+echo "AEGIS: no encuentro Python (py/python/python3) en el PATH." >&2
+echo "       Instálalo o corrige el PATH; sin Python los candados no corren." >&2
+exit 1

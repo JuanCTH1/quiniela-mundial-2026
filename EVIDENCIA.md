@@ -1,0 +1,3 @@
+- 2026-07-08 [GATE-ATRAPO] C1 bloqueó un secreto en commit.
+- 2026-07-08 [GATE-ATRAPO] C1 bloqueó un secreto en commit.
+- 2026-07-08 [GATE-ATRAPO] C1 bloqueó un secreto en push.

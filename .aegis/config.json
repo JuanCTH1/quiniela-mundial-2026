@@ -1,0 +1,47 @@
+{
+  "_comentario": "Plantilla de configuracion de Aegis por proyecto. Copiar a .aegis/config.json en el repo destino y ajustar. Los campos flujos_criticos / superficies_fragiles / seed_qa se llenan en FASE 2; los demas quedan operativos en FASE 1.",
+
+  "aegis_version": "1.1",
+
+  "ramas": {
+    "prod": "master",
+    "staging": "develop",
+    "_comentario": "Nombres reales de cada repo. Ecosistema y Quiniela conservan los suyos; se leen de aqui, NO de una convencion memorizada (diseno E)."
+  },
+
+  "check_command": {
+    "comando": "npm run build",
+    "timeout_seg": 300,
+    "_comentario": "Gate de build C4 en pre-push a staging/prod. Incluye lint con limites de arquitectura (Ruff/ESLint). Ramas de feature exentas del build; lint y secretos corren en todas."
+  },
+
+  "perfil_seguridad": {
+    "auth": null,
+    "datos_personales": null,
+    "rls_o_equivalente": null,
+    "secretos_viven_en": "doppler",
+    "superficie_publica": null,
+    "_comentario": "Las 5 preguntas de seguridad de dia 0 (aegis init). Se responden al adoptar el proyecto en FASE 2. null = pendiente de responder."
+  },
+
+  "topes_tablero": {
+    "ESTADO.md": 60,
+    "BACKLOG.md": 100,
+    "LECCIONES.md": 120,
+    "DECISIONES.md": 150,
+    "DEUDA.md": 60,
+    "EVIDENCIA.md": 200,
+    "_comentario": "Limites de lineas que cierre.py hace cumplir mecanicamente. El excedente se archiva en bitacora/, no se borra."
+  },
+
+  "watchdog": {
+    "max_min": 15,
+    "max_tokens": 10000,
+    "_comentario": "Candado C7: agente aislado que supera cualquiera de los dos umbrales se corta y avisa a JC."
+  },
+
+  "flujos_criticos": [],
+  "superficies_fragiles": [],
+  "seed_qa": null,
+  "_comentario_fase2": "flujos_criticos: 3-5 caminos de negocio que reciben smoke E2E. superficies_fragiles: pantallas vigiladas con regresion visual. seed_qa: como se generan datos de prueba en QA (>=100 registros para la pregunta de volumen del Verificador). Se llenan en FASE 2."
+}
