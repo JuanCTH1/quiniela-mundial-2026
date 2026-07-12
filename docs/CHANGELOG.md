@@ -1,5 +1,21 @@
 # Changelog — Quiniela Overrated 2026
 
+## [Fix de red en sync-fixtures + revert de release Sentry redundante] — 2026-07-12
+
+### Fix
+- **`sync-fixtures`: los cortes de red hacia football-data.org ya no revientan como 500 sin
+  contexto** (cierra `QUINIELA-3`/`QUINIELA-4`). `fetchAllWCMatches()` se envolvió en try/catch:
+  los ECONNRESET/TLS transitorios de la API externa se loggean en `system_logs` y devuelven 502;
+  el cron se reintenta solo en la próxima corrida. No toca datos. Verificado QA→prod (PR #28,
+  deploy verde). Las tres fallas de Sentry eran red transitoria, no bugs.
+
+### Observabilidad
+- **`release` por SHA revertido** (`3e66923`): `@sentry/nextjs` YA autodetecta el SHA del commit
+  en build-time (los eventos de prod ya llegaban con `release=<sha>`), así que el
+  `release: process.env.NEXT_PUBLIC_SENTRY_RELEASE` que se había añadido era redundante y, con la
+  var vacía en Railway, arriesgaba pisar el SHA con `""`. Regla: **en Next.js no se toca `release`.**
+  Variable muerta `NEXT_PUBLIC_SENTRY_RELEASE` borrada de Railway (qa+prod).
+
 ## [Aegis Bloque C — Sentry en producción + Doppler fuente de verdad] — 2026-07-11
 
 ### Observabilidad
