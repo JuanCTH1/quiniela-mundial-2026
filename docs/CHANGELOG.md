@@ -1,5 +1,24 @@
 # Changelog — Quiniela Overrated 2026
 
+## [Aegis Bloque C — Sentry en producción + Doppler fuente de verdad] — 2026-07-11
+
+### Observabilidad
+- **Sentry cableado y VIVO en prod** (`@sentry/nextjs` 10.65, Next 16): `src/instrumentation.ts`
+  (server/edge + `onRequestError`) e `src/instrumentation-client.ts` (browser), `next.config.ts`
+  envuelto con `withSentryConfig` (source maps desactivados → no rompe build). Guardado por
+  `NEXT_PUBLIC_SENTRY_DSN` (no-op sin él); `environment=NEXT_PUBLIC_APP_ENV` separa qa/prod.
+  Rollout QA→prod verificado: error de prueba capturado en Sentry desde QA (issue `QUINIELA-1`,
+  resuelto), luego merge a prod (PR #27). Proyecto Sentry `quiniela` en org `jcth-2v`; alerta de
+  email por defecto activa. Ahora los errores de prod se ven en un panel en vez de perderse.
+- **Trampa documentada**: `NEXT_PUBLIC_*` se incrusta en build-time → el DSN tuvo que estar en
+  Railway antes de buildear prod. Y el middleware de auth (`src/proxy.ts`) redirige rutas
+  no-`/api`, así que la ruta de prueba fue `/api/debug-sentry`.
+
+### Infra
+- **Doppler = fuente de verdad de QA y PROD**: la sync Doppler→Railway `prd` (servicio
+  `quiniela`) quedó activa; secretos verificados por huella (9/9) contra Railway. `DEUDA.md`:
+  cerrada la entrada de `tokens.md` (plaintext de secretos del perfil, ya borrado).
+
 ## [Auditoría de predicciones + fix cron QA + UX de guardado] — 2026-07-03
 
 ### Investigación

@@ -31,8 +31,18 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ ok: true, message: 'No placeholders', ...results })
   }
 
-  // Un solo request a la API para todos los partidos del torneo
-  const apiMatches = await fetchAllWCMatches()
+  // Un solo request a la API para todos los partidos del torneo.
+  // La API externa a veces corta la conexión (ECONNRESET/TLS) — no es un bug
+  // nuestro; se loggea y se reintenta en la próxima corrida del cron.
+  let apiMatches
+  try {
+    apiMatches = await fetchAllWCMatches()
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    await logEntry(supabase, 'ERROR', `sync-fixtures: fallo de red hacia football-data.org: ${msg}`, true,
+      { started_at: startedAt })
+    return NextResponse.json({ ok: false, error: 'football-data.org unreachable', message: msg }, { status: 502 })
+  }
   const apiById = new Map(apiMatches.map(m => [m.id, m]))
 
   for (const row of placeholders) {
