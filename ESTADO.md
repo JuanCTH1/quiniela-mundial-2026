@@ -3,10 +3,22 @@
 > Actualizar cuando: cierre de sesión (siempre).
 
 **Ramas:** prod=`master` · staging=`develop`
+**Prod:** https://quiniela-production-bdd7.up.railway.app · **Supabase:** `wltltpzvscgpnfwvgfmt`
+**Detalle operativo vivo** (usuarios, crons, edge functions, features): `docs/referencia/OPERACION.md`
+**Historia completa** (CHANGELOG, estados y backlog viejos, fases 0-2): `bitacora/`
 
 ## Dónde vamos
-Adoptado a Aegis el 2026-07-13. El estado y la historia viejos siguen
-en sus archivos originales; su migración al Tablero canónico es FASE 3.
+**Torneo en curso — R32/R16, Modo Real activo.** App en prod con los 6 jugadores.
+Fase de grupos cerró Jun 27. Timer en vivo, drawer de análisis, penales y auditoría
+de predicciones OK. Observabilidad Aegis (Sentry) viva en prod; Doppler es la fuente
+de secretos. Adoptado a Aegis (FASE 2) y migrado de memoria (FASE 3) el 2026-07-13.
 
 ## Lo primero en próxima sesión
-_(pendiente)_
+- **Decisión grupal abierta:** los 3 pts de Javier por el bug de penales (ya corregido)
+  siguen sin resolverse con el grupo (afecta ranking real). Ver `BACKLOG.md` AUD-003.
+- **Confirmar `bloqueo_minutos`** (corre en 15 default, nunca confirmado formalmente).
+- Backlog técnico abierto (BUG/FEAT/TEC/UX): ver `BACKLOG.md`.
+
+## Pendientes grupales (decisión de JC + grupo)
+- [ ] Resultado válido en eliminatorias: ¿90', 120' o penales? (FEAT-001 UI en pausa)
+- [ ] Bonus por acertar clasificado en penales: ¿se da? ¿cuántos puntos?

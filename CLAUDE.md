@@ -14,11 +14,14 @@ App web privada para 6 jugadores que predicen resultados del Mundial 2026. No es
 - **Fuente deportiva:** football-data.org (primaria) / API-Football (respaldo)
 - **Emails:** Resend
 
-## Documentación del producto
-Toda la propuesta, reglas y checklist de fases vive en `docs/`:
-- `docs/Propuesta_Producto_Actualizada.md` — spec completo
-- `docs/Checklist_Fases_Quiniela.md` — gates por fase (leer ANTES de arrancar cualquier fase)
-- `docs/Reglamento_La_Quiniela_Mundial2026.md` — reglas del juego para compartir con el grupo
+## Documentación y memoria
+Referencia viva de producto en `docs/referencia/`; la memoria de trabajo en el Tablero raíz
+(`ESTADO.md`, `BACKLOG.md`, `LECCIONES.md`) y la historia completa en `bitacora/` (desde la
+migración Aegis, 2026-07-13):
+- `docs/referencia/Propuesta_Producto_Actualizada.md` — spec completo
+- `docs/referencia/Reglamento_La_Quiniela_Mundial2026.md` — reglas del juego para compartir con el grupo
+- `docs/referencia/OPERACION.md` — infra viva (usuarios en prod, crons, edge functions, features)
+- `bitacora/Checklist_Fases_Quiniela.md` — gates por fase (histórico; fases 0-2 ya cerradas)
 
 ## Principios que NO se negocian
 1. **Las predicciones son sagradas:** bloqueadas = intocables para todos, incluyendo el admin.
@@ -30,7 +33,7 @@ Toda la propuesta, reglas y checklist de fases vive en `docs/`:
 ## Pendientes abiertos
 Modo real ya está activo (desde 2026-06-22) corriendo con valores default sin que el grupo los haya confirmado formalmente. Cerrar esto sigue pendiente:
 - Resultado válido en eliminatorias: 90', 120' o penales (y si es igual para todas las rondas). Corre con `corte = '90'` default en `reglas_puntuacion`.
-- Minutos de bloqueo antes del kickoff. Corre con `bloqueo_minutos = 15` default en `settings`. Un bloqueo de 15 min genera confusión real (ver caso Suiza-Argelia, 2026-07-03, en `docs/CHANGELOG.md`) — vale la pena revisarlo con el grupo, no solo confirmarlo.
+- Minutos de bloqueo antes del kickoff. Corre con `bloqueo_minutos = 15` default en `settings`. Un bloqueo de 15 min genera confusión real (ver caso Suiza-Argelia, 2026-07-03, en `bitacora/CHANGELOG.md`) — vale la pena revisarlo con el grupo, no solo confirmarlo.
 
 ## Notas de implementación
 - Tailwind v4: la configuración de tokens va en `@theme inline {}` dentro de `globals.css`, no en `tailwind.config.ts`.

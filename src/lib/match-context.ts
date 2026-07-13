@@ -7,7 +7,7 @@ import type { MatchContextData, FormResult } from '@/components/MatchContext'
 // nunca tumbe la sección entera. Usa el cliente con RLS: los facts no-revisados
 // quedan filtrados por la policy (reviewed = true).
 //
-// PENDIENTE (ver docs/Feature_Contexto_Partido.md):
+// PENDIENTE (ver docs/referencia/Feature_Contexto_Partido.md):
 //  - stakes: calcular desde standings del grupo
 //  - keyPlayers: requiere acumular goleadores/asistentes del torneo en DB
 
