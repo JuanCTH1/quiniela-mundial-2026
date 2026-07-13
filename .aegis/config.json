@@ -15,13 +15,20 @@
     "_comentario": "Gate de build C4 en pre-push a staging/prod. Incluye lint con limites de arquitectura (Ruff/ESLint). Ramas de feature exentas del build; lint y secretos corren en todas."
   },
 
+  "limite_archivo": {
+    "max_lineas": 500,
+    "extensiones": [".py", ".js", ".ts", ".jsx", ".tsx"],
+    "excluir": ["src/types/database.types.ts"],
+    "_comentario": "Config que lee verificar_tamano_archivo.py. 'excluir' son prefijos de ruta con razon documentada. database.types.ts: generado por Supabase (se regenera solo), partirlo no aplica."
+  },
+
   "perfil_seguridad": {
-    "auth": null,
-    "datos_personales": null,
-    "rls_o_equivalente": null,
+    "auth": "Supabase Auth (email / password)",
+    "datos_personales": "Email y metadatos de perfil. No almacena tarjetas ni informacion bancaria.",
+    "rls_o_equivalente": "Si, activo. Migracion 04_rls_policies.sql: los usuarios solo pueden editar/ver sus predicciones antes del inicio de los partidos.",
     "secretos_viven_en": "doppler",
-    "superficie_publica": null,
-    "_comentario": "Las 5 preguntas de seguridad de dia 0 (aegis init). Se responden al adoptar el proyecto en FASE 2. null = pendiente de responder."
+    "superficie_publica": "/login. Las APIs api/cron/* estan protegidas por Bearer CRON_SECRET.",
+    "_comentario": "Las 5 preguntas de seguridad de dia 0 (aegis init). Respondidas y verificadas en codigo en la adopcion FASE 2 (2026-07-13)."
   },
 
   "topes_tablero": {
@@ -40,8 +47,14 @@
     "_comentario": "Candado C7: agente aislado que supera cualquiera de los dos umbrales se corta y avisa a JC."
   },
 
-  "flujos_criticos": [],
-  "superficies_fragiles": [],
-  "seed_qa": null,
-  "_comentario_fase2": "flujos_criticos: 3-5 caminos de negocio que reciben smoke E2E. superficies_fragiles: pantallas vigiladas con regresion visual. seed_qa: como se generan datos de prueba en QA (>=100 registros para la pregunta de volumen del Verificador). Se llenan en FASE 2."
+  "flujos_criticos": [
+    "El usuario actualiza su pronostico de marcadores.",
+    "El usuario pone el filtro en la fecha de hoy y muestra los siguientes partidos.",
+    "El usuario revisa los rankings."
+  ],
+  "superficies_fragiles": [
+    "Pantalla principal de partidos (lista con horas y marcadores)."
+  ],
+  "seed_qa": "Semillas SQL nativas en Supabase (15_h2h_history_seed.sql, venues.sql) y el endpoint /api/cron/seed-matches.",
+  "_comentario_fase2": "Rellenado en la adopcion real FASE 2 (2026-07-13) con las respuestas de negocio de JC, validadas contra el codigo. Insumo original: README_URGENTE.md seccion 2.1."
 }

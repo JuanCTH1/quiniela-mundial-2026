@@ -1,3 +1,4 @@
+> **Antes de operar, lee `.aegis/manual.md`** — manual de operación de Aegis.
 @AGENTS.md
 
 # Quiniela Overrated 2026
