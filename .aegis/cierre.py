@@ -142,12 +142,18 @@ def aplicar_topes(topes):
                           "secciones '## ' que archivar — hay que podarlo a mano.")
             continue
         movidas = []
-        # Convención Aegis: lo nuevo se añade al FINAL → lo viejo queda ARRIBA
-        # (justo tras el encabezado). Se archiva desde arriba, conservando lo reciente.
+        # Dos órdenes de archivado (revisión Fable 2026-07-17, tras incidente real en
+        # penetron-dash: se archivó la ## Alta activa del BACKLOG):
+        #  - Cronológicos (ESTADO/LECCIONES/EVIDENCIA...): lo nuevo va al FINAL → lo
+        #    viejo queda ARRIBA → se archiva desde arriba (pop(0)).
+        #  - Por PRIORIDAD (BACKLOG: Alta→Media→Baja→Completado): lo importante va
+        #    ARRIBA → se archiva desde el FINAL (pop()), sacrificando Completado/Baja
+        #    y protegiendo la Alta activa.
+        por_prioridad = os.path.basename(archivo).upper().startswith("BACKLOG")
         while secciones and _contar("".join(encabezado) +
                                     "".join("".join(s) for s in secciones)) > tope \
                 and len(secciones) > 1:
-            movidas.append(secciones.pop(0))  # el primero = el más viejo
+            movidas.append(secciones.pop() if por_prioridad else secciones.pop(0))
         if movidas:
             _archivar(archivo, movidas)
             with open(archivo, "w", encoding="utf-8") as f:
