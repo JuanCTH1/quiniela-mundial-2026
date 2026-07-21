@@ -1,7 +1,7 @@
 {
   "_comentario": "Plantilla de configuracion de Aegis por proyecto. Copiar a .aegis/config.json en el repo destino y ajustar. Los campos flujos_criticos / superficies_fragiles / seed_qa se llenan en FASE 2; los demas quedan operativos en FASE 1.",
 
-  "aegis_version": "1.1",
+  "aegis_version": "1.3",
 
   "ramas": {
     "prod": "master",

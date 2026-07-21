@@ -2,3 +2,4 @@
 - 2026-07-08 [GATE-ATRAPO] C1 bloqueó un secreto en commit.
 - 2026-07-08 [GATE-ATRAPO] C1 bloqueó un secreto en push.
 - 2026-07-13 [GATE-ATRAPO] C1 bloqueó un secreto en commit.
+- 2026-07-21 `[EVOLUCION]` **Recibido v1.3 desde master-framework — el Parte de sesión ahora se persiste a `bitacora/parte-NNN.md`.** `cierre.py` gana un paso: escribe el esqueleto de las 6 cabeceras canónicas (línea Seguridad llena por el script) y valida por string exacto que estén las 6 + que no quede `[rellenar]`. Implementa la propuesta Clase 3 `PARTE_PERSISTENCIA.md` (aprobada por JC, gate bendecido por Fable bajo net-zero). `aegis_version` "1.1"→"1.3" (absorbe el bump pendiente de 1.2, cuyo código ya estaba instalado desde 2026-07-17). Propagado byte-idéntico.

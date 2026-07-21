@@ -18,6 +18,11 @@ Qué hace:
      ESTADO/DECISIONES/DEUDA no lo mencionan → falla ruidosamente.
   7. Arrastre de decisiones: una decisión pendiente ≥2 sesiones sin respuesta de
      JC → línea [RADAR] en EVIDENCIA.
+  8. Parte de sesión persistido (v1.3): en la 1ª corrida escribe el ESQUELETO de
+     las 6 cabeceras canónicas en bitacora/parte-NNN.md (la línea Seguridad la
+     llena el script, no el modelo) y falla pidiendo rellenarlo; en la 2ª corrida
+     valida por STRING EXACTO que estén las 6 cabeceras y no quede ningún
+     [rellenar]. Hace auditable el criterio "Parte sostenido" de FASE_6.md.
   (Drift de despliegue: inerte hasta que FASE 4 provea el sello del Verificador.)
 
 Uso:
@@ -302,6 +307,70 @@ def _linea_evidencia(linea):
     print(f"  ✔ EVIDENCIA.md += {linea}")
 
 
+# ---------- 8) Parte de sesión persistido (v1.3) ----------
+# Las 6 cabeceras canónicas del Parte (diseño §6). El match de validación es por
+# STRING EXACTO, cero interpretación (bendición Fable 2026-07-21, condición b).
+# Cambiar una cabecera aquí es cambiar el formato del Parte → es Clase 3.
+PARTE_CABECERAS_MODELO = [   # las rellena el modelo
+    "— Hecho:",
+    "— Atrapado:",
+    "— Tu decisión pendiente:",
+    "— Deuda/bypasses abiertos:",
+    "— Próxima sesión:",
+]
+PARTE_CAB_SEGURIDAD = "— Seguridad:"   # la llena el script, NO el modelo
+RELLENAR = "[rellenar]"
+
+
+def gestionar_parte(n, vig):
+    """Persiste el Parte de sesión a bitacora/parte-NNN.md (Clase 3, v1.3).
+
+    Dos fases en corridas sucesivas de cierre.py — mismo patrón fallar-y-reintentar
+    que el resto del script (invariante #2: lo crítico se fuerza por mecanismo):
+      - Si el archivo NO existe: escribe el esqueleto de las 6 cabeceras canónicas
+        (el modelo NO las inventa → cero falsos negativos), con la línea Seguridad
+        ya llena por el script; las otras 5 quedan como [rellenar]. Falla ruidoso.
+      - Si existe: valida por string exacto que estén las 6 cabeceras y que ninguna
+        siga en [rellenar]. Cero interpretación (condiciones a/b de la bendición).
+    """
+    if n is None:
+        return  # sin --n no hay número de sesión (igual que escribir_sesion)
+    os.makedirs("bitacora", exist_ok=True)
+    destino = os.path.join("bitacora", f"parte-{int(n):03d}.md")
+    seguridad = "; ".join(vig) if vig else "sin archivos vigilados"
+    if not os.path.exists(destino):
+        esqueleto = (
+            f"# PARTE DE SESIÓN {int(n):03d} — {HOY}\n\n"
+            f"— Hecho: {RELLENAR}\n"
+            f"— Atrapado: {RELLENAR}\n"
+            f"— Tu decisión pendiente: {RELLENAR}\n"
+            f"— Deuda/bypasses abiertos: {RELLENAR}\n"
+            f"{PARTE_CAB_SEGURIDAD} {seguridad}\n"
+            f"— Próxima sesión: {RELLENAR}\n"
+        )
+        with open(destino, "w", encoding="utf-8") as f:
+            f.write(esqueleto)
+        fallas.append(
+            f"escribí el esqueleto del Parte en {destino} (la línea Seguridad ya la "
+            f"llené yo). Rellená las 5 secciones [rellenar] con el MISMO texto que le "
+            f"emitís a JC en el chat y vuelve a correr cierre.py para validar.")
+        return
+    # el archivo existe → validar por string exacto
+    with open(destino, encoding="utf-8") as f:
+        parte = f.read()
+    faltan = [c for c in (PARTE_CABECERAS_MODELO + [PARTE_CAB_SEGURIDAD])
+              if c not in parte]
+    if faltan:
+        fallas.append(f"{destino} no tiene la(s) cabecera(s) exacta(s): "
+                      f"{' | '.join(faltan)}. El Parte son 6 secciones fijas en su "
+                      f"orden (diseño §6) — no se omite ni se renombra ninguna.")
+    if RELLENAR in parte:
+        fallas.append(f"{destino} todavía tiene sección(es) en {RELLENAR} sin "
+                      f"rellenar. Complétalas antes de cerrar.")
+    if not faltan and RELLENAR not in parte:
+        print(f"  ✔ bitacora/parte-{int(n):03d}.md: Parte con las 6 secciones, validado.")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--base")
@@ -344,6 +413,9 @@ def main():
     print(f"Archivos tocados:\n{stat or '  (ninguno)'}")
     print("Seguridad (archivos vigilados): " + "; ".join(vig))
     print("===========================================================\n")
+
+    print("→ Parte de sesión (persistencia)…")
+    gestionar_parte(args.n, vig)
 
     if fallas:
         print("✗ AEGIS cierre: NO se puede cerrar — corrige esto primero:",
