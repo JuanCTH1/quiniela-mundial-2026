@@ -130,41 +130,169 @@ def partir_secciones(texto):
     return encabezado, secciones
 
 
+FECHA_ISO = re.compile(r"\b(20\d\d-\d\d-\d\d)\b")
+
+
+def partir_items(lineas):
+    """Para listas planas: (preámbulo, [ítems]). Ítem = desde una línea que abre
+    con '- '/'* ' en COLUMNA 0 hasta el siguiente ítem; toda continuación (indentada
+    o sin viñeta) viaja con su ítem (eval en frío 2026-07-22, nota 4)."""
+    def _abre(l):
+        return l.startswith("- ") or l.startswith("* ")
+    idx = next((i for i, l in enumerate(lineas) if _abre(l)), len(lineas))
+    preambulo = lineas[:idx]
+    items, actual = [], []
+    for l in lineas[idx:]:
+        if _abre(l) and actual:
+            items.append(actual)
+            actual = []
+        actual.append(l)
+    if actual:
+        items.append(actual)
+    return preambulo, items
+
+
+def _fecha_encabezado(bloque):
+    """Fecha ISO de la PRIMERA línea con texto del bloque (el encabezado del ítem/
+    sección) — NO del cuerpo, que puede citar fechas de 'gatillo' (eval en frío
+    2026-07-22, cambio 2). None si no hay."""
+    for linea in bloque:
+        if linea.strip():
+            m = FECHA_ISO.search(linea)
+            return m.group(1) if m else None
+    return None
+
+
+def _normalizar_spec(spec):
+    """topes_tablero acepta un entero (forma vieja → modo se infiere del nombre) o
+    un objeto {tope, archivado} (v1.4). Devuelve (tope, modo|None)."""
+    if isinstance(spec, dict):
+        return spec.get("tope"), spec.get("archivado")
+    return spec, None
+
+
 def aplicar_topes(topes):
-    for archivo, tope in topes.items():
+    for archivo, spec in topes.items():
         if archivo.startswith("_"):
             continue
-        if not os.path.exists(archivo):
+        tope, modo = _normalizar_spec(spec)
+        if tope is None or not os.path.exists(archivo):
             continue
         with open(archivo, encoding="utf-8") as f:
             texto = f.read()
-        n = texto.count("\n") + (0 if texto.endswith("\n") or not texto else 1)
+        n = _contar(texto)
         if n <= tope:
             continue
-        encabezado, secciones = partir_secciones(texto)
-        if len(secciones) <= 1:
-            fallas.append(f"{archivo} excede el tope ({n}>{tope}) pero no tiene "
-                          "secciones '## ' que archivar — hay que podarlo a mano.")
-            continue
-        movidas = []
-        # Dos órdenes de archivado (revisión Fable 2026-07-17, tras incidente real en
-        # penetron-dash: se archivó la ## Alta activa del BACKLOG):
-        #  - Cronológicos (ESTADO/LECCIONES/EVIDENCIA...): lo nuevo va al FINAL → lo
-        #    viejo queda ARRIBA → se archiva desde arriba (pop(0)).
-        #  - Por PRIORIDAD (BACKLOG: Alta→Media→Baja→Completado): lo importante va
-        #    ARRIBA → se archiva desde el FINAL (pop()), sacrificando Completado/Baja
-        #    y protegiendo la Alta activa.
-        por_prioridad = os.path.basename(archivo).upper().startswith("BACKLOG")
-        while secciones and _contar("".join(encabezado) +
-                                    "".join("".join(s) for s in secciones)) > tope \
-                and len(secciones) > 1:
-            movidas.append(secciones.pop() if por_prioridad else secciones.pop(0))
-        if movidas:
-            _archivar(archivo, movidas)
-            with open(archivo, "w", encoding="utf-8") as f:
-                f.write("".join(encabezado) + "".join("".join(s) for s in secciones))
-            print(f"  ✔ {archivo}: {len(movidas)} sección(es) vieja(s) → bitacora/ "
-                  f"(ahora {_contar_archivo(archivo)}≤{tope} líneas)")
+        if modo is None:  # forma vieja (entero): heurística por nombre (legacy)
+            modo = ("prioridad"
+                    if os.path.basename(archivo).upper().startswith("BACKLOG")
+                    else "cronologico")
+        if modo == "manual":
+            fallas.append(f"{archivo} excede el tope ({n}>{tope}) y su archivado es "
+                          "'manual': ninguna sección es archivable a ciegas — podá a "
+                          "mano las entradas viejas antes de cerrar.")
+        elif modo == "cronologico":
+            _archivar_cronologico(archivo, texto, tope, n)
+        elif modo == "prioridad":
+            _archivar_prioridad(archivo, texto, tope, n)
+        else:
+            fallas.append(f"{archivo}: modo de archivado '{modo}' desconocido "
+                          "(usá cronologico/prioridad/manual, o un entero para el "
+                          "modo legacy por nombre).")
+
+
+def _archivar_cronologico(archivo, texto, tope, n):
+    """Lo viejo arriba, lo nuevo al final → archiva desde ARRIBA. Opera por sección
+    '## ' si las hay; si es lista plana, por ítem '- '. Antes de tocar nada, gate de
+    sanidad de dirección (detector del caso frecuente, NO salvaguarda total: solo mira
+    los extremos y necesita fecha en ambos)."""
+    encabezado, secciones = partir_secciones(texto)
+    if secciones:
+        preambulo, elementos, unidad = encabezado, secciones, "sección"
+    else:
+        preambulo, elementos = partir_items(texto.splitlines(keepends=True))
+        unidad = "ítem"
+    if len(elementos) <= 1:
+        fallas.append(f"{archivo} excede el tope ({n}>{tope}) pero no tiene "
+                      "secciones '## ' ni ítems '- ' que archivar — podalo a mano.")
+        return
+    f_prim, f_ult = _fecha_encabezado(elementos[0]), _fecha_encabezado(elementos[-1])
+    if f_prim and f_ult and f_prim > f_ult:
+        fallas.append(
+            f"{archivo}: convención cronológica ROTA — el elemento de arriba ({f_prim}) "
+            f"es más nuevo que el de abajo ({f_ult}). cierre.py archiva desde arriba, "
+            f"así que archivaría lo NUEVO. Volteá el archivo (lo viejo arriba, lo nuevo "
+            f"al final) antes de cerrar. NO se archivó nada.")
+        return
+    movidas = []
+    while len(elementos) > 1 and _contar(
+            "".join(preambulo) + "".join("".join(e) for e in elementos)) > tope:
+        movidas.append(elementos.pop(0))
+    if movidas:
+        _archivar(archivo, movidas)
+        with open(archivo, "w", encoding="utf-8") as f:
+            f.write("".join(preambulo) + "".join("".join(e) for e in elementos))
+        print(f"  ✔ {archivo}: {len(movidas)} {unidad}(es) vieja(s) → bitacora/ "
+              f"(ahora {_contar_archivo(archivo)}≤{tope} líneas)")
+
+
+def _archivar_prioridad(archivo, texto, tope, n):
+    """Lo importante arriba (## Alta…) → archiva desde el FINAL, POR ÍTEM: primero los
+    ~~tachados~~ (resueltos) de las secciones de menor prioridad, luego ítems abiertos
+    desde abajo. Las cabeceras '## ' se conservan siempre (no se pierde estructura)."""
+    encabezado, secciones = partir_secciones(texto)
+    if not secciones:
+        fallas.append(f"{archivo} (prioridad) excede el tope ({n}>{tope}) pero no tiene "
+                      "secciones '## ' — declaralo 'manual' o revisá su estructura.")
+        return
+    desc = []  # una entrada por sección, en orden original: {cab, items}
+    for sec in secciones:
+        j = next((k for k, l in enumerate(sec)
+                  if l.startswith("- ") or l.startswith("* ")), len(sec))
+        _, items = partir_items(sec[j:]) if j < len(sec) else ([], [])
+        desc.append({"cab": sec[:j], "items": items})
+
+    def total():
+        partes = ["".join(encabezado)]
+        for d in desc:
+            partes.append("".join(d["cab"]))
+            partes.extend("".join(it) for it in d["items"])
+        return _contar("".join(partes))
+
+    def _tachado(item):
+        return any("~~" in l for l in item)
+
+    movidas = []
+    # Fase 1: tachados, de la sección de menor prioridad (más abajo) a la de mayor,
+    # dentro de cada sección del último al primero.
+    for d in reversed(desc):
+        i = len(d["items"]) - 1
+        while i >= 0 and total() > tope:
+            if _tachado(d["items"][i]):
+                movidas.append(d["items"].pop(i))
+            i -= 1
+    # Fase 2: ítems abiertos desde el final (última sección primero).
+    for d in reversed(desc):
+        while d["items"] and total() > tope:
+            movidas.append(d["items"].pop())
+        if total() <= tope:
+            break
+    if not movidas:
+        fallas.append(f"{archivo} (prioridad) excede el tope ({n}>{tope}) y no tiene "
+                      "ítems archivables — podá a mano.")
+        return
+    _archivar(archivo, movidas)
+    partes = ["".join(encabezado)]
+    for d in desc:
+        partes.append("".join(d["cab"]))
+        partes.extend("".join(it) for it in d["items"])
+    with open(archivo, "w", encoding="utf-8") as f:
+        f.write("".join(partes))
+    print(f"  ✔ {archivo}: {len(movidas)} ítem(s) → bitacora/ "
+          f"(ahora {_contar_archivo(archivo)}≤{tope} líneas)")
+    if total() > tope:
+        fallas.append(f"{archivo}: archivé todos los ítems archivables y AÚN excede el "
+                      f"tope ({tope}) — quedan solo cabeceras '## '; podá a mano.")
 
 
 def _contar(texto):

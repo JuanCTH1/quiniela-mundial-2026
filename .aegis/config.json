@@ -1,7 +1,7 @@
 {
   "_comentario": "Plantilla de configuracion de Aegis por proyecto. Copiar a .aegis/config.json en el repo destino y ajustar. Los campos flujos_criticos / superficies_fragiles / seed_qa se llenan en FASE 2; los demas quedan operativos en FASE 1.",
 
-  "aegis_version": "1.3",
+  "aegis_version": "1.4",
 
   "ramas": {
     "prod": "master",
@@ -32,13 +32,13 @@
   },
 
   "topes_tablero": {
-    "ESTADO.md": 60,
-    "BACKLOG.md": 100,
-    "LECCIONES.md": 120,
-    "DECISIONES.md": 150,
-    "DEUDA.md": 60,
-    "EVIDENCIA.md": 200,
-    "_comentario": "Limites de lineas que cierre.py hace cumplir mecanicamente. El excedente se archiva en bitacora/, no se borra."
+    "ESTADO.md":     {"tope": 60,  "archivado": "manual"},
+    "BACKLOG.md":    {"tope": 100, "archivado": "prioridad"},
+    "LECCIONES.md":  {"tope": 120, "archivado": "manual"},
+    "DECISIONES.md": {"tope": 150, "archivado": "cronologico"},
+    "DEUDA.md":      {"tope": 60,  "archivado": "cronologico"},
+    "EVIDENCIA.md":  {"tope": 200, "archivado": "cronologico"},
+    "_comentario": "Limites de lineas que cierre.py hace cumplir mecanicamente (v1.4). Cada archivo declara su 'archivado': cronologico (viejo arriba, archiva desde arriba, con gate de sanidad de direccion), prioridad (archiva desde el final por item, tachados primero), o manual (nunca auto-archiva; falla y pide poda a mano). Un entero suelto = modo legacy por nombre. El excedente se archiva en bitacora/, NUNCA se borra."
   },
 
   "watchdog": {
