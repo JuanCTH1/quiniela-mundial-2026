@@ -1,27 +1,30 @@
 {
   "_comentario": "Plantilla de configuracion de Aegis por proyecto. Copiar a .aegis/config.json en el repo destino y ajustar. Los campos flujos_criticos / superficies_fragiles / seed_qa se llenan en FASE 2; los demas quedan operativos en FASE 1.",
-
   "aegis_version": "1.4",
-
   "ramas": {
     "prod": "master",
     "staging": "develop",
     "_comentario": "Nombres reales de cada repo. Ecosistema y Quiniela conservan los suyos; se leen de aqui, NO de una convencion memorizada (diseno E)."
   },
-
   "check_command": {
     "comando": "npm run build",
     "timeout_seg": 300,
     "_comentario": "Gate de build C4 en pre-push a staging/prod. Incluye lint con limites de arquitectura (Ruff/ESLint). Ramas de feature exentas del build; lint y secretos corren en todas."
   },
-
   "limite_archivo": {
     "max_lineas": 500,
-    "extensiones": [".py", ".js", ".ts", ".jsx", ".tsx"],
-    "excluir": ["src/types/database.types.ts"],
+    "extensiones": [
+      ".py",
+      ".js",
+      ".ts",
+      ".jsx",
+      ".tsx"
+    ],
+    "excluir": [
+      "src/types/database.types.ts"
+    ],
     "_comentario": "Config que lee verificar_tamano_archivo.py. 'excluir' son prefijos de ruta con razon documentada. database.types.ts: generado por Supabase (se regenera solo), partirlo no aplica."
   },
-
   "perfil_seguridad": {
     "auth": "Supabase Auth (email / password)",
     "datos_personales": "Email y metadatos de perfil. No almacena tarjetas ni informacion bancaria.",
@@ -30,23 +33,38 @@
     "superficie_publica": "/login. Las APIs api/cron/* estan protegidas por Bearer CRON_SECRET.",
     "_comentario": "Las 5 preguntas de seguridad de dia 0 (aegis init). Respondidas y verificadas en codigo en la adopcion FASE 2 (2026-07-13)."
   },
-
   "topes_tablero": {
-    "ESTADO.md":     {"tope": 60,  "archivado": "manual"},
-    "BACKLOG.md":    {"tope": 100, "archivado": "prioridad"},
-    "LECCIONES.md":  {"tope": 120, "archivado": "manual"},
-    "DECISIONES.md": {"tope": 150, "archivado": "cronologico"},
-    "DEUDA.md":      {"tope": 60,  "archivado": "cronologico"},
-    "EVIDENCIA.md":  {"tope": 200, "archivado": "cronologico"},
+    "ESTADO.md": {
+      "tope": 60,
+      "archivado": "manual"
+    },
+    "BACKLOG.md": {
+      "tope": 100,
+      "archivado": "prioridad"
+    },
+    "LECCIONES.md": {
+      "tope": 120,
+      "archivado": "manual"
+    },
+    "DECISIONES.md": {
+      "tope": 150,
+      "archivado": "cronologico"
+    },
+    "DEUDA.md": {
+      "tope": 60,
+      "archivado": "cronologico"
+    },
+    "EVIDENCIA.md": {
+      "tope": 200,
+      "archivado": "cronologico"
+    },
     "_comentario": "Limites de lineas que cierre.py hace cumplir mecanicamente (v1.4). Cada archivo declara su 'archivado': cronologico (viejo arriba, archiva desde arriba, con gate de sanidad de direccion), prioridad (archiva desde el final por item, tachados primero), o manual (nunca auto-archiva; falla y pide poda a mano). Un entero suelto = modo legacy por nombre. El excedente se archiva en bitacora/, NUNCA se borra."
   },
-
   "watchdog": {
     "max_min": 15,
     "max_tokens": 10000,
     "_comentario": "Candado C7: agente aislado que supera cualquiera de los dos umbrales se corta y avisa a JC."
   },
-
   "flujos_criticos": [
     "El usuario actualiza su pronostico de marcadores.",
     "El usuario pone el filtro en la fecha de hoy y muestra los siguientes partidos.",
@@ -56,5 +74,7 @@
     "Pantalla principal de partidos (lista con horas y marcadores)."
   ],
   "seed_qa": "Semillas SQL nativas en Supabase (15_h2h_history_seed.sql, venues.sql) y el endpoint /api/cron/seed-matches.",
-  "_comentario_fase2": "Rellenado en la adopcion real FASE 2 (2026-07-13) con las respuestas de negocio de JC, validadas contra el codigo. Insumo original: README_URGENTE.md seccion 2.1."
+  "_comentario_fase2": "Rellenado en la adopcion real FASE 2 (2026-07-13) con las respuestas de negocio de JC, validadas contra el codigo. Insumo original: README_URGENTE.md seccion 2.1.",
+  "estado": "pausado",
+  "_pausado_desde": "2026-07-28"
 }
