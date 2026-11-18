@@ -3,6 +3,9 @@
 
   "aegis_version": "1.1",
 
+  "estado": "pausado",
+  "_pausado_desde": "2026-11-18 -- el Mundial ya paso; JC la da por archivada. Version de Aegis congelada en 1.1 a proposito.",
+
   "ramas": {
     "prod": "master",
     "staging": "develop",
